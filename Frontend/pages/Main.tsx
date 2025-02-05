@@ -7,6 +7,7 @@ import Champions from './Champions'
 import Profile from './Profile'
 import Icon from 'react-native-vector-icons/Entypo'
 import User from 'react-native-vector-icons/FontAwesome'
+import HomeStackNavigator from './HomeStackNavigator'
 const Tab = createBottomTabNavigator()
 const Main = () => {
 
@@ -42,7 +43,7 @@ const Main = () => {
         })}
       
      >
-            <Tab.Screen name='Home' component={Home}  options={{ headerShown: false }}/>
+            <Tab.Screen name='Home' component={HomeStackNavigator}  options={{ headerShown: false }}/>
             <Tab.Screen name='Chat' component={Chat}  options={{ headerShown: false }}/>
             <Tab.Screen name='Champions' component={Champions} options={{ headerShown: false }}/>
             <Tab.Screen name='Profile' component={Profile}  options={{ headerShown: false }}/>

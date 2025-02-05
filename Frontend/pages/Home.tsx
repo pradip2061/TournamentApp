@@ -4,6 +4,8 @@ import Doller from 'react-native-vector-icons/FontAwesome6'
 import Gamepad from 'react-native-vector-icons/Entypo'
 import TabButton from '../components/TabButton'
 import Card from '../components/Card'
+import FreeFire from './FreeFire'
+import ClashSquad from './ClashSquad'
 const freefire = require('../assets/freefire.jpeg')
 const img1 = require('../assets/ffmap.jpg')
 const img2 = require('../assets/image.png')
@@ -11,8 +13,7 @@ const img3 = require('../assets/cod.webp')
 const img4 = require('../assets/clashsquad.webp')
 const pubgfull =require('../assets/pubgfull.jpg')
 const tdm = require('../assets/tdm.jpg')
-
-const Home = () => {
+const Home = ({navigation}) => {
     const[toggle,setToggle]=useState('freefire')
   return (
     <View style={styles.container}>
@@ -24,7 +25,7 @@ const Home = () => {
             <View style={{display:'flex',flexDirection:'row',gap:20}}>
             <TouchableOpacity><Gamepad name='game-controller' size={30} color='white'/></TouchableOpacity>
             <TouchableOpacity>
-            <Gamepad name='menu' size={30} color='white'/>
+            <Gamepad name='menu' size={30} color='white' onPress={()=>navigation.navigate('Setting')}/>
             </TouchableOpacity>
             </View>
         </View>
@@ -39,14 +40,21 @@ const Home = () => {
                 <Text style={styles.button}>SELECT MODE</Text>
                 <View style={{marginLeft:60,marginTop:20}}>
                     {
-                        toggle=='freefire' && <View><Card image={img1} name='Full Map Matches'/>
-                        <Card image={img4} name='Clash Squad'/>
+                        toggle=='freefire' && <View>
+                          <TouchableOpacity onPress={()=>navigation.navigate('FreeFire')}>
+                          <Card image={img1} name='Full Map Matches'/>
+                          </TouchableOpacity>
+                          <TouchableOpacity onPress={()=>navigation.navigate('ClashSquad')}>
+                          <Card image={img4} name='Clash Squad'/>
+                          </TouchableOpacity>
                         </View>
                     }
                     {
                         toggle =='pubg' && <View>
-                             <Card image={pubgfull} name='Full Map Matches'/>
-                             <Card image={tdm} name='TDM(Team Death)'/>
+                          <TouchableOpacity onPress={()=>navigation.navigate('Pubg')}><Card image={pubgfull} name='Full Map Matches'/></TouchableOpacity>
+                          <TouchableOpacity >
+                          <Card image={tdm} name='TDM(Team Death)'/>
+                          </TouchableOpacity>
                             </View>
                     }
                     {

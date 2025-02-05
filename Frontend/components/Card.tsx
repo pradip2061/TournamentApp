@@ -3,11 +3,12 @@ import React from 'react'
 
 const Card = ({image,name}) => {
   return (
-    <TouchableOpacity>
-                    <Image source={image} alt='no image'style={styles.map}/>
+    <View>
+      <Image source={image} alt='no image'style={styles.map}/>
                     <Text style={styles.title}>{name}</Text>
-        </TouchableOpacity>
+                    </View>
   )
+    
 }
 const styles = StyleSheet.create({
   title: {

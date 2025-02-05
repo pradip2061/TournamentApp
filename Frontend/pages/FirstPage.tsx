@@ -1,93 +1,73 @@
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
-import React, { useState } from 'react'
+import React from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
+import FastImage from "react-native-fast-image";
 
 const FirstPage = ({ navigation }) => {
-  const [hover, setHover] = useState(false)
-
   return (
     <View style={styles.container}>
-      <View style={styles.logo} />
-      <Text style={styles.title}>ESPORTS</Text>
-      <Text style={styles.subtitle}>First Step to Esports journey</Text>
-      <Text style={styles.description}>Our app main goal is to promote esports in Nepal</Text>
+      <FastImage
+        source={require('../assets/logo.gif')} // Replace with a better GIF URL if needed
+        style={styles.gamepadGif}
+        resizeMode={FastImage.resizeMode.contain}
+      />
 
-      <TouchableOpacity
-        style={hover ? styles.buttonHover : styles.button}
-        onPressIn={() => setHover(true)}
-        onPressOut={() => {
-          setHover(false)
-          navigation.navigate('Authenticate')
-        }}
-      >
-        <Text style={hover ? styles.buttonTextHover : styles.buttonText}>GET STARTED</Text>
+      <Text style={styles.esportsText}>ESPORTS</Text>
+      <Text style={styles.subText}>First step to Esport's journey</Text>
+
+      {/* 🇳🇵 Our App's Goal */}
+      <Text style={styles.goalText}>
+        Our app's main goal is to promote esports in Nepal.
+      </Text>
+      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Authenticate')}>
+        <Text style={styles.buttonText}>GET STARTED</Text>
       </TouchableOpacity>
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: 'rgb(0,18,64)',
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
+    flex: 1,
+    alignItems: "center",
+    padding: 20,
+    backgroundColor:'rgb(252,255,252)',
+    gap:20,
+    paddingTop:90
   },
-  logo: {
-    width: 80,
-    height: 80,
-    borderColor: 'white',
-    borderWidth: 2,
-    marginTop: 150,
+  gamepadGif: {
+    width: 350,
+    height: 250,
   },
-  title: {
-    color: 'white',
-    fontSize: 30,
-    marginTop: 30,
+  esportsText: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "orange", // Golden color
+    marginBottom: 10,
   },
-  subtitle: {
-    color: 'white',
-    fontSize: 25,
-    fontWeight: 'bold',
-    marginTop: 40,
-    fontFamily: 'sans-serif',
-    textAlign: 'center',
+  subText: {
+    fontSize: 18,
+    color: "black",
+    marginBottom: 10,
   },
-  description: {
-    color: 'white',
+  goalText: {
     fontSize: 16,
-    marginTop: 150,
-    textAlign: 'center',
+    color: "#B0B0B0",
+    textAlign: "center",
+    marginBottom: 30,
+    paddingHorizontal: 20,
   },
   button: {
-    width: 300,
-    height: 40,
-    backgroundColor: 'white',
-    borderRadius: 20,
-    marginTop: 100,
-    justifyContent: 'center',
-  },
-  buttonHover: {
-    width: 300,
-    height: 40,
-    backgroundColor: 'rgb(0,18,64)',
-    borderRadius: 20,
-    marginTop: 100,
-    justifyContent: 'center',
-    borderColor: 'white',
-    borderWidth: 2,
+    backgroundColor: "orange",
+    paddingVertical: 12,
+    paddingHorizontal: 80,
+    borderRadius: 25, // Rounded corners
+    marginTop:40
   },
   buttonText: {
-    fontSize: 25,
-    textAlign: 'center',
-    color: 'black',
+    fontSize: 18,
+    color: "#fff",
+    fontWeight: "bold",
   },
-  buttonTextHover: {
-    fontSize: 25,
-    textAlign: 'center',
-    color: 'white',
-  },
-})
+});
 
-export default FirstPage
+export default FirstPage;

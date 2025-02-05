@@ -7,6 +7,7 @@ import FirstPage from './pages/FirstPage';
 import Authenticate from './pages/Authenticate';
 import Home from './pages/Home';
 import Main from './pages/Main';
+import HomeStackNavigator from './pages/HomeStackNavigator';
 
 
 

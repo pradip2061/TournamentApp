@@ -1,24 +1,43 @@
 import { View, Text,TouchableOpacity,TextInput,StyleSheet} from 'react-native'
-import React from 'react'
+import React, { useState } from 'react'
 import Icon from 'react-native-vector-icons/AntDesign'
 import Lock from 'react-native-vector-icons/AntDesign'
 import Email from 'react-native-vector-icons/MaterialCommunityIcons'
 const Authenticate = ({navigation}) => {
+  const[show,setShow]=useState(true)
+  const[value,setValue]=useState('Signup')
+  const shows=()=>{
+    show ? setShow(false):setShow(true)
+    show?setValue('Login'):setValue('Signup')
+  }
   return (
     <View style={{ padding: 20,backgroundColor:'rgb(0,18,64)',width:'100%',height:'100%'}}>
       <TouchableOpacity onPress={()=>navigation.navigate('First')}><Icon name="arrowleft" size={30} color="white" /></TouchableOpacity>
-      <View style={styles.loginContainer}>
-      <Text style={{ fontSize: 35, marginTop: 40,fontWeight:900,color:'white' }}>Log in</Text>
+      {
+        show?<View style={styles.loginContainer}>
+        <Text style={{ fontSize: 35, marginTop: 40,fontWeight:900,color:'white' }}>Log in</Text>
+        <Email name="email-outline" size={30} color="orange" style={styles.emailIcon}/>
+        <TextInput placeholder='Enter your email id' style={styles.input}></TextInput>
+        <Lock name='lock1' size={30} color='orange' style={styles.lockIcon}/>
+        <TextInput placeholder='Enter your password' style={styles.input}></TextInput>
+        <Text  style={{ fontSize: 15, marginTop: 10,color:'red',marginLeft:140 }}>Forgot Password?</Text>
+        <TouchableOpacity style={styles.button} onPress={()=>navigation.navigate('Main')}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Login</Text></TouchableOpacity>
+        <Text  style={{ fontSize: 30, marginTop: 20,fontWeight:400,color:'white' }}>OR</Text>
+        </View>:<View style={styles.loginContainer}>
+      <Text style={{ fontSize: 35, marginTop: 40,fontWeight:900,color:'white' }}>sign in</Text>
       <Email name="email-outline" size={30} color="orange" style={styles.emailIcon}/>
       <TextInput placeholder='Enter your email id' style={styles.input}></TextInput>
       <Lock name='lock1' size={30} color='orange' style={styles.lockIcon}/>
       <TextInput placeholder='Enter your password' style={styles.input}></TextInput>
       <Text  style={{ fontSize: 15, marginTop: 10,color:'red',marginLeft:140 }}>Forgot Password?</Text>
-      <TouchableOpacity style={styles.button} onPress={()=>navigation.navigate('Main')}><Text style={{ fontSize: 35,fontWeight:700,color:'white',textAlign:'center'}}>Login</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={()=>navigation.navigate('Main')}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Signup</Text></TouchableOpacity>
       <Text  style={{ fontSize: 30, marginTop: 20,fontWeight:400,color:'white' }}>OR</Text>
-      <Text  style={{ fontSize: 26, marginTop: 20,fontWeight:900,color:'white' }}>login with</Text>
       </View>
-      <Text style={{ fontSize: 20,color:'white',marginLeft:40,marginTop:130}}>Don't have acccount ? <Text style={{color:'orange'}}>Signup</Text></Text>
+      }
+      <View style={{display:'flex',flexDirection:'row',marginLeft:50,marginTop:150}}>
+      <Text style={{ fontSize: 20,color:'white'}}>Don't have account ?  </Text>
+      <TouchableOpacity onPress={shows}><Text style={{color:'orange',fontSize:20}}>{value}</Text></TouchableOpacity>
+      </View>
     </View>
   )
 }
