@@ -137,13 +137,13 @@ const ClashSquad = ({navigation}) => {
                 } horizontal   contentContainerStyle={styles.roundContainer}/>
             </View>
             <View style={{display:'flex',marginTop:40}}>
-                <Text style={{fontSize:20,fontWeight:700}}>
+                <Text style={{fontSize:20,fontWeight:700}}> 
                     Game name:
                 </Text>
                 <TextInput placeholder='Give your name' style={styles.textinput} value={matchDetails.gameName} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,gameName:text}))}/>
                
             </View>
-            <View style={{display:'flex',marginTop:40}}>
+            <View style={{display:'flex',marginTop:30}}>
                 <Text style={{fontSize:20,fontWeight:700}}>
                     Bet amount:
                 </Text>
@@ -230,12 +230,10 @@ createButton: {
     fontWeight: "600",
   },
   modal:{
-    width:390,
-    height:400,
+    width:'100%',
+    height:'100%',
     backgroundColor:'white',
-    marginTop:337,
-   paddingBottom:30
-
+    paddingBottom:40
   },
   modalTitle: {
     fontSize: 20,
