@@ -40,7 +40,7 @@ const Authenticate = ({navigation}) => {
   const login = async(e)=>{
    try {
     e.preventDefault()
-    await axios.post('http://192.168.1.8:3000/khelmela/login',{email,password},{
+    await axios.post('http://192.168.1.12:3000/khelmela/login',{email,password},{
       headers:{
         'Content-Type':'application/json'
       }
@@ -61,7 +61,7 @@ const Authenticate = ({navigation}) => {
   const signin= async(e)=>{
 try {
   e.preventDefault()
-  await axios.post('http://192.168.1.8:3000/khelmela/signup',{username,email,password},{
+  await axios.post('http://192.168.1.12:3000/khelmela/signup',{username,email,password},{
     headers: {
       'Content-Type': 'application/json',
     },

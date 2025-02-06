@@ -25,10 +25,10 @@ if(!decoded){
     res.status(400).json({
         message:'password is wrong!'
     })
+    return
 }
 
 const token = generateTokens(emailCheck._id.toString())
-console.log(token)
 if(!token){
     res.status(400).json({
         message:'login failed!'

@@ -1,12 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-const Setting = () => {
+import axios from 'axios'
+const img = require('../assets/loading.gif')
+import { Modal } from 'react-native';
+const Setting = ({navigation}) => {
   const[token,setToken]=useState('')
+  const[changepass,setChangepass]=useState(false)
+  const[loading,setLoading]=useState(false)
+
+  const [oldPassword, setOldPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+
+
   useEffect(()=>{
    const gettoken=async()=>{
      const tokens =await  AsyncStorage.getItem('token')
@@ -18,7 +28,30 @@ const Setting = () => {
 
  const logout=async()=>{
   await AsyncStorage.clear()
-  console.log('hello')
+  navigation.navigate('Authenticate')
+  
+ }
+
+ const changepassword=async(e)=>{
+  e.preventDefault();
+  setLoading(true)
+try {
+  await axios.post('http://192.168.1.12:3000/khelmela/changepassword',{oldPassword,newPassword},{
+    headers:{
+      Authorization:`${token}`,
+      "Content-Type":'application/json'
+    }
+  })
+  .then((response)=>{
+    Alert.alert(response.data.message)
+    setLoading(false)
+    setNewPassword('')
+    setOldPassword('')
+    setChangepass(false)
+  })
+} catch (error) {
+  Alert.alert(error.response.data.message)
+}
  }
   return (
     <ScrollView style={styles.container}>
@@ -45,7 +78,7 @@ const Setting = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
           <Ionicons name="lock-closed-outline" size={24} color="#555" />
-          <Text style={styles.itemText}>Change Password</Text>
+          <Text style={styles.itemText} onPress={()=>setChangepass(true)}>Change Password</Text>
         </TouchableOpacity>
       </View>
 
@@ -93,6 +126,40 @@ const Setting = () => {
           <Entypo name="youtube" size={30} color="#ff0000" />
         </TouchableOpacity>
       </View>
+      <Modal transparent={true} animationType="fade" visible={changepass}>
+      <View style={styles.overlay}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.title}>Change Password</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Old Password"
+            secureTextEntry
+            value={oldPassword}
+            onChangeText={(text)=>setOldPassword(text)}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="New Password"
+            secureTextEntry
+            value={newPassword}
+            onChangeText={(text)=>setNewPassword(text)}
+          />
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={styles.cancelButton} onPress={()=>setChangepass(false)}>
+              <Text style={styles.buttonText} >Cancel</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.submitButton} onPress={changepassword}>
+              <Text style={styles.buttonText}>Change Password</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+    <Modal transparent={true} animationType="fade" visible={loading}>
+    <View style={styles.overlay}>
+      <Image source={img} alt='no image'/>
+      </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -160,6 +227,54 @@ const styles = StyleSheet.create({
     backgroundColor:'#fff',
     paddingBlock:10,
     borderRadius:10
+  }, overlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Semi-transparent black background
+  },
+  modalContainer: {
+    backgroundColor: 'white',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+    alignItems: 'center',
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 20,
+  },
+  input: {
+    width: '100%',
+    padding: 10,
+    borderWidth: 1,
+    borderRadius: 5,
+    marginBottom: 15,
+    fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  cancelButton: {
+    backgroundColor: '#ccc',
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  submitButton: {
+    backgroundColor: '#007bff',
+    padding: 10,
+    borderRadius: 5,
+    width: '45%',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
 });
 
