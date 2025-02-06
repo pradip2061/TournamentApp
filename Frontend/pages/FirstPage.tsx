@@ -1,8 +1,16 @@
 import React from "react";
 import { View, Text, TouchableOpacity, StyleSheet, Image } from "react-native";
 import FastImage from "react-native-fast-image";
-
+import AsyncStorage from "@react-native-async-storage/async-storage";
 const FirstPage = ({ navigation }) => {
+  const verify= async()=>{
+    const tokens = await AsyncStorage.getItem('token')
+    if(!tokens){
+    navigation.navigate('Authenticate')
+  }else{
+    navigation.navigate('Main')
+  }
+}
   return (
     <View style={styles.container}>
       <FastImage
@@ -18,7 +26,7 @@ const FirstPage = ({ navigation }) => {
       <Text style={styles.goalText}>
         Our app's main goal is to promote esports in Nepal.
       </Text>
-      <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Authenticate')}>
+      <TouchableOpacity style={styles.button} onPress={verify}>
         <Text style={styles.buttonText}>GET STARTED</Text>
       </TouchableOpacity>
     </View>

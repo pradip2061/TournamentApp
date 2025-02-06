@@ -4,7 +4,7 @@ const bcrypt = require('bcrypt')
 const Login =async(req,res)=>{
 try {
     const{email,password}=req.body
-if(!email||!password){
+if(!email || !password){
     res.status(400).json({
         message:'fill the field properly'
     })
@@ -19,6 +19,7 @@ if(!emailCheck){
     return
 }
 
+
 const decoded = await bcrypt.compare(password,emailCheck.password)
 if(!decoded){
     res.status(400).json({
@@ -26,7 +27,8 @@ if(!decoded){
     })
 }
 
-const token = generateTokens(emailCheck._id)
+const token = generateTokens(emailCheck._id.toString())
+console.log(token)
 if(!token){
     res.status(400).json({
         message:'login failed!'
@@ -36,7 +38,7 @@ if(!token){
 
 res.status(200).json({
     message:'login successfully!',
-    data:token
+    data:`${token}`
 })
 
 } catch (error) {

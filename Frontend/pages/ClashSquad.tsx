@@ -233,7 +233,8 @@ createButton: {
     width:'100%',
     height:'100%',
     backgroundColor:'white',
-    paddingBottom:40
+    paddingBottom:40,
+    zIndex:20
   },
   modalTitle: {
     fontSize: 20,

@@ -4,3 +4,4 @@ const generateTokens=(userid)=>{
     const token= jwt.sign({id:userid},process.env.secret_key,{expiresIn:'1h'})
     return token
 }
+module.exports =generateTokens

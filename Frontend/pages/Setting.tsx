@@ -1,11 +1,25 @@
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const Setting = () => {
+  const[token,setToken]=useState('')
+  useEffect(()=>{
+   const gettoken=async()=>{
+     const tokens =await  AsyncStorage.getItem('token')
+     setToken(tokens)
+   }
+   gettoken()
+  },[])
+
+
+ const logout=async()=>{
+  await AsyncStorage.clear()
+  console.log('hello')
+ }
   return (
     <ScrollView style={styles.container}>
       {/* User Info Section with Icons */}
@@ -14,7 +28,7 @@ const Setting = () => {
         <View style={styles.userInfo}>
           <View style={styles.userRow}>
             <Ionicons name="person-circle-outline" size={20} color="#555" />
-            <Text style={styles.username}> John Doe</Text>
+            <Text style={styles.username}>{token}</Text>
           </View>
           <View style={styles.userRow}>
             <MaterialIcons name="email" size={20} color="#555" />
@@ -63,7 +77,7 @@ const Setting = () => {
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
           <Ionicons name="log-out-outline" size={24} color="red" />
-          <Text style={[styles.itemText, { color: 'red' }]}>Logout</Text>
+          <Text style={[styles.itemText, { color: 'red' }]} onPress={logout}>Logout</Text>
         </TouchableOpacity>
       </View>
 

@@ -1,20 +1,43 @@
 const mongoose =require('mongoose')
 
  const schema = new mongoose.Schema({
-    username:{
+     userid :{
         type:String,
         required:true
-    },
-    email:{
+     },
+      player:{
         type:String,
-        required:true,
-        unique:true
-    },
-    password:{
-        type:Number,
         required:true
-    }
+     },
+      ammo:{
+        type:String,
+        required:true
+     },
+      headshot:{
+        type:String,
+        required:true
+     },
+      skill:{
+        type:String,
+        required:true
+     },
+      round:{
+        type:String,
+        required:true
+     },
+      coin:{
+        type:String,
+        required:true
+     },
+     getName:{
+        type:String,
+        required:true
+     },
+    betAmount:{
+        type:String,
+        required:true
+     }
 },{timestamps:true})
 
 const ClashSquad = mongoose.model('ClashSquad',schema)
-module.e
+module.exports=ClashSquad

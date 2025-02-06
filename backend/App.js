@@ -8,12 +8,14 @@ connectToDatabase()
 app.use(express.json())
 require('dotenv').config()
 app.use('/khelmela',AuthenticateRouter)
-app.use(cors({
-    origin:'http://localhost:8081'
-}))
+app.use(cors())
 
 
 
-app.listen(3000,()=>{
+app.listen(3000, '0.0.0.0',()=>{
     console.log('the project is running at 3000')
 })
+
+// {
+//     origin:'http://localhost:8081'
+// }

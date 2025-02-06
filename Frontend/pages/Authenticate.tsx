@@ -1,14 +1,81 @@
-import { View, Text,TouchableOpacity,TextInput,StyleSheet} from 'react-native'
-import React, { useState } from 'react'
+import { View, Text,TouchableOpacity,TextInput,StyleSheet, Alert} from 'react-native'
+import React, { useEffect, useState } from 'react'
 import Icon from 'react-native-vector-icons/AntDesign'
 import Lock from 'react-native-vector-icons/AntDesign'
 import Email from 'react-native-vector-icons/MaterialCommunityIcons'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios'
 const Authenticate = ({navigation}) => {
   const[show,setShow]=useState(true)
   const[value,setValue]=useState('Signup')
+  const[username,setUsername]=useState('')
+  const[email,setEmail]=useState('')
+  const[password,setPassword]=useState('')
+  const[token,setToken]=useState('')
   const shows=()=>{
     show ? setShow(false):setShow(true)
     show?setValue('Login'):setValue('Signup')
+  }
+
+    const settoken=async()=>{
+      await AsyncStorage.setItem('token',token)
+    }
+    useEffect(() => {
+      // After token is updated, save it to AsyncStorage
+      settoken()
+    }, [token])
+
+  useEffect(()=>{
+    const checkLoginorNot = async()=>{
+        const tokens = await AsyncStorage.getItem('token')
+        if(!tokens){
+        console.log('login first')
+      }else{
+        navigation.navigate('First')
+      }
+    }
+    checkLoginorNot()
+  },[])
+
+  const login = async(e)=>{
+   try {
+    e.preventDefault()
+    await axios.post('http://192.168.1.8:3000/khelmela/login',{email,password},{
+      headers:{
+        'Content-Type':'application/json'
+      }
+    })
+    .then((response)=>{
+        Alert.alert(response.data.message)
+        setEmail('')
+        setPassword('')
+        setToken(response.data.data)
+        
+        navigation.navigate('Main')
+    })
+   } catch (error) {
+    Alert.alert(error.response.data.message )
+   }
+        
+  }
+  const signin= async(e)=>{
+try {
+  e.preventDefault()
+  await axios.post('http://192.168.1.8:3000/khelmela/signup',{username,email,password},{
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+  .then((response)=>{
+    Alert.alert(response.data.message)
+    setShow((prev)=>!prev)
+    setEmail('')
+    setPassword('')
+  })
+} catch (error) {
+  Alert.alert(error.response.data.message )
+}
+
   }
   return (
     <View style={{ padding: 20,backgroundColor:'rgb(0,18,64)',width:'100%',height:'100%'}}>
@@ -16,21 +83,23 @@ const Authenticate = ({navigation}) => {
       {
         show?<View style={styles.loginContainer}>
         <Text style={{ fontSize: 35, marginTop: 40,fontWeight:900,color:'white' }}>Log in</Text>
-        <Email name="email-outline" size={30} color="orange" style={styles.emailIcon}/>
-        <TextInput placeholder='Enter your email id' style={styles.input}></TextInput>
-        <Lock name='lock1' size={30} color='orange' style={styles.lockIcon}/>
-        <TextInput placeholder='Enter your password' style={styles.input}></TextInput>
+        <Email name="email-outline" size={30} color="orange" style={styles.loginemailIcon}/>
+        <TextInput placeholder='Enter your email id' style={styles.input} value={email} onChangeText={(text)=>setEmail(text)}></TextInput>
+                <Lock name='lock1' size={30} color='orange' style={styles.loginlockIcon}/>
+        <TextInput placeholder='Enter your password' style={styles.input} value={password} onChangeText={(text)=>setPassword(text)}></TextInput>
         <Text  style={{ fontSize: 15, marginTop: 10,color:'red',marginLeft:140 }}>Forgot Password?</Text>
-        <TouchableOpacity style={styles.button} onPress={()=>navigation.navigate('Main')}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Login</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={login}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Login</Text></TouchableOpacity>
         <Text  style={{ fontSize: 30, marginTop: 20,fontWeight:400,color:'white' }}>OR</Text>
         </View>:<View style={styles.loginContainer}>
       <Text style={{ fontSize: 35, marginTop: 40,fontWeight:900,color:'white' }}>sign in</Text>
+      <Icon name="user" size={30} color="orange" style={{position:'absolute',marginRight:260,marginTop:135,zIndex:10}}/>
+      <TextInput placeholder='Enter your name' style={styles.input} value={username} onChangeText={(text)=>setUsername(text)}></TextInput>
       <Email name="email-outline" size={30} color="orange" style={styles.emailIcon}/>
-      <TextInput placeholder='Enter your email id' style={styles.input}></TextInput>
+      <TextInput placeholder='Enter your email id' style={styles.input} value={email} onChangeText={(text)=>setEmail(text)}></TextInput>
       <Lock name='lock1' size={30} color='orange' style={styles.lockIcon}/>
-      <TextInput placeholder='Enter your password' style={styles.input}></TextInput>
+      <TextInput placeholder='Enter your password' style={styles.input} value={password} onChangeText={(text)=>setPassword(text)}></TextInput>
       <Text  style={{ fontSize: 15, marginTop: 10,color:'red',marginLeft:140 }}>Forgot Password?</Text>
-      <TouchableOpacity style={styles.button} onPress={()=>navigation.navigate('Main')}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Signup</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={signin}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Signup</Text></TouchableOpacity>
       <Text  style={{ fontSize: 30, marginTop: 20,fontWeight:400,color:'white' }}>OR</Text>
       </View>
       }
@@ -71,14 +140,26 @@ const styles= StyleSheet.create({
     emailIcon:{
         position:'absolute',
         marginRight:260,
-        marginTop:137,
+        marginTop:227,
         zIndex:20
     },
     lockIcon:{
         position:'absolute',
-        marginTop:225,
+        marginTop:315,
         zIndex:20,
         marginRight:260
+    },
+    loginemailIcon:{
+      position:'absolute',
+      marginRight:255,
+      marginTop:135,
+      zIndex:20
+    },
+    loginlockIcon:{
+      position:'absolute',
+      marginTop:225,
+      zIndex:20,
+      marginRight:260
     }
 })
 

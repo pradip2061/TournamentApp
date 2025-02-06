@@ -11,7 +11,7 @@ const mongoose =require('mongoose')
         unique:true
     },
     password:{
-        type:Number,
+        type:String,
         required:true
     }
 },{timestamps:true})
