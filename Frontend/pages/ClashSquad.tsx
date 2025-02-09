@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet,Pressable, TextInput, Modal, Keyboard, TouchableOpacity,ScrollView,Animated } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -7,8 +7,15 @@ import { SafeAreaView } from 'react-native-safe-area-context'
 import Entypo from 'react-native-vector-icons/Entypo'
 import MatchCard from '../components/MatchCard'
 import { FlatList, TouchableWithoutFeedback } from 'react-native-gesture-handler'
-
+import axios from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import { Alert } from 'react-native'
 const ClashSquad = ({navigation}) => {
+  const[page,setPage]=useState(1)
+  const[data,setData]=useState([])
+  const[trigger,setTrigger]=useState('')
+  const[visible,setVisible]=useState(false)
+  const[message,setMessage]=useState('')
     const [matchDetails, setMatchDetails] = useState({
       show: false,
       showDetail: true,
@@ -22,6 +29,14 @@ const ClashSquad = ({navigation}) => {
       betAmount: '',
     });
     
+    const modal =(messages)=>{
+      setVisible(true)
+      setMessage(messages)
+      setTimeout(()=>{
+        setVisible(false)
+        setMessage('')
+      },1000)
+    }
     const handleOutsidePress = () => {
         Keyboard.dismiss(); // To dismiss keyboard if it's open
         setMatchDetails((prev)=>({...prev,show:false})); // Close the modal
@@ -46,10 +61,37 @@ const ClashSquad = ({navigation}) => {
       ];
         
 
-      const sendData =()=>{
-
-      }
-    
+      const sendData =async(e)=>{
+        e.preventDefault()
+     try {
+      const token = await AsyncStorage.getItem('token')
+      await axios.post('http://192.168.1.7:3000/khelmela/create',{matchDetails},{
+        headers:{
+          Authorization:`${token}`
+        }
+      })
+      .then((response)=>{
+     modal(response.data.message)
+      setTrigger('done')
+      })
+     } catch (error) {
+      const errorMessage = error.response?.data?.message || "exceed the limit";
+      modal(errorMessage)
+     }
+      }  
+      useEffect(()=>{
+        try {
+          const getMatches = async()=>{
+            await axios.get(`http://192.168.1.7:3000/khelmela/get?page=${page}`)
+            .then((response)=>{
+              setData(response.data.card)
+            })
+          }
+          getMatches()
+        } catch (error) {
+          Alert.alert(error.response.data.message)
+        }
+      },[trigger,page])
   return (
     
     <View style={styles.container}>
@@ -79,8 +121,16 @@ const ClashSquad = ({navigation}) => {
         <Entypo name="game-controller" size={24} color="black" />
         <Text style={styles.liveMatchesText}>Live Matches</Text>
       </View>
-      <View>
-      <MatchCard/>
+      <View style={{paddingBottom:260}}>
+         
+                  <View>
+                  <FlatList
+      data={data}
+      keyExtractor={(item,id) =>id.toString() }
+      renderItem={({ item }) => <MatchCard match={item} />}
+    />
+                <TouchableOpacity onPress={()=>setPage((prev)=>prev+1)}><Text style={{color:'white',fontSize:16,marginLeft:270}}>Load more</Text></TouchableOpacity>
+                  </View>
       </View>
       <Modal visible={matchDetails.show}  transparent animationType='fade' onRequestClose={handleOutsidePress}>
       <View style={styles.modal}>
@@ -159,7 +209,17 @@ const ClashSquad = ({navigation}) => {
         </ScrollView>
       </View>
       </Modal>
-    
+      <Modal
+      animationType="fade"
+      transparent={true}
+      visible={visible}
+    >
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.title}>{message}</Text>
+        </View>
+      </View>
+    </Modal>
     </View>
   )
 }
@@ -321,7 +381,25 @@ createButton: {
     borderRadius:20,
     backgroundColor:'orange',
     marginTop:40
-}
+},  modalContainer: {
+  flex: 1,
+  alignItems: 'center',
+// Semi-transparent background
+},
+modalContent: {
+  width: 300,
+  padding: 20,
+  backgroundColor: 'rgb(255, 255, 255)',
+  borderRadius: 10,
+  alignItems: 'center',
+  borderWidth:2,
+  borderColor:'orange',
+  marginTop:35
+},
+title: {
+  fontSize: 20,
+  fontWeight:900
+},
  
 })
 export default ClashSquad
