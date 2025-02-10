@@ -24,7 +24,7 @@ const MatchCard = ({match}) => {
                   <Text style={styles.text}>🎮 Mode:{item.player} </Text>
                   <Text style={styles.text}>🔫 skills:{item.skill}</Text>
                   <Text style={styles.text}>🎯 Headshot:{item.headshot}</Text>
-                  <Text style={styles.text}>🗺️ status:{item.status}</Text>
+                  <Text style={styles.text}>🗺️ match:{item.match}</Text>
                 </View>
                 <View style={styles.column}>
                   <Text style={styles.text}>💥 Limited Ammo:{item.ammo}</Text>

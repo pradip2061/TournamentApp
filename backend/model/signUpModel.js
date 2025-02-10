@@ -18,17 +18,25 @@ const mongoose =require('mongoose')
         type:Number,
         default:0
     },
-    matches:{
-
-    },
     image:{
-
+        type:String
     },
-    uid:[
-        {
-        
+    uid:[{
+        freefire:{
+            type:String
+        },
+        pubg:{
+            type:String
+        },
+        cod:{
+            type:String
         }
-    ]
+    }
+    ],
+    balance:{
+     type:Number,
+     default:0
+    }
 },{timestamps:true})
 
 const signUp =  mongoose.model('signUp',schema)

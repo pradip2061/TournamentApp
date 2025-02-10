@@ -24,6 +24,10 @@ const schema = new mongoose.Schema(
           type: String,
           required: true,
         },
+        match:{
+         type:String,
+         required:true
+        },
         coin: {
           type: String,
           required: true,
@@ -38,27 +42,28 @@ const schema = new mongoose.Schema(
         },
       },
     ],
-    teamHost:[{
-gameName:String,
-userid:String
-}],
-teamopponent:[{
-gameName:String,
-userid:String
-}],
-    teamHost: {
-      type: Boolean,
-      enum: [true, false],
-      default: false,
-    },
-    team2: {
-      type: Boolean,
-      enum: [true, false],
-      default: false,
-    },
+    teamHost: [
+      {
+        userid: { type: String },
+        teamHostStatus: {
+          type: Boolean,
+          enum: [true, false],
+          default: false,
+        },
+      },
+    ],
+    teamopponent: [
+      {
+       userid: { type: String },
+      team2Status: {
+         type: Boolean,
+         enum: [true, false],
+         default: false,
+       }}
+    ],
     status: {
       type: String,
-      enum: ["completed", "pending"],
+      enum: ["running", "pending","completed"],
       default: "pending",
     },
   },

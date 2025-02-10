@@ -10,6 +10,7 @@ import { FlatList, TouchableWithoutFeedback } from 'react-native-gesture-handler
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Alert } from 'react-native'
+import ShimmerBox from '../components/ShimmerBox'
 const ClashSquad = ({navigation}) => {
   const[page,setPage]=useState(1)
   const[data,setData]=useState([])
@@ -25,6 +26,7 @@ const ClashSquad = ({navigation}) => {
       skill: 'No',
       round: 13,
       coin: 'Default',
+        match:'clashsquad',
       gameName: '',
       betAmount: '',
     });
@@ -65,7 +67,7 @@ const ClashSquad = ({navigation}) => {
         e.preventDefault()
      try {
       const token = await AsyncStorage.getItem('token')
-      await axios.post('http://192.168.1.7:3000/khelmela/create',{matchDetails},{
+      await axios.post('http://192.168.1.3:3000/khelmela/create',{matchDetails},{
         headers:{
           Authorization:`${token}`
         }
@@ -82,7 +84,7 @@ const ClashSquad = ({navigation}) => {
       useEffect(()=>{
         try {
           const getMatches = async()=>{
-            await axios.get(`http://192.168.1.16:3000/khelmela/get?page=${page}`)
+            await axios.get(`http://192.168.1.3:3000/khelmela/get?page=${page}`)
             .then((response)=>{
               setData(response.data.card)
             })
@@ -124,12 +126,13 @@ const ClashSquad = ({navigation}) => {
       <View style={{paddingBottom:260}}>
          
                   <View>
-                  <FlatList
-      data={data}
-      keyExtractor={(item,id) =>id.toString() }
-      renderItem={({ item }) => <MatchCard match={item} />}
-    />
-                <TouchableOpacity onPress={()=>setPage((prev)=>prev+1)}><Text style={{color:'white',fontSize:16,marginLeft:270}}>Load more</Text></TouchableOpacity>
+                    {
+                      data.length !==0 ?  <FlatList
+                      data={data}
+                      keyExtractor={(item,id) =>id.toString() }
+                      renderItem={({ item }) => <MatchCard match={item} />}
+                    /> :<ShimmerBox/>
+                    }
                   </View>
       </View>
       <Modal visible={matchDetails.show}  transparent animationType='fade' onRequestClose={handleOutsidePress}>
@@ -140,8 +143,8 @@ const ClashSquad = ({navigation}) => {
         <View style={{marginLeft:40}}>
             <Text style={{fontSize:20,fontWeight:700}}>Room mode</Text>
             <View style={{display:'flex',flexDirection:'row',gap:100,alignItems:'center',marginTop:20,}}>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:true}))} style={ matchDetails.showDetail ?styles.toggle:null}><Text style={ matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Clash Squad</Text></TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:false}))} style={ !matchDetails.showDetail ?styles.toggle:null}><Text style={!matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Lone Wolf</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:true,match:'clashsquads'}))} style={ matchDetails.showDetail ?styles.toggle:null}><Text style={ matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Clash Squad</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:false,match:'lonewolf'}))} style={ !matchDetails.showDetail ?styles.toggle:null}><Text style={!matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Lone Wolf</Text></TouchableOpacity>
             </View>
         </View>
         {
@@ -197,7 +200,7 @@ const ClashSquad = ({navigation}) => {
                 <Text style={{fontSize:20,fontWeight:700}}>
                     Bet amount:
                 </Text>
-                <TextInput placeholder='Enter the amount' style={styles.textinput} value={matchDetails.betAmount} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,betAmount:text}))}/>
+                <TextInput placeholder='Enter the amount'  keyboardType="numeric" style={styles.textinput} value={matchDetails.betAmount} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,betAmount:text}))}/>
             </View>
                   <TouchableOpacity style={styles.button} onPress={sendData}><Text style={{ fontSize: 25,fontWeight:700,color:'white',textAlign:'center',marginTop:6}}>Publish</Text></TouchableOpacity>
                 </View>
