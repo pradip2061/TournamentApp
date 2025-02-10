@@ -82,7 +82,7 @@ const ClashSquad = ({navigation}) => {
       useEffect(()=>{
         try {
           const getMatches = async()=>{
-            await axios.get(`http://192.168.1.7:3000/khelmela/get?page=${page}`)
+            await axios.get(`http://192.168.1.16:3000/khelmela/get?page=${page}`)
             .then((response)=>{
               setData(response.data.card)
             })

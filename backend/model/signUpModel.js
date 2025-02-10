@@ -13,7 +13,22 @@ const mongoose =require('mongoose')
     password:{
         type:String,
         required:true
-    }
+    },
+    trophy:{
+        type:Number,
+        default:0
+    },
+    matches:{
+
+    },
+    image:{
+
+    },
+    uid:[
+        {
+        
+        }
+    ]
 },{timestamps:true})
 
 const signUp =  mongoose.model('signUp',schema)

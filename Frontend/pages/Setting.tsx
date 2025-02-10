@@ -36,7 +36,7 @@ const Setting = ({navigation}) => {
   e.preventDefault();
   setLoading(true)
 try {
-  await axios.post('http://192.168.1.12:3000/khelmela/changepassword',{oldPassword,newPassword},{
+  await axios.post('http://192.168.1.16:3000/khelmela/changepassword',{oldPassword,newPassword},{
     headers:{
       Authorization:`${token}`,
       "Content-Type":'application/json'

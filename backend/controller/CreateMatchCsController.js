@@ -1,47 +1,26 @@
 const ClashSquad = require("../model/ClashSquadModel");
 
 const createCs = async (req, res) => {
-  const { matchDetails } = req.body;
-  const userId = req.user
-
-  // Check if the required fields are provided
-  if (!userId || !matchDetails) {
-    return res.status(400).json({
-      message: "User ID and match details are required.",
-    });
+  const {gameName, matchDetails } = req.body;
+const userId = req.user
+  if (!userId || !gameName || !matchDetails || !Array.isArray(matchDetails)) {
+    return res.status(400).json({ error: "Invalid input data" });
   }
 
   try {
-    // Check if the user already exists in the database
-    const userExists = await ClashSquad.findOne({ userid:userId });
-
-    if (!userExists) {
-      // Create a new document if user doesn't exist
-      await ClashSquad.create({
-        userid:userId,
-        matchDetails:[matchDetails]
-      });
-
-      return res.status(200).json({
-        message: "Match Create successfully!!",
-      });
-    } else {
-      // Push the new match details to the existing user's matchDetails array
-      userExists.matchDetails.push(matchDetails); 
-
-      // Save the updated document
-      await userExists.save();
-
-      return res.status(200).json({
-        message: "Match create successfully!!",
-      });
-    }
-  } catch (error) {
-    console.error("Error handling createCs:", error);
-    res.status(500).json({
-      message: "Internal server error.",
-      details: error.message,
+    const newMatch = new ClashSquad({
+      matchDetails: matchDetails, 
+      teamHost: [{ userid: userId, gameName: gameName }], 
+      teamopponent: [],
+      teamHostStatus: false,
+      team2Status: false,
+      status: "pending",
     });
+    await newMatch.save();
+    res.status(200).json({ message: "Match created successfully!", match: newMatch });
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
