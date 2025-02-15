@@ -177,7 +177,7 @@ const styles= StyleSheet.create({
         height:50,
         paddingLeft:50,
         backgroundColor:'white',
-        color:'black',
+        color:'red',
         borderWidth:3,
         borderColor:'orange',
         fontSize:18,
