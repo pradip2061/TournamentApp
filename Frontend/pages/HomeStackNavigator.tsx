@@ -6,8 +6,7 @@ import { createStackNavigator } from "@react-navigation/stack";
 import Pubg from "./Pubg";
 import Setting from "./Setting";
 import TDM from "./TDM";
-
-
+import Transcation from "./Transcation";
 const Stack =createStackNavigator()
 
 const  HomeStackNavigator=()=> {
@@ -19,6 +18,8 @@ const  HomeStackNavigator=()=> {
       <Stack.Screen name='Pubg' component={Pubg} options={{headerShown:false}}/>
       <Stack.Screen name='Setting' component={Setting}/>
       <Stack.Screen name='TDM' component={TDM}/>
+      <Stack.Screen name='Transcation' component={Transcation}
+      />
     </Stack.Navigator>
   );
 }

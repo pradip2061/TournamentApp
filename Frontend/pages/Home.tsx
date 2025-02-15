@@ -29,7 +29,7 @@ const Home = ({ navigation }) => {
       <View>
         <View style={styles.header}>
           <TouchableOpacity>
-            <Doller name="circle-dollar-to-slot" size={30} color="white" />
+            <Doller name="circle-dollar-to-slot" size={30} color="white" onPress={() =>navigation.navigate('Transcation')} />
           </TouchableOpacity>
           <View style={{ display: 'flex', flexDirection: 'row', gap: 20 }}>
             <TouchableOpacity>
