@@ -1,19 +1,15 @@
-const ClashSquad = require('../model/ClashSquadModel');
-const RateLimit = require('../model/RateLimitModel')
+
 const mongoose = require('mongoose');
+const signUp = require('../model/signUpModel');
 
 
 const userRateLimiter = async (req, res, next) => {
   try{
     const userId = req.user
-  const userMatches = await ClashSquad.find({
-    $or: [{ "teamHost.userid": userId }, { "teamopponent.userid": userId }], // Match if user is in host or opponent
-    status: { $in: ["pending", "running"] }, // Only fetch pending or running matches
-  });
-
-  if (userMatches.length>0) {
-    return res.status(404).json({ message: "you can't setup matches until the previous match is finished" });
-  }
+    const user = await signUp.findById(userId)
+    if(user.isplaying == true){
+      return res.status(404).json({ message: "you can't setup matches until the previous match is finished" });
+    }
 
   next()
  
@@ -24,3 +20,8 @@ const userRateLimiter = async (req, res, next) => {
 };
 
 module.exports = userRateLimiter;
+
+// const userMatches = await ClashSquad.find({
+//   $or: [{ "teamHost.userid": userId }, { "teamopponent.userid": userId }], // Match if user is in host or opponent
+//   status: { $in: ["pending", "running"] }, // Only fetch pending or running matches
+// });

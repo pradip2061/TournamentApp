@@ -33,6 +33,23 @@ const mongoose =require('mongoose')
         }
     }
     ],
+    isplaying:{
+            type:Boolean,
+            default:false
+        },
+     matchId:{
+            type:String,
+            ref:"ClashSquad"
+        }
+    ,
+    history:[{
+        victory:{
+            type:String
+        },
+        loss:{
+            type:String
+        }
+    }],
     balance:{
      type:Number,
      default:0

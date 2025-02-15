@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image, Animated, Button, TouchableOpacity} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
@@ -7,24 +7,28 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const MatchCard = ({match}) => {
   const[check,setCheck]=useState('')
  
-  const checkUserOrAdmin =async()=>{
-    const matchId = match._id
-    const token = await AsyncStorage.getItem('token')
-await axios.post('http://30.30.6.248:3000/khelmela/checkUserOrAdmin',{matchId},{
-  headers:{
-    Authorization:`${token}`
-  }
-})
-.then((response)=>{
-  console.log(response)
-    setCheck(response.data.message)
-})
-  }
+  useEffect(()=>{
+    const checkUserOrAdmin =async()=>{
+      const matchId = match._id
+      const token = await AsyncStorage.getItem('token')
+  await axios.post('http://30.30.6.248:3000/khelmela/checkUserOrAdmin',{matchId},{
+    headers:{
+      Authorization:`${token}`
+    }
+  })
+  .then((response)=>{
+    console.log(response)
+      setCheck(response.data.message)
+  })
+    }
+    checkUserOrAdmin()
+  },[])
+ 
   return (
     <>
             <FlatList data={match.matchDetails} keyExtractor={(item,id)=>id.toString()}
             renderItem={({item})=>(
-              <TouchableOpacity onPress={checkUserOrAdmin}>
+              <TouchableOpacity>
                 <View style={styles.card}>
             <View style={styles.cardContent}>
               <View style={styles.headerRow}>
@@ -49,20 +53,22 @@ await axios.post('http://30.30.6.248:3000/khelmela/checkUserOrAdmin',{matchId},{
               </View>
               <View style={styles.divider} />
               <View style={styles.footer}>
+                <View style={{display:'flex',gap:80,flexDirection:'row'}}>
                 <Text style={styles.text}>👾 Opponent:{item.gameName}</Text>
+                {
+            check === 'user'? <View>
+            <Text>this is user</Text>
+          </View>:null
+          }
+                </View>
+                
                 <View style={styles.footerRow}>
                   <Text style={styles.prizeText}>🏆 Prize:{item.betAmount*1.5}</Text>
                   <Text style={styles.entryText}> Entry:{item.betAmount} </Text>
                 </View>
               </View>
             </View>
-          </View>
-          {
-            check === 'host'? <View>
-            <Text>this is admin</Text>
-          </View>:<View><Text>this is user</Text></View>
-          }
-         
+          </View> 
               </TouchableOpacity>
             )}/>
     </>

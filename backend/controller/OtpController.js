@@ -73,7 +73,9 @@ const verifyOtpandSignup = async (req, res) => {
         cod:""
     }
     ],
-        password:await bcrypt.hash(password,11)
+        password:await bcrypt.hash(password,11),
+        matchId:"",
+
     })
       res.status(200).json({ message: "OTP verified successfully" });
   

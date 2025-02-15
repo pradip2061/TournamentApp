@@ -29,7 +29,7 @@ const schema = new mongoose.Schema(
          required:true
         },
         coin: {
-          type: String,
+          type: String || null,
           required: true,
         },
         gameName: {
@@ -62,7 +62,7 @@ const schema = new mongoose.Schema(
        }}
     ],
     status: {
-      type: String,
+      type: String ,
       enum: ["running", "pending","completed"],
       default: "pending",
     },
