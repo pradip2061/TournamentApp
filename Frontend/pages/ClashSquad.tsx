@@ -30,10 +30,11 @@ const ClashSquad = ({navigation}) => {
       gameName: '',
       betAmount: '',
     });
+
     
     const modal =(messages)=>{
       setVisible(true)
-      setMessage(messages)
+      setMessage(String(messages))
       setTimeout(()=>{
         setVisible(false)
         setMessage('')
@@ -67,24 +68,43 @@ const ClashSquad = ({navigation}) => {
         e.preventDefault()
      try {
       const token = await AsyncStorage.getItem('token')
-      await axios.post('http://192.168.1.3:3000/khelmela/create',{matchDetails},{
+      await axios.post('http://30.30.6.248:3000/khelmela/create',{matchDetails},{
         headers:{
           Authorization:`${token}`
         }
       })
       .then((response)=>{
+        console.log(response)
      modal(response.data.message)
       setTrigger('done')
+      setMatchDetails((prev)=>({...prev,show:false}))
+      matchidSend(response.data.newMatch._id)
+      })
+     } catch (error) {
+      const errorMessage = error.response.data.message || "exceed the limit";
+      modal(errorMessage)
+     }
+      }  
+      
+      const matchidSend =async(matchId)=>{
+      console.log(matchId)
+     try {
+      const token = await AsyncStorage.getItem('token')
+      await axios.post('http://30.30.6.248:3000/khelmela/addinhost',{matchId},{
+        headers:{
+          Authorization:`${token}`
+        }
       })
      } catch (error) {
       const errorMessage = error.response?.data?.message || "exceed the limit";
       modal(errorMessage)
      }
-      }  
+      } 
+
       useEffect(()=>{
         try {
           const getMatches = async()=>{
-            await axios.get(`http://192.168.1.3:3000/khelmela/get?page=${page}`)
+            await axios.get(`http://30.30.6.248:3000/khelmela/get?page=${page}`)
             .then((response)=>{
               setData(response.data.card)
             })
@@ -123,8 +143,7 @@ const ClashSquad = ({navigation}) => {
         <Entypo name="game-controller" size={24} color="black" />
         <Text style={styles.liveMatchesText}>Live Matches</Text>
       </View>
-      <View style={{paddingBottom:260}}>
-         
+      <View style={{paddingBottom:220}}>
                   <View>
                     {
                       data.length !==0 ?  <FlatList
@@ -143,8 +162,8 @@ const ClashSquad = ({navigation}) => {
         <View style={{marginLeft:40}}>
             <Text style={{fontSize:20,fontWeight:700}}>Room mode</Text>
             <View style={{display:'flex',flexDirection:'row',gap:100,alignItems:'center',marginTop:20,}}>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:true,match:'clashsquads'}))} style={ matchDetails.showDetail ?styles.toggle:null}><Text style={ matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Clash Squad</Text></TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:false,match:'lonewolf'}))} style={ !matchDetails.showDetail ?styles.toggle:null}><Text style={!matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Lone Wolf</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:true}))} style={ matchDetails.showDetail ?styles.toggle:null}><Text style={ matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Clash Squad</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:false,coin:''}))} style={ !matchDetails.showDetail ?styles.toggle:null}><Text style={!matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Lone Wolf</Text></TouchableOpacity>
             </View>
         </View>
         {
@@ -186,7 +205,7 @@ const ClashSquad = ({navigation}) => {
                     Coin:
                 </Text>
                 <FlatList data={coinOptions} keyExtractor={(item,id)=>item.id.toString()} renderItem={({item})=>
-                  <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,coin:item.label}))} style={ matchDetails.coin === item.label ?styles.coin:null}><Text style={matchDetails.coin === item.label ? styles.selectText:styles.noselectText}>{item.label}</Text></TouchableOpacity>
+                  <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,coin:item.label}))}  style={ matchDetails.coin === item.label ?styles.coin:null}><Text style={matchDetails.coin === item.label ? styles.selectText:styles.noselectText}>{item.label}</Text></TouchableOpacity>
                 } horizontal   contentContainerStyle={styles.roundContainer}/>
             </View>
             <View style={{display:'flex',marginTop:40}}>
@@ -206,7 +225,55 @@ const ClashSquad = ({navigation}) => {
                 </View>
                 </View>
                 :
-            <View><Text>hello lone wolf</Text></View>
+                <View style={{marginTop:40}}>
+                <Text style={{fontSize:20,fontWeight:700,marginLeft:40}}>Player</Text>
+                <FlatList data={playerOptions} keyExtractor={(item,id)=>item.id.toString()} renderItem={({item})=>
+                  <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,player:item.label}))} style={matchDetails.player === item.label ?styles.select:null}><Text style={ matchDetails.player === item.label ? styles.selectText:styles.noselectText}>{item.label}</Text></TouchableOpacity>
+                } horizontal   contentContainerStyle={styles.flatListContainer}/>
+                <View style={{marginLeft:40,marginTop:40}}>
+                <Text style={{fontSize:20,fontWeight:700}}>Limited ammo</Text>
+            <View style={{display:'flex',flexDirection:'row',gap:100,alignItems:'center',marginTop:20,}}>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,ammo:'yes'}))} style={ matchDetails.ammo == 'yes' ?styles.toggle:null}><Text style={matchDetails.ammo == 'yes' ? styles.toggleText:styles.toggleTextN}>Yes</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,ammo:'No'}))} style={ matchDetails.ammo =='No' ?styles.toggle:null}><Text style={matchDetails.ammo == 'No' ? styles.toggleText:styles.toggleTextN}>No</Text></TouchableOpacity>
+            </View>
+                </View>
+                <View style={{marginLeft:40,marginTop:40}}>
+                <Text style={{fontSize:20,fontWeight:700}}>Headshot</Text>
+            <View style={{display:'flex',flexDirection:'row',gap:100,alignItems:'center',marginTop:20,}}>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,headshot:'yes'}))} style={ matchDetails.headshot == 'yes' ?styles.toggle:null}><Text style={ matchDetails.headshot== 'yes' ? styles.toggleText:styles.toggleTextN}>Yes</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,headshot:'No'}))} style={ matchDetails.headshot =='No' ?styles.toggle:null}><Text style={matchDetails.headshot== 'No' ? styles.toggleText:styles.toggleTextN}>No</Text></TouchableOpacity>
+            </View>
+                </View>
+                <View style={{marginLeft:40,marginTop:40}}>
+                <Text style={{fontSize:20,fontWeight:700}}>Character Skill</Text>
+            <View style={{display:'flex',flexDirection:'row',gap:100,alignItems:'center',marginTop:20,}}>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,skill:'yes'}))} style={ matchDetails.skill == 'yes' ?styles.toggle:null}><Text style={ matchDetails.skill == 'yes' ? styles.toggleText:styles.toggleTextN}>Yes</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,skill:'No'}))} style={ matchDetails.skill =='No' ?styles.toggle:null}><Text style={matchDetails.skill == 'No' ? styles.toggleText:styles.toggleTextN}>No</Text></TouchableOpacity>
+            </View>
+            <View style={{display:'flex',marginTop:40}}>
+                <Text style={{fontSize:20,fontWeight:700}}>
+                    Rounds
+                </Text>
+                <FlatList data={roundOptions} keyExtractor={(item,id)=>item.id.toString()} renderItem={({item})=>
+                  <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,round:item.label}))} style={ matchDetails.round === item.label ?styles.round:null}><Text style={matchDetails.round === item.label ? styles.selectText:styles.noselectText}>{item.label}</Text></TouchableOpacity>
+                } horizontal   contentContainerStyle={styles.roundContainer}/>
+            </View>
+            <View style={{display:'flex',marginTop:40}}>
+                <Text style={{fontSize:20,fontWeight:700}}> 
+                    Game name:
+                </Text>
+                <TextInput placeholder='Give your name' style={styles.textinput} value={matchDetails.gameName} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,gameName:text}))}/>
+               
+            </View>
+            <View style={{display:'flex',marginTop:30}}>
+                <Text style={{fontSize:20,fontWeight:700}}>
+                    Bet amount:
+                </Text>
+                <TextInput placeholder='Enter the amount'  keyboardType="numeric" style={styles.textinput} value={matchDetails.betAmount} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,betAmount:text}))}/>
+            </View>
+                  <TouchableOpacity style={styles.button} onPress={sendData}><Text style={{ fontSize: 25,fontWeight:700,color:'white',textAlign:'center',marginTop:6}}>Publish</Text></TouchableOpacity>
+                </View>
+                </View>
             
         }
         </ScrollView>
@@ -272,7 +339,6 @@ createButton: {
     paddingHorizontal: 16,
     borderRadius: 24,
     alignSelf: "flex-end",
-    marginBottom: 20,
   },
   createButtonText: {
     marginLeft: 8,
@@ -285,8 +351,8 @@ createButton: {
     backgroundColor: "#EEE",
     padding: 8,
     borderRadius: 8,
-    width:160,
-    marginLeft:10
+    width:135,
+    marginLeft:10,
   },
   liveMatchesText: {
     marginLeft: 8,

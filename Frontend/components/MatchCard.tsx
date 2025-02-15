@@ -1,16 +1,31 @@
 import React, {useState} from 'react';
-import {View, Text, StyleSheet, Image, Animated, Button} from 'react-native';
+import {View, Text, StyleSheet, Image, Animated, Button, TouchableOpacity} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
-
+import axios from 'axios'
+import AsyncStorage from '@react-native-async-storage/async-storage';
 const MatchCard = ({match}) => {
-  // Initial opacity is 0
+  const[check,setCheck]=useState('')
+ 
+  const checkUserOrAdmin =async()=>{
+    const matchId = match._id
+    const token = await AsyncStorage.getItem('token')
+await axios.post('http://30.30.6.248:3000/khelmela/checkUserOrAdmin',{matchId},{
+  headers:{
+    Authorization:`${token}`
+  }
+})
+.then((response)=>{
+  console.log(response)
+    setCheck(response.data.message)
+})
+  }
   return (
     <>
-     
             <FlatList data={match.matchDetails} keyExtractor={(item,id)=>id.toString()}
             renderItem={({item})=>(
-              <View style={styles.card}>
+              <TouchableOpacity onPress={checkUserOrAdmin}>
+                <View style={styles.card}>
             <View style={styles.cardContent}>
               <View style={styles.headerRow}>
                 <Text style={styles.title}>Battle</Text>
@@ -22,14 +37,14 @@ const MatchCard = ({match}) => {
               <View style={styles.row}>
                 <View style={styles.column}>
                   <Text style={styles.text}>🎮 Mode:{item.player} </Text>
-                  <Text style={styles.text}>🔫 skills:{item.skill}</Text>
+                  <Text style={styles.text}>🔫 skills:{item.skill }</Text>
                   <Text style={styles.text}>🎯 Headshot:{item.headshot}</Text>
                   <Text style={styles.text}>🗺️ match:{item.match}</Text>
                 </View>
                 <View style={styles.column}>
                   <Text style={styles.text}>💥 Limited Ammo:{item.ammo}</Text>
                   <Text style={styles.text}>🔄 Rounds:{item.round}</Text>
-                  <Text style={styles.text}>💰 Coin:{item.coin} </Text>
+                  <Text style={styles.text}>💰{item.coin ? 'coin:'+item.coin:""} </Text>
                 </View>
               </View>
               <View style={styles.divider} />
@@ -42,6 +57,13 @@ const MatchCard = ({match}) => {
               </View>
             </View>
           </View>
+          {
+            check === 'host'? <View>
+            <Text>this is admin</Text>
+          </View>:<View><Text>this is user</Text></View>
+          }
+         
+              </TouchableOpacity>
             )}/>
     </>
   );

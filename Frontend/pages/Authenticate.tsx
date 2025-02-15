@@ -1,4 +1,4 @@
-import { View, Text,TouchableOpacity,TextInput,StyleSheet, Alert} from 'react-native'
+import { View, Text,TouchableOpacity,TextInput,StyleSheet, Alert, Image, ActivityIndicator} from 'react-native'
 import React, { useEffect, useState } from 'react'
 import Icon from 'react-native-vector-icons/AntDesign'
 import Lock from 'react-native-vector-icons/AntDesign'
@@ -16,6 +16,7 @@ const Authenticate = ({navigation}) => {
   const[error,setError]=useState('')
   const[otp,setOtp]=useState("")
   const[otpmodel,setOtpmodel]=useState(false)
+  const[loading,setLoading]=useState(false)
   const shows=()=>{
     show ? setShow(false):setShow(true)
     show?setValue('Login'):setValue('Signup')
@@ -44,7 +45,11 @@ const Authenticate = ({navigation}) => {
   const login = async(e)=>{
    try {
     e.preventDefault()
-    await axios.post('http://192.168.1.3:3000/khelmela/login',{email,password},{
+    if( !email || !password){
+      return
+    }
+    setLoading(true)
+    await axios.post('http://30.30.6.248:3000/khelmela/login',{email,password},{
       headers:{
         'Content-Type':'application/json'
       }
@@ -54,51 +59,58 @@ const Authenticate = ({navigation}) => {
         setEmail('')
         setPassword('')
         setToken(response.data.data)
-        
         navigation.navigate('Main')
     })
    } catch (error) {
-    setError(error.response.data.message )
+    setError(error?.response?.data?.message || "An unexpected error occurred" )
+   }finally{
+    setLoading(false)
    }
   }
 
   const sendOtp=async()=>{
     try {
-      await axios.post('http://192.168.1.3:3000/khelmela/verifyotp',{otp,username,email,password},{
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
+    setLoading(true)
+      await axios.post('http://30.30.6.248:3000/khelmela/verifyotp',{otp,username,email,password})
       .then((response)=>{
         Alert.alert(response.data.message)
         setEmail('')
         setPassword('')
         setUsername('')
           setOtp('')
+          setError('')
           if(response.status == 200){
             setOtpmodel(false)
             setShow((prev)=>!prev)
           }
       })
     } catch (error) {
-      setError(error.response.data.message )
+      setError(error?.response?.data?.message || "An unexpected error occurred")
+    }finally{
+      setLoading(false)
     }
   }
   const signin= async(e)=>{
 try {
   e.preventDefault()
-  await axios.post('http://192.168.1.3:3000/khelmela/sendOtp',{username,email,password},{
+  if(!username || !email || !password){
+    return
+  }
+  setLoading(true)
+  await axios.post('http://30.30.6.248:3000/khelmela/sendOtp',{username,email,password},{
     headers: {
       'Content-Type': 'application/json',
     },
   })
   .then((response)=>{
-    Alert.alert(response.data.message)
+    setError('')
     setOtpmodel(true)
   })
 } catch (error) {
-  setError(error.response.data.message)
+    setError(error.response.data.message)
   console.log(error.response.data.message)
+}finally{
+  setLoading(false)
 }
   }
 
@@ -114,7 +126,7 @@ try {
         <TextInput placeholder='Enter your password' secureTextEntry style={styles.input} value={password} onChangeText={(text)=>setPassword(text)}></TextInput>
         <Text style={{color:'white',fontSize:20}}>{error}</Text>
         <Text  style={{ fontSize: 15, marginTop: 10,color:'red',marginLeft:140 }}>Forgot Password?</Text>
-        <TouchableOpacity style={styles.button} onPress={login}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Login</Text></TouchableOpacity>
+        <TouchableOpacity style={styles.button} onPress={login}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}} disabled={loading}>Login</Text></TouchableOpacity>
         <Text  style={{ fontSize: 30, marginTop: 20,fontWeight:400,color:'white' }}>OR</Text>
         </View>:<View style={styles.loginContainer}>
       <Text style={{ fontSize: 35, marginTop: 40,fontWeight:900,color:'white' }}>sign in</Text>
@@ -126,7 +138,7 @@ try {
       <TextInput placeholder='Enter your password' secureTextEntry style={styles.input} value={password} onChangeText={(text)=>setPassword(text)}></TextInput>
       <Text style={{color:'white',fontSize:20}}>{error}</Text>
       <Text  style={{ fontSize: 15, marginTop: 10,color:'red',marginLeft:140 }}>Forgot Password?</Text>
-      <TouchableOpacity style={styles.button} onPress={signin}><Text style={{ fontSize: 30,fontWeight:700,color:'white',textAlign:'center'}}>Signup</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={signin}><Text style={styles.signupButton } disabled={loading}>Signup</Text></TouchableOpacity>
       <Text  style={{ fontSize: 30, marginTop: 20,fontWeight:400,color:'white' }}>OR</Text>
       </View>
       }
@@ -134,6 +146,9 @@ try {
       <Text style={{ fontSize: 20,color:'white'}}>Don't have account ?  </Text>
       <TouchableOpacity onPress={shows}><Text style={{color:'orange',fontSize:20}}>{value}</Text></TouchableOpacity>
       </View>
+     {
+      loading ? <View style={styles.overlay}><ActivityIndicator color="#fff"  size={'large'} /></View>:null
+     }
       <Modal isVisible={otpmodel} animationIn="zoomIn" animationOut="zoomOut">
       <View style={styles.modalContainer}>
         {/* Close Button */}
@@ -161,10 +176,10 @@ try {
           value={otp}
           onChangeText={setOtp}
         />
-
+        <Text style={{color:'red'}}>{error}</Text>
         {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton}>
-          <Text style={styles.sendButtonText} onPress={sendOtp}>Send</Text>
+        <TouchableOpacity style={styles.sendButton} disabled={loading}>
+          <Text style={loading ?styles.sendButtonText :styles.buttonpress} onPress={sendOtp}>{loading  ?'...loading':'send'}</Text>
         </TouchableOpacity>
       </View>
     </Modal>
@@ -197,6 +212,16 @@ const styles= StyleSheet.create({
         flexDirection:'column',
         alignItems:'center'
 
+    },
+    overlay:{
+      position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
     },
     emailIcon:{
         position:'absolute',
@@ -265,6 +290,17 @@ const styles= StyleSheet.create({
       fontSize: 16,
       fontWeight: "bold",
     },
+    buttonpress:{
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+    },
+    signupButton:{
+      fontSize: 30,fontWeight:700,color:'white',textAlign:'center'
+    },
+    signupButtonDisable:{
+      backgroundColor:'grey'
+    }
 })
 
 export default Authenticate
