@@ -3,7 +3,8 @@ import {View, Text, StyleSheet, Image, Animated, Button} from 'react-native';
 import {FlatList} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 
-const MatchCard = ({match}) => {
+const 
+MatchCard = ({match}) => {
   // Initial opacity is 0
   return (
     <>

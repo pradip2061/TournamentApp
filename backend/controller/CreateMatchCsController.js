@@ -1,7 +1,7 @@
 const ClashSquad = require("../model/ClashSquadModel");
 
 const createCs = async (req, res) => {
-  const { matchDetails } = req.body;
+  const {matchDetails} = req.body
 const userId = req.user
   if (!userId ||  !matchDetails) {
     return res.status(400).json({ error: "Invalid input data" });

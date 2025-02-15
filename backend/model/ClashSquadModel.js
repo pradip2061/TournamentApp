@@ -56,7 +56,7 @@ const schema = new mongoose.Schema(
       {
        userid: { type: String },
       team2Status: {
-         type: Boolean,
+         type: Boolean ,
          enum: [true, false],
          default: false,
        }}

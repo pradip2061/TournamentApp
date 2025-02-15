@@ -44,7 +44,7 @@ const Authenticate = ({navigation}) => {
   const login = async(e)=>{
    try {
     e.preventDefault()
-    await axios.post('http://192.168.1.3:3000/khelmela/login',{email,password},{
+    await axios.post('http://30.30.17.80:3000/khelmela/login',{email,password},{
       headers:{
         'Content-Type':'application/json'
       }
@@ -64,7 +64,7 @@ const Authenticate = ({navigation}) => {
 
   const sendOtp=async()=>{
     try {
-      await axios.post('http://192.168.1.3:3000/khelmela/verifyotp',{otp,username,email,password},{
+      await axios.post('http://30.30.17.80:3000/khelmela/verifyotp',{otp,username,email,password},{
         headers: {
           'Content-Type': 'application/json',
         },
@@ -87,7 +87,7 @@ const Authenticate = ({navigation}) => {
   const signin= async(e)=>{
 try {
   e.preventDefault()
-  await axios.post('http://192.168.1.3:3000/khelmela/sendOtp',{username,email,password},{
+  await axios.post('http://30.30.17.80:3000/khelmela/sendOtp',{username,email,password},{
     headers: {
       'Content-Type': 'application/json',
     },

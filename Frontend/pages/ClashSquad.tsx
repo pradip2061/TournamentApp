@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
-import { SafeAreaView } from 'react-native-safe-area-context'
+
 import Entypo from 'react-native-vector-icons/Entypo'
 import MatchCard from '../components/MatchCard'
 import { FlatList, TouchableWithoutFeedback } from 'react-native-gesture-handler'
@@ -67,7 +67,7 @@ const ClashSquad = ({navigation}) => {
         e.preventDefault()
      try {
       const token = await AsyncStorage.getItem('token')
-      await axios.post('http://192.168.1.3:3000/khelmela/create',{matchDetails},{
+      await axios.post('http://30.30.17.80:3000/khelmela/create',{matchDetails},{
         headers:{
           Authorization:`${token}`
         }
@@ -84,7 +84,7 @@ const ClashSquad = ({navigation}) => {
       useEffect(()=>{
         try {
           const getMatches = async()=>{
-            await axios.get(`http://192.168.1.3:3000/khelmela/get?page=${page}`)
+            await axios.get(`http://30.30.17.80:3000/khelmela/get?page=${page}`)
             .then((response)=>{
               setData(response.data.card)
             })
@@ -99,7 +99,7 @@ const ClashSquad = ({navigation}) => {
     <View style={styles.container}>
         
        <View style={styles.header}>
-        <AntDesign name="arrowleft" size={24} color="white" onPress={()=>navigation.navigate('Homes')} />
+        <AntDesign name="arrowleft" size={30} color="white" onPress={()=>navigation.navigate('Homes')} />
         <Text style={styles.headerTitle}>Clash Squad Matches</Text>
       </View>
       {/* Search Bar */}

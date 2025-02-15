@@ -4,8 +4,8 @@ import Doller from 'react-native-vector-icons/FontAwesome6';
 import Gamepad from 'react-native-vector-icons/Entypo';
 import TabButton from '../components/TabButton';
 import Card from '../components/Card';
-import FreeFire from './FreeFire';
-import ClashSquad from './ClashSquad';
+import LinearGradient from 'react-native-linear-gradient';
+
 
 const freefire = require('../assets/freefire.jpeg');
 const img1 = require('../assets/ffmap.jpg');
@@ -19,6 +19,12 @@ const Home = ({ navigation }) => {
   const [toggle, setToggle] = useState('freefire');
 
   return (
+    <LinearGradient
+    colors={['#5e00c0', '#8a00d4', '#b100e8']} // Adjust colors to match the design
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={styles.container}
+  >
     <View style={styles.container}>
       <View>
         <View style={styles.header}>
@@ -86,7 +92,7 @@ const Home = ({ navigation }) => {
                   <TouchableOpacity onPress={() => navigation.navigate('Pubg')}>
                     <Card image={pubgfull} name="Full Map Matches" />
                   </TouchableOpacity>
-                  <TouchableOpacity>
+                  <TouchableOpacity onPress={() => navigation.navigate('TDM')} >
                     <Card image={tdm} name="TDM(Team Death)" />
                   </TouchableOpacity>
                 </View>
@@ -96,7 +102,8 @@ const Home = ({ navigation }) => {
           </View>
         </View>
       </View>
-    </View>
+    </View> 
+  </LinearGradient>
   );
 };
 
@@ -104,7 +111,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
     height: '100%',
-    backgroundColor: 'rgb(0,18,64)',
+    
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
