@@ -1,12 +1,13 @@
 import React, {useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image, Animated, Button, TouchableOpacity} from 'react-native';
-import {FlatList} from 'react-native-gesture-handler';
+import {FlatList, TextInput} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 const MatchCard = ({match}) => {
   const[check,setCheck]=useState('')
- 
+  const [customId, setCustomId] = useState("");
+  const [customPassword, setCustomPassword] = useState("");
   useEffect(()=>{
     const checkUserOrAdmin =async()=>{
       const matchId = match._id
@@ -53,21 +54,59 @@ const MatchCard = ({match}) => {
               </View>
               <View style={styles.divider} />
               <View style={styles.footer}>
-                <View style={{display:'flex',gap:80,flexDirection:'row'}}>
                 <Text style={styles.text}>👾 Opponent:{item.gameName}</Text>
-                {
-            check === 'user'? <View>
-            <Text>this is user</Text>
-          </View>:null
-          }
-                </View>
-                
+               
                 <View style={styles.footerRow}>
                   <Text style={styles.prizeText}>🏆 Prize:{item.betAmount*1.5}</Text>
-                  <Text style={styles.entryText}> Entry:{item.betAmount} </Text>
+                  
+                  {
+            check === 'user'? <TouchableOpacity style={{backgroundColor:'green',padding:5}}>
+              <Text style={styles.entryText}> Entry:{item.betAmount} </Text>
+            </TouchableOpacity>:  <TouchableOpacity style={{backgroundColor:'green',padding:5}}>
+              <Text style={styles.entryText}> joined </Text>
+            </TouchableOpacity>
+          }
                 </View>
               </View>
             </View>
+            {
+              check === 'host'?<View style={styles.container}>
+              {/* Left Side - Inputs */}
+              <View style={styles.leftContainer}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Custom ID"
+                  value={customId}
+                  onChangeText={setCustomId}
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Custom Password"
+                  secureTextEntry
+                  value={customPassword}
+                  onChangeText={setCustomPassword}
+                />
+              </View>
+        
+              {/* Right Side - Button */}
+              <View style={styles.rightContainer}>
+                <TouchableOpacity style={styles.button}>
+                  <Text style={styles.buttonText}>Publish</Text>
+                </TouchableOpacity>
+              </View>
+        
+              {/* Bottom Text */}
+              <Text style={styles.footerText}>Submit Your Result</Text>
+            </View>
+            :check === 'userjoined'? <View style={styles.leftContainer}>
+           <View style={styles.input}>
+            <Text>customPassword:</Text>
+          </View>
+            <View style={styles.input}>
+            <Text>customPassword:</Text>
+          </View>
+          </View>
+        :null}
           </View> 
               </TouchableOpacity>
             )}/>
@@ -129,7 +168,8 @@ const styles = StyleSheet.create({
   },
   footerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap:120,
+    alignItems:'center'
   },
   prizeText: {
     fontSize: 16,
@@ -140,8 +180,47 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'lightgreen',
-    marginRight: 40,
   },
+  container: {
+    flex: 1,
+    flexDirection: "row",
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 20,
+    marginBottom:10
+  },
+  leftContainer: {
+    flex: 1,
+  },
+  input: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    paddingHorizontal: 10,
+    marginBottom: 10,
+  },
+  rightContainer: {
+    marginLeft: 20,
+  },
+  button: {
+    backgroundColor: "#007bff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+  },
+  buttonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  footerText: {
+    position: "absolute",
+    bottom: 0,
+    fontSize: 16,
+    fontWeight: "bold",
+    paddingLeft:100,
+  }
 });
 
 export default MatchCard;
@@ -164,3 +243,7 @@ export default MatchCard;
 // const [fadeAnim] = useState(new Animated.Value(0));
 
 // { opacity: fadeAnim }
+
+
+
+

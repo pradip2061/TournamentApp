@@ -105,10 +105,17 @@ if( matchCard){
    return res.status(200).json({
     message:'host'
   })
-}else{
-  return res.status(200).json({
-    message:'user'
-  })
+}else if(!matchCard){
+  const userjoined = await ClashSquad.findOne({_id:matchId,teamopponent: { $elemMatch: { userid: userId } },})
+  if(userjoined){
+    return res.status(200).json({
+      message:'userjoined'
+    })
+  }else{
+    return res.status(200).json({
+      message:'user'
+    })
+  }
 }
 }
 

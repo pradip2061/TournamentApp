@@ -30,17 +30,7 @@ const Authenticate = ({navigation}) => {
       settoken()
     }, [token])
 
-  useEffect(()=>{
-    const checkLoginorNot = async()=>{
-        const tokens = await AsyncStorage.getItem('token')
-        if(!tokens){
-        console.log('login first')
-      }else{
-        navigation.navigate('First')
-      }
-    }
-    checkLoginorNot()
-  },[])
+
 
   const login = async(e)=>{
    try {
