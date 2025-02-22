@@ -47,8 +47,7 @@ const schema = new mongoose.Schema(
         userid: { type: String },
         teamHostStatus: {
           type: Boolean,
-          enum: [true, false],
-          default: false,
+          default: null,
         },
       },
     ],
@@ -56,12 +55,17 @@ const schema = new mongoose.Schema(
       {
        userid: { type: String },
       team2Status: {
-         type: Boolean ,
-         enum: [true, false],
-         default: false,
+         type: Boolean,
+         default:null,
        }}
     ],
-    status: {
+    customId:{
+      type:Number || null
+    },
+    customPassword:{
+      type:Number || null
+    },
+    status:{
       type: String ,
       enum: ["running", "pending","completed"],
       default: "pending",

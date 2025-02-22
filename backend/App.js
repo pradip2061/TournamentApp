@@ -4,11 +4,12 @@ const dotenv = require("dotenv")
 const cors = require('cors')
 const AuthenticateRouter = require('./router/AuthenticateRouter')
 const CreateRouter = require('./router/CreateRouter')
+const CheckResultRouter = require('./router/CheckResultRouter')
 const connectToDatabase = require('./database/index')
 connectToDatabase()
 app.use(express.json())
 require('dotenv').config()
-app.use('/khelmela',AuthenticateRouter,CreateRouter)
+app.use('/khelmela',AuthenticateRouter,CreateRouter,CheckResultRouter)
 app.use(cors())
 
 

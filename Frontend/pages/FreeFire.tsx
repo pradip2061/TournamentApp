@@ -1,16 +1,28 @@
 import { View, Text, StyleSheet,Pressable, TextInput, Modal, Keyboard, TouchableOpacity,ScrollView,Animated } from 'react-native'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import Freefirefullmatchcard from '../components/Freefirefullmatchcard'
-
+import axios from 'axios'
+import { FlatList } from 'react-native-gesture-handler'
 
 
 
 
 const FreeFire = ({navigation}) => {
-
+    const[card,setCard]=useState([])
+  useEffect(()=>{
+    try {
+     const getmatch=async()=>{
+     const match =  await axios.get('http://30.30.6.248:3000/khelmela/getff')
+       setCard(match.data.card)
+   }
+         getmatch()
+    } catch (error) {
+     console.log(error)
+    }
+   },[])
   return(
     
    <View style={styles.container}>
@@ -32,7 +44,15 @@ const FreeFire = ({navigation}) => {
        <Text style={styles.note}>
          Note: All matches are made by the admin everyday in same time
         </Text>
-        <Freefirefullmatchcard />
+        {
+                      card.length !==0 ?  <FlatList
+                      data={card}
+                      scrollEnabled={false} 
+                      keyExtractor={(item,id) =>id.toString() }
+                      renderItem={({ item }) =>  <Freefirefullmatchcard  matches ={item}/>}
+                    /> :null
+                    }
+       
 </View>
   )
 }

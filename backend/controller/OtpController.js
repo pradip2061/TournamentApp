@@ -3,7 +3,7 @@ const sendOtpEmail = require("../config/nodemailer");
 const signUp = require("../model/signUpModel");
 const bcrypt = require('bcrypt')
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
-
+const OtpModel = require("../model/OtpModel")
 const requestOtp = async (req, res) => {
   try {
     const { email,password,username } = req.body;
@@ -37,11 +37,15 @@ const requestOtp = async (req, res) => {
         })
         return
     }
+    const emailid = await OtpModel.find({email:email})
+ if(emailid.length >= 3){
+   return res.status(400).json({message:'your today otp limit is exceed'})
+ }
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // Expiry in 5 minutes
 
     await Otp.create({ email, otp, expiresAt });
-
+   
     await sendOtpEmail(email, otp);
 
     res.status(200).json({ message: "OTP sent to your email" });
@@ -75,6 +79,17 @@ const verifyOtpandSignup = async (req, res) => {
     ],
         password:await bcrypt.hash(password,11),
         matchId:"",
+        Loss:{
+          pubg:[
+
+          ],
+          Freefire:[
+
+          ],
+          cod:[
+            
+          ]
+        }
 
     })
       res.status(200).json({ message: "OTP verified successfully" });

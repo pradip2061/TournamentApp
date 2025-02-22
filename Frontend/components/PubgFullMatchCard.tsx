@@ -5,6 +5,7 @@ const miramar = require('../assets/miramar.jpg')
 const erangle = require('../assets/erangle.jpg')
 const sanhok = require('../assets/sanhok.jpg')
 const PubgFullMatchCard = () => {
+  
   return (
     <View style={styles.container}>
       <View style={{display:'flex',flexDirection:'row',alignItems:'center',gap:20}}>

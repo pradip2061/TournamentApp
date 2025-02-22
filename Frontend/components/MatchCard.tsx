@@ -1,16 +1,28 @@
 import React, {useEffect, useState} from 'react';
-import {View, Text, StyleSheet, Image, Animated, Button, TouchableOpacity} from 'react-native';
+import {View, Text, StyleSheet, Image, Animated, Button, TouchableOpacity, Modal, Alert} from 'react-native';
 import {FlatList, TextInput} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Clipboard from "@react-native-clipboard/clipboard";
+import ModalNotify from './ModalNotify';
 const MatchCard = ({match}) => {
   const[check,setCheck]=useState('')
   const [customId, setCustomId] = useState("");
   const [customPassword, setCustomPassword] = useState("");
+  const [modalVisible, setModalVisible] = useState(false);
+  const[error,setError]=useState('')
+  const[message,setMessage]=useState('')
+  const[publish,setPublish]=useState('')
+  const[modalReset,setModalReset]=useState(false)
+  const[modalDidYouWin,setModalDidYouWin]=useState(false)
+  const customid = match.customId
+  const custompassword = match.customPassword
+  const[notifyModel,setNotifyModel]=useState(false)
+  const[result,setResult]=useState('')
+  const matchId = match._id
   useEffect(()=>{
     const checkUserOrAdmin =async()=>{
-      const matchId = match._id
       const token = await AsyncStorage.getItem('token')
   await axios.post('http://30.30.6.248:3000/khelmela/checkUserOrAdmin',{matchId},{
     headers:{
@@ -18,18 +30,193 @@ const MatchCard = ({match}) => {
     }
   })
   .then((response)=>{
-    console.log(response)
       setCheck(response.data.message)
   })
     }
     checkUserOrAdmin()
-  },[])
- 
+  },[check,message])
+
+
+   const checking =async()=>{
+        try {
+          setError('')
+          setMessage('')
+         const token = await AsyncStorage.getItem('token')
+         console.log(token)
+         await axios.post('http://30.30.6.248:3000/khelmela/check',{},{
+           headers:{
+             Authorization:`${token}`
+           }
+         })
+         .then((response)=>{
+           if(response.status == 200){
+             setModalVisible(true)
+             setMessage('user is free')
+           }else{
+            setModalVisible(false)
+           }
+         })
+        } catch (error) {
+         console.log(error)
+         setError(error.response.data.message)
+        }finally{
+         notify()
+        }
+       }
+
+       const notify=()=>{
+        setNotifyModel(true)
+        setTimeout(()=>{
+          setNotifyModel(false)
+        },900)
+       }
+
+       const customIdAndPassword =async(e)=>{
+        e.preventDefault()
+        try {
+         await axios.post('http://30.30.6.248:3000/khelmela/setpass',{customId,customPassword,matchId})
+         .then((response)=>{
+           if(response.status == 200){
+           setMessage(response.data.message)
+           }
+         })
+        } catch (error) {
+         console.log(error)
+         setError(error.response.data.message)
+        }
+       }
+       const joinuser =async()=>{
+        try {
+          setError('')
+          setMessage('')
+         const token = await AsyncStorage.getItem('token')
+         console.log(token)
+         await axios.post('http://30.30.6.248:3000/khelmela/join',{matchId},{
+           headers:{
+             Authorization:`${token}`
+           }
+         })
+         .then((response)=>{
+           if(response.status == 200){
+             setModalVisible(false)
+             setMessage(response.data.message)
+             
+           }else{
+            setModalVisible(true)
+           }
+         })
+        } catch (error) {
+         console.log(error)
+         setError(error.response.data.message)
+        } finally{
+          notify()
+        }
+       }
+      
+       useEffect(()=>{
+        const checkpublish =async()=>{
+         try {
+          await axios.post('http://30.30.6.248:3000/khelmela/checkpublish',{matchId})
+          .then((response)=>{
+           if(response.status == 200){
+             setPublish(response.data.message)
+           }
+           }
+         )
+         } catch (error) {
+          setError(error.response.data.message)
+         }
+          }
+          checkpublish()
+       },[message])
+       const copyToClipboardId = () => {
+        Clipboard.setString(match.customId.toString());
+      };
+      const copyToClipboardPass = () => {
+        Clipboard.setString(match.customPassword.toString());
+      };
+      const reset =async()=>{
+       try {
+        setError('')
+          setMessage('')
+        await axios.post('http://localhost:3000/khelmela/changecustom',{matchId,customId,customPassword})
+        .then((response)=>{
+          if(response.status == 200){
+            setPublish(response.data.message)
+            setModalReset(false)
+          }
+          })
+       } catch (error) {
+        setError(error.response.data.message)
+       }finally{
+        notify()
+       }
+      }
+      const submitresultIfYes = async()=>{
+        try {
+        const boolean = false
+        const token = await AsyncStorage.getItem('token')
+await axios.post('http://30.30.6.248:3000/khelmela/checkBoolean',{
+  matchId,
+  boolean
+},{
+  headers:{
+    Authorization:`${token}`
+  }
+})
+.then((response)=>{
+  setMessage(response.data.message)
+})
+        } catch (error) {
+          setError(error.data.response.message)
+        }finally{
+          setModalDidYouWin(false)
+          notify()
+        }
+      }
+      const submitresultIfNo = async()=>{
+      try {
+        const boolean = false
+        const token = await AsyncStorage.getItem('token')
+await axios.post('http://30.30.6.248:3000/khelmela/checkBoolean',{
+  matchId,
+boolean
+},{
+  headers:{
+    Authorization:`${token}`
+  }
+})
+.then((response)=>{
+  setMessage(response.data.message)
+})
+      } catch (error) {
+        setError(error.response.data.message)
+      }finally{
+        setModalDidYouWin(false)
+        notify()
+      }
+      }
+
+      useEffect(()=>{
+        const checkresult = async()=>{
+try {
+  await axios.post('http://30.30.6.248:3000/khelmela/checkresult',{matchId})
+  .then((response)=>{
+    setResult(response.data.message)
+    console.log(response.data.message)
+  })
+} catch (error) {
+  setError(error.response.data.message)
+  notify()
+}
+        }
+        checkresult()
+      },[])
   return (
     <>
-            <FlatList data={match.matchDetails} keyExtractor={(item,id)=>id.toString()}
+            <FlatList data={match.matchDetails}  scrollEnabled={false}  keyExtractor={(item,id)=>id.toString()}
             renderItem={({item})=>(
-              <TouchableOpacity>
+              <TouchableOpacity activeOpacity={1}>
                 <View style={styles.card}>
             <View style={styles.cardContent}>
               <View style={styles.headerRow}>
@@ -60,54 +247,134 @@ const MatchCard = ({match}) => {
                   <Text style={styles.prizeText}>🏆 Prize:{item.betAmount*1.5}</Text>
                   
                   {
-            check === 'user'? <TouchableOpacity style={{backgroundColor:'green',padding:5}}>
+            check === 'user'? <TouchableOpacity  activeOpacity={1} style={{backgroundColor:'green',padding:5}} onPress={checking}>
               <Text style={styles.entryText}> Entry:{item.betAmount} </Text>
-            </TouchableOpacity>:  <TouchableOpacity style={{backgroundColor:'green',padding:5}}>
+            </TouchableOpacity>: check==='userjoined'? <TouchableOpacity style={{backgroundColor:'green',padding:5}}>
               <Text style={styles.entryText}> joined </Text>
-            </TouchableOpacity>
+            </TouchableOpacity>:null
           }
                 </View>
               </View>
             </View>
             {
-              check === 'host'?<View style={styles.container}>
-              {/* Left Side - Inputs */}
-              <View style={styles.leftContainer}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Custom ID"
-                  value={customId}
-                  onChangeText={setCustomId}
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Custom Password"
-                  secureTextEntry
-                  value={customPassword}
-                  onChangeText={setCustomPassword}
-                />
-              </View>
+              check === 'host'?
+                <View style={styles.container}>
+                {
+                  publish === 'publish'? <><View style={styles.leftContainer}>
+                  <TouchableOpacity onPress={copyToClipboardId}>
+                  <View style={styles.inputs}>
+                  <Text>customId:{match.customId}</Text>
+                  </View>
+                  </TouchableOpacity>
+                  <TouchableOpacity  onPress={copyToClipboardPass}>
+                  <View style={styles.inputs}>
+                  <Text >customId:{match.customPassword}</Text>
+                  </View>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.rightContainer}>
+                   <TouchableOpacity style={styles.button}>
+                    <Text style={styles.buttonText}>Reset</Text>
+                  </TouchableOpacity>               
+                </View></>:<> <View style={styles.leftContainer}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Custom ID"
+                     keyboardType='numeric'
+                    value={customId}
+                    onChangeText={setCustomId}
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Custom Password"
+                    secureTextEntry
+                    keyboardType='numeric'
+                    value={customPassword}
+                    onChangeText={setCustomPassword}
+                  />
+                </View>
+          
+                <View style={styles.rightContainer}>
+                   <TouchableOpacity style={styles.button}>
+                    <Text style={styles.buttonText} onPress={customIdAndPassword}>Publish</Text>
+                  </TouchableOpacity>               
+                </View></>
+                }
+                {
+                  result === 'booleanNotMatch'?<Text>hello hai</Text>:result === 'booleanMatch'?<Text></Text>:
+                  result ==='noresponse'?<TouchableOpacity onPress={()=>setModalDidYouWin(true)} style={styles.footerText}>
+                  <Text style={{marginLeft:25,textDecorationLine:'underline'}}>Submit Your Result</Text>
+                  </TouchableOpacity>:null
+                }
         
-              {/* Right Side - Button */}
-              <View style={styles.rightContainer}>
-                <TouchableOpacity style={styles.button}>
-                  <Text style={styles.buttonText}>Publish</Text>
-                </TouchableOpacity>
-              </View>
-        
-              {/* Bottom Text */}
-              <Text style={styles.footerText}>Submit Your Result</Text>
             </View>
             :check === 'userjoined'? <View style={styles.leftContainer}>
-           <View style={styles.input}>
-            <Text>customPassword:</Text>
+           <TouchableOpacity onPress={copyToClipboardId}>
+           <View style={styles.inputs}>
+            <Text>customId:{match.customId}</Text>
           </View>
-            <View style={styles.input}>
-            <Text>customPassword:</Text>
+          </TouchableOpacity>
+          <TouchableOpacity onPress={copyToClipboardPass}>
+            <View style={styles.inputs}>
+            <Text>customPassword:{match.customPassword}</Text>
           </View>
+          </TouchableOpacity>
+          {
+                  result === 'booleanNotMatch'? <Text>result submitted</Text>:result === 'booleanMatch'?<Text>upload your match photo</Text>:
+                  result ==='noresponse'?<TouchableOpacity onPress={()=>setModalDidYouWin(true)} style={styles.footerText}>
+                  <Text style={{marginLeft:25,textDecorationLine:'underline'}}>Submit Your Result</Text>
+                  </TouchableOpacity>:null
+                }
           </View>
         :null}
           </View> 
+          <Modal transparent animationType="slide" visible={modalVisible}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalText}>Are you sure?</Text>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={[styles.button, styles.noButton]} onPress={()=>setModalVisible(false)}>
+              <Text style={styles.buttonText}>No</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.yesButton]} onPress={joinuser}>
+              <Text style={styles.buttonText}>Yes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+    <Modal transparent animationType="slide" visible={modalDidYouWin}>
+      <View style={styles.modalContainer}>
+        <View style={styles.modalContent}>
+          <Text style={styles.modalText}>Did you Win Match?</Text>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity style={[styles.button, styles.noButton]} onPress={submitresultIfNo}>
+              <Text style={styles.buttonText}>No</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={[styles.button, styles.yesButton]} onPress={submitresultIfYes}>
+              <Text style={styles.buttonText}>Yes</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+    <Modal visible={modalReset} transparent animationType="slide">
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{ width: "80%", padding: 20, backgroundColor: "white", borderRadius: 10, alignItems: "center" }}>
+          <TextInput placeholder="Custom ID" value={customid} onChangeText={setCustomId} style={{ width: "100%", borderWidth: 1, marginBottom: 10, padding: 10 }} />
+          <TextInput placeholder="Custom Password" value={custompassword} secureTextEntry onChangeText={setCustomPassword} style={{ width: "100%", borderWidth: 1, padding: 10 }} />
+          <View style={{ flexDirection: "row", marginTop: 10 }}>
+            <TouchableOpacity onPress={reset} style={{ backgroundColor: "green", padding: 10, margin: 5 }}>
+              <Text style={{ color: "white" }}>Yes</Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={()=>setModalReset(false)} style={{ backgroundColor: "red", padding: 10, margin: 5 }}>
+              <Text style={{ color: "white" }}>No</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
+    <ModalNotify visible={notifyModel} error={error} message={message}/>
               </TouchableOpacity>
             )}/>
     </>
@@ -118,13 +385,14 @@ const styles = StyleSheet.create({
   card: {
     marginVertical: 8,
     borderRadius: 15,
-    overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: {width: 0, height: 5},
     shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
     backgroundColor: 'white',
+    height:470,
+    paddingBottom:20
   },
   cardContent: {
     padding: 10,
@@ -194,12 +462,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   input: {
+    width:136,
     height: 50,
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 10,
+  },
+  inputs: {
+    width:180,
+    height:40,
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 5,
+    paddingLeft:5,
+    display:'flex',
+    justifyContent:'center',
+    marginLeft:10,
+    marginTop:10
   },
   rightContainer: {
     marginLeft: 20,
@@ -216,11 +497,20 @@ const styles = StyleSheet.create({
   },
   footerText: {
     position: "absolute",
-    bottom: 0,
+    bottom: -20,
     fontSize: 16,
     fontWeight: "bold",
     paddingLeft:100,
-  }
+    marginTop:20
+  },
+  openButton: { backgroundColor: "#007bff", padding: 10, borderRadius: 5 },
+  openButtonText: { color: "#fff", fontSize: 16 },
+  modalContainer: { flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "rgba(0,0,0,0.5)" },
+  modalContent: { backgroundColor: "#fff", padding: 20, borderRadius: 10, width: 300, alignItems: "center" },
+  modalText: { fontSize: 18, marginBottom: 20 },
+  buttonContainer: { flexDirection: "row", width: "100%", justifyContent: "space-between" },
+  noButton: { backgroundColor: "#dc3545" },
+  yesButton: { backgroundColor: "#28a745" },
 });
 
 export default MatchCard;
@@ -243,7 +533,5 @@ export default MatchCard;
 // const [fadeAnim] = useState(new Animated.Value(0));
 
 // { opacity: fadeAnim }
-
-
 
 

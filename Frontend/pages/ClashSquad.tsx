@@ -6,7 +6,7 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 import Entypo from 'react-native-vector-icons/Entypo'
 import MatchCard from '../components/MatchCard'
-import { FlatList, TouchableWithoutFeedback } from 'react-native-gesture-handler'
+import { FlatList} from 'react-native-gesture-handler'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import { Alert } from 'react-native'
@@ -67,6 +67,10 @@ const ClashSquad = ({navigation}) => {
       const sendData =async(e)=>{
         e.preventDefault()
      try {
+      if(!matchDetails.betAmount || !matchDetails.gameName){
+        modal('fill All fields')
+        return
+      }
       const token = await AsyncStorage.getItem('token')
       await axios.post('http://30.30.6.248:3000/khelmela/create',{matchDetails},{
         headers:{
@@ -113,11 +117,11 @@ const ClashSquad = ({navigation}) => {
         } catch (error) {
           Alert.alert(error.response.data.message)
         }
-      },[trigger,page])
+      },[trigger])
+      
   return (
-    
+    <ScrollView>
     <View style={styles.container}>
-        
        <View style={styles.header}>
         <AntDesign name="arrowleft" size={30} color="white" onPress={()=>navigation.navigate('Homes')} />
         <Text style={styles.headerTitle}>Clash Squad Matches</Text>
@@ -143,11 +147,12 @@ const ClashSquad = ({navigation}) => {
         <Entypo name="game-controller" size={24} color="black" />
         <Text style={styles.liveMatchesText}>Live Matches</Text>
       </View>
-      <View style={{paddingBottom:220}}>
+      <View style={{paddingBottom:10}}>
                   <View>
                     {
                       data.length !==0 ?  <FlatList
                       data={data}
+                      scrollEnabled={false} 
                       keyExtractor={(item,id) =>id.toString() }
                       renderItem={({ item }) => <MatchCard match={item} />}
                     /> :<ShimmerBox/>
@@ -286,11 +291,12 @@ const ClashSquad = ({navigation}) => {
     >
       <View style={styles.modalContainer}>
         <View style={styles.modalContent}>
-          <Text style={styles.title}>{message}</Text>
+        <Text style={styles.title}>{message}</Text>
         </View>
       </View>
     </Modal>
     </View>
+    </ScrollView>
   )
 }
 const styles = StyleSheet.create({
@@ -298,6 +304,7 @@ const styles = StyleSheet.create({
       flex: 1,
       backgroundColor: 'rgb(0,18,64)',
       padding: 16,
+      paddingBottom:190
     },
     header: {
       flexDirection: "row",
@@ -450,13 +457,15 @@ createButton: {
     borderRadius:20,
     backgroundColor:'orange',
     marginTop:40
-},  modalContainer: {
+},  
+modalContainer: {
   flex: 1,
   alignItems: 'center',
+  marginTop:650
 // Semi-transparent background
 },
 modalContent: {
-  width: 300,
+  width: 320,
   padding: 20,
   backgroundColor: 'rgb(255, 255, 255)',
   borderRadius: 10,

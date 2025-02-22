@@ -93,8 +93,11 @@ try {
     },
   })
   .then((response)=>{
-    setError('')
+    if(response.status == 200){
+      setError('')
     setOtpmodel(true)
+    }
+    
   })
 } catch (error) {
     setError(error.response.data.message)

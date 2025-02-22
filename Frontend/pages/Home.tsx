@@ -65,14 +65,14 @@ const Home = ({ navigation }) => {
           </Text>
           <View style={styles.box}>
             <View style={{ display: 'flex', flexDirection: 'row', justifyContent: 'center', marginTop: 20, gap: 30 }}>
-              <TouchableOpacity onPress={() => setToggle('freefire')}>
-                <TabButton images={freefire} />
+              <TouchableOpacity onPress={()=>setToggle('freefire')} style={toggle === 'freefire'?styles.tabbutton:null}>
+                <TabButton images={freefire} toggleset={toggle}/>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setToggle('pubg')}>
-                <TabButton images={img2} />
+              <TouchableOpacity onPress={() => setToggle('pubg')} style={toggle === 'pubg'?styles.tabbutton:null}>
+                <TabButton images={img2} toggleset={toggle}/>
               </TouchableOpacity>
-              <TouchableOpacity onPress={() => setToggle('cod')}>
-                <TabButton images={img3} />
+              <TouchableOpacity onPress={() => setToggle('cod')} style={toggle === 'cod'?styles.tabbutton:null}>
+                <TabButton images={img3} toggleset={toggle} />
               </TouchableOpacity>
             </View>
             <Text style={styles.button}>SELECT MODE</Text>
@@ -121,6 +121,18 @@ const styles = StyleSheet.create({
     height: 80,
     borderRadius: 30,
   },
+
+  tabbutton:{
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    borderWidth:4,
+    borderColor:'black',
+    display:'flex',
+    alignItems:'center',
+    justifyContent:'center',
+  }
+,
   title: {
     color: 'white',
     fontSize: 25,
