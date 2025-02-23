@@ -1,23 +1,38 @@
-const express = require('express')
-const app =express()
-const dotenv = require("dotenv")
-const cors = require('cors')
-const AuthenticateRouter = require('./router/AuthenticateRouter')
-const CreateRouter = require('./router/CreateRouter')
-const CheckResultRouter = require('./router/CheckResultRouter')
-const connectToDatabase = require('./database/index')
-connectToDatabase()
-app.use(express.json())
-require('dotenv').config()
-app.use('/khelmela',AuthenticateRouter,CreateRouter,CheckResultRouter)
-app.use(cors())
+const express = require("express");
+const dotenv = require("dotenv");
+const cors = require("cors");
+const connectToDatabase = require("./database/db");
+const AuthenticateRouter = require("./router/user/AuthenticateRouter");
+const Admin = require("./router/admin/AdminRouter");
+const CreateRouter = require("./router/user/CreateRouter");
 
+const {
+  router: ChatRouter,
+  setupChatSocket,
+} = require("./router/user/chatRoutes");
+dotenv.config();
+const app = express();
+connectToDatabase();
 
+app.use(express.json());
+app.use(cors());
+app.use("/khelmela", AuthenticateRouter, CreateRouter, ChatRouter);
+app.use("/khelmela/admin", Admin);
 
-app.listen(3000, '0.0.0.0',()=>{
-    console.log('the project is running at 3000')
-})
+const server = require("http").createServer(app);
+const { Server } = require("socket.io");
 
-// {
-//     origin:'http://localhost:8081'
-// }
+const io = new Server(server, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["Content-Type"],
+  },
+});
+setupChatSocket(io);
+
+// Start the server
+const PORT = process.env.SERVER_PORT || 3000;
+server.listen(PORT, "0.0.0.0", () => {
+  console.log(`Server running at ${process.env.IP || "localhost"}:${PORT}`);
+});
