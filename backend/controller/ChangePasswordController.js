@@ -1,0 +1,87 @@
+const signUp = require("../model/signUpModel")
+const mongoose = require('mongoose')
+const bcrypt = require('bcrypt')
+const ClashSquad = require("../model/ClashSquadModel")
+const changePassword=async(req,res)=>{
+try {
+const userid =req.user
+const{oldPassword,newPassword}=req.body
+if(!oldPassword || !newPassword){
+    res.status(400).json({
+        message:'plz fill the all field!'
+    })
+    return
+}
+const cleanUserId = userid.trim();
+const objectId = new mongoose.Types.ObjectId(cleanUserId);
+const NewPassword = await bcrypt.hash(newPassword,11)
+const userinfo = await signUp.findById(objectId)
+if(!userinfo){
+    res.status(400).json({
+        message:'user not signup!'
+    })
+    return
+}
+const ispassword = await bcrypt.compare(oldPassword,userinfo.password)
+if(!ispassword){
+res.status(400).json({
+    message:'oldPassword is wrong!'
+})
+return
+}
+userinfo.password = NewPassword
+ await userinfo.save()
+res.status(200).json({
+    message:'password change successfully'
+})
+} catch (error) {
+    res.status(400).json({
+        message:error.message
+    })
+}
+}
+
+const customIdAndPassword=async(req,res)=>{
+const{customId,customPassword,matchId}=req.body
+const match = await ClashSquad.findOne({_id:matchId})
+match.customId=customId
+match.customPassword=customPassword
+await match.save()
+
+res.status(200).json({
+    message:'data added successfully'
+})
+}
+
+const checkPublishOrNot=async(req,res)=>{
+const{matchId}=req.body
+ const match = await ClashSquad.findOne({_id:matchId})
+ if(!match.customId || !match.customPassword){
+    return res.status(200).json({
+        message:'notpublish'
+    })
+ }
+ res.status(200).json({
+    message:'publish'
+ })
+
+}
+
+const reset =async(req,res)=>{
+ const{matchId,customId,customPassword}=req.body
+ const match = await ClashSquad.findOne({_id:matchId})
+ if(!match){
+   return res.status(400).json({message:'no matchcard found'})
+ }
+ if(customId !== match.customId){
+    match.customId = matchId
+    await match.save()
+    res.status(200).json({message:'customId changed!'})
+ } else if(customPassword !== match.customPassword){
+    match.customPassword=customPassword
+    await match.save()
+    res.status(200).json({message:'customPassword changed!'})
+ }
+}
+
+module.exports={changePassword,customIdAndPassword,checkPublishOrNot,reset}
