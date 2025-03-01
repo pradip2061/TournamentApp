@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet,Pressable, TextInput, Modal, Keyboard, TouchableOpacity,ScrollView,Animated } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -8,15 +8,20 @@ import axios from 'axios'
 import { FlatList } from 'react-native-gesture-handler'
 import ShimmerBox from '../components/ShimmerBox'
 import PubgFullMatchCard from '../components/PubgFullMatchCard';
+import { CheckAdminContext } from './ContextApi'
 const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
 const erangle = require('../assets/erangle.jpg');
 const sanhok = require('../assets/sanhok.jpg');
 const Pubg = ({navigation}) => {
   const[data,setData]=useState([])
+  const{checkrole,checkadmin}=useContext(CheckAdminContext);
+      useEffect(()=>{
+        checkrole()
+      },[])
   useEffect(()=>{
     const getmatchCard = ()=>{
-      axios.get('http://30.30.6.248:3000/khelmela/getpubg')
+      axios.get(`${process.env.baseUrl}/khelmela/getpubg`)
       .then((response)=>{
         setData(response.data.data)
         console.log(data)
@@ -44,6 +49,12 @@ const Pubg = ({navigation}) => {
        <Text style={styles.note}>
          Note: All matches are made by the admin everyday in same time
         </Text>
+                {
+                  checkadmin === "admin"?
+                          <TouchableOpacity>
+                          <Text>admin</Text>
+                        </TouchableOpacity>:<Text>hello user</Text>
+                }
         <FlatList data={data} keyExtractor={(item)=>item.id}
         renderItem={({item})=>(<PubgFullMatchCard matches={item} key={item._id}/>)} contentContainerStyle={{ gap: 30,paddingBottom:30 }} scrollEnabled={false}/>
 </ScrollView>

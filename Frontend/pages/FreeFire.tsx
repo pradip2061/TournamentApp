@@ -1,22 +1,29 @@
 import { View, Text, StyleSheet,Pressable, TextInput, Modal, Keyboard, TouchableOpacity,ScrollView,Animated } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 import Freefirefullmatchcard from '../components/Freefirefullmatchcard'
 import axios from 'axios'
-import { FlatList } from 'react-native-gesture-handler'
+import { FlatList, TouchableWithoutFeedback } from 'react-native-gesture-handler'
 import ShimmerBox from '../components/ShimmerBox'
+import LinearGradient from 'react-native-linear-gradient'
+import { CheckAdminContext } from './ContextApi'
 
 
 
 
 const FreeFire = ({navigation}) => {
     const[card,setCard]=useState([])
+    const{checkrole,checkadmin}=useContext(CheckAdminContext);
+    const[createModal,setCreateModal]=useState(false)
+    useEffect(()=>{
+      checkrole()
+    },[])
   useEffect(()=>{
     try {
      const getmatch=async()=>{
-     const match =  await axios.get('http://30.30.6.248:3000/khelmela/getff')
+     const match =  await axios.get(`${process.env.baseUrl}/khelmela/getff`)
        setCard(match.data.card)
    }
          getmatch()
@@ -25,9 +32,13 @@ const FreeFire = ({navigation}) => {
     }
    },[])
   return(
-    
-   <View style={styles.container}>
-        
+    <ScrollView style={styles.container}>
+    <LinearGradient
+    colors={['#5e00c0', '#8a00d4', '#b100e8']} // Adjust colors to match the design
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={styles.linearColor}
+  >
         <View style={styles.header}>
          <AntDesign name="arrowleft" size={30} color="white"   onPress={()=>navigation.navigate('Homes')} /> 
          <Text style={styles.headerTitle}> Full Map Matches</Text>
@@ -46,6 +57,13 @@ const FreeFire = ({navigation}) => {
          Note: All matches are made by the admin everyday in same time
         </Text>
         {
+          checkadmin === "admin"?
+                  <TouchableOpacity style={styles.createButton}  onPress={()=>setCreateModal(true)}>
+                          <Ionicons name="add-circle-outline" size={24} color="white" />
+                          <Text style={styles.createButtonText}>Create</Text>
+                        </TouchableOpacity>:<Text>hello user</Text>
+        }
+        {
                       card.length !==0 ?  <FlatList
                       data={card}
                       scrollEnabled={false} 
@@ -53,24 +71,58 @@ const FreeFire = ({navigation}) => {
                       renderItem={({ item }) =>  <Freefirefullmatchcard  matches ={item}/>}
                     /> :<ShimmerBox/>
                     }
-</View>
+                    <Modal visible={createModal} animationType='fade' transparent >
+  <TouchableWithoutFeedback onPress={()=>setCreateModal(false)}>
+  <View style={{ flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)"}} >
+      <TouchableWithoutFeedback onPress={()=>{}}>
+    <Text>
+      hello guys
+    </Text>
+    </TouchableWithoutFeedback>
+  </View>
+  </TouchableWithoutFeedback>
+</Modal>
+</LinearGradient>
+</ScrollView>
   )
 }
 
 const styles = StyleSheet.create({
     container: {
-      
-      backgroundColor: 'rgb(0,18,64)',
-      height:'100%'
-      
+      width:"100%",
+      height:'100%',
+      paddingRight:15
+    },
+    linearColor:{
+flex:1,
     },
     header: {
       flexDirection: "row",
       alignItems: "center",
       marginTop: 20,  
       marginRight: 100,
-      marginLeft:10
+      marginLeft:60
     },
+    createButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      backgroundColor: "orange",
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+      borderRadius: 24,
+      alignSelf: "flex-end",
+      marginBottom:10,
+      marginRight:20
+    },
+    createButtonText: {
+      marginLeft: 8,
+      fontWeight: 600,
+      color:'white',
+      fontSize:17
+    } ,
     headerTitle: {
       fontSize: 24,
       fontWeight: "bold",

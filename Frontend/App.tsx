@@ -9,12 +9,14 @@ import AddMoney from './pages/AddMoney';
 import PrivateChat from './pages/PrivateChat';
 import TokenCheck from './pages/TokenCheck';
 import { navigationRef } from './pages/NavigationRef';
+import { ContextApi } from './pages/ContextApi';
 
 
 const App = () => {
   const Stack = createStackNavigator();
 
   return (
+    <ContextApi>
     <NavigationContainer ref={navigationRef}>
       <TokenCheck/>
       <Stack.Navigator>
@@ -42,6 +44,7 @@ const App = () => {
         <Stack.Screen name="AddMoney" component={AddMoney} />
       </Stack.Navigator>
     </NavigationContainer>
+    </ContextApi>
   );
 };
 

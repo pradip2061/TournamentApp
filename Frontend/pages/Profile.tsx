@@ -1,5 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import LinearGradient from 'react-native-linear-gradient';
 import React, { useEffect, useState } from 'react';
 import {
   View,
@@ -30,7 +31,7 @@ const Profile = () => {
     const getProfile =async()=>{
     const token =await AsyncStorage.getItem('token')
       try {
-         axios.get('http://30.30.6.248:3000/khelmela/getprofile',{
+         axios.get(`${process.env.baseUrl}/khelmela/getprofile`,{
           headers:{
             Authorization:`${token}`
           }
@@ -61,7 +62,7 @@ setVisible(false)
     setMessage('')
  try {
   const token =await AsyncStorage.getItem('token')
- axios.post('http://30.30.6.248:3000/khelmela/updateprofile',{username},{
+ axios.post(`${process.env.baseUrl}/khelmela/updateprofile`,{username},{
   headers:{
     Authorization:`${token}`
   }
@@ -81,7 +82,7 @@ setError('')
     setMessage('')
     try {
      const token =await AsyncStorage.getItem('token')
-    axios.post('http://30.30.6.248:3000/khelmela/pubgname',{pubgName,pubgUid},{
+    axios.post(`${process.env.baseUrl}/khelmela/pubgname`,{pubgName,pubgUid},{
      headers:{
        Authorization:`${token}`
      }
@@ -102,7 +103,7 @@ setError('')
       setMessage('')
           try {
            const token =await AsyncStorage.getItem('token')
-          axios.post('http://30.30.6.248:3000/khelmela/freefirename',{freefireName,freefireUid},{
+          axios.post(`${process.env.baseUrl}/khelmela/freefirename`,{freefireName,freefireUid},{
            headers:{
              Authorization:`${token}`
            }
@@ -117,7 +118,15 @@ setError('')
           }
            }
   return (
+    
+    <LinearGradient
+    colors={['#5e00c0', '#8a00d4', '#b100e8']} // Adjust colors to match the design
+    start={{ x: 0, y: 0 }}
+    end={{ x: 1, y: 1 }}
+    style={styles.linearColor}
+  >
     <ScrollView contentContainerStyle={styles.container}>
+      
       <Text style={styles.header}>Profile</Text>
 
       {/* Profile Section */}
@@ -194,15 +203,19 @@ setError('')
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor:"#5D0EAD"
+    padding:20
   },
-
+  linearColor:{
+   flex:1,
+   justifyContent: "center",
+   alignItems: "center",
+  },
   header: {
     fontWeight:'bold',
     fontSize:25,
@@ -211,17 +224,16 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     alignItems: 'center',
-    marginTop:50,
+    marginTop:30,
     backgroundColor:'white',
     width:320,
     borderRadius:25,
-    borderWidth:2,
     marginLeft:20
   },
   profileImageContainer: {
     alignItems: 'center',
     position: 'relative',
-    marginTop:40,
+    marginTop:20,
   },
   profileImage: {
     width: 80,

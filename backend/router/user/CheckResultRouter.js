@@ -7,5 +7,5 @@ router2.post('/checkuserff',Authverify,checkuserJoinFF)
 router2.post('/checkmatchType',checkmatchtypeTdm)
 router2.post('/checkmatchTypePubg',checkmatchtypePubg)
 router2.post('/checkmatchTypeff',checkmatchtypeff)
-router2.get('checkrole',Authverify,checkrole)
+router2.get('/checkrole',Authverify,checkrole)
 module.exports = router2

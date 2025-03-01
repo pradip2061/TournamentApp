@@ -43,7 +43,7 @@ const Authenticate = ({navigation}) => {
       return
     }
     setLoading(true)
-    await axios.post('http://30.30.6.248:3000/khelmela/login',{email,password},{
+    await axios.post(`${process.env.baseUrl}/khelmela/login`,{email,password},{
       headers:{
         'Content-Type':'application/json'
       }
@@ -65,7 +65,7 @@ const Authenticate = ({navigation}) => {
   const sendOtp=async()=>{
     try {
     setLoading(true)
-      await axios.post('http://30.30.6.248:3000/khelmela/verifyotp',{otp,username,email,password})
+      await axios.post(`${process.env.baseUrl}/khelmela/verifyotp`,{otp,username,email,password})
       .then((response)=>{
         Alert.alert(response.data.message)
         setEmail('')
@@ -91,7 +91,7 @@ try {
     return
   }
   setLoading(true)
-  await axios.post('http://30.30.6.248:3000/khelmela/sendOtp',{username,email,password},{
+  await axios.post(`${process.env.baseUrl}/khelmela/sendOtp`,{username,email,password},{
     headers: {
       'Content-Type': 'application/json',
     },

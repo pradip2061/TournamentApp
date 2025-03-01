@@ -1,11 +1,14 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, BackHandler, Alert } from 'react-native';
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 import Doller from 'react-native-vector-icons/FontAwesome6';
 import Gamepad from 'react-native-vector-icons/Entypo';
 import TabButton from '../components/TabButton';
 import Card from '../components/Card';
 import LinearGradient from 'react-native-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import { CheckAdminContext } from './ContextApi';
 
 
 const freefire = require('../assets/freefire.jpeg');
@@ -18,6 +21,7 @@ const tdm = require('../assets/tdm.jpg');
 
 const Home = ({ navigation }) => {
   const [toggle, setToggle] = useState('freefire');
+  const {checkadmin,setCheckAdmin}=useContext(CheckAdminContext)
  useFocusEffect(
     useCallback(() => {
       const backAction = () => {
@@ -33,6 +37,8 @@ const Home = ({ navigation }) => {
       return () => backHandler.remove(); // Remove event listener when screen is unfocused
     }, [])
   );
+
+
   return (
     <LinearGradient
     colors={['#5e00c0', '#8a00d4', '#b100e8']} // Adjust colors to match the design

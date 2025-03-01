@@ -27,7 +27,7 @@ const Setting = ({navigation}) => {
   setLoading(true)
   const token =await AsyncStorage.getItem('token')
 try {
-  axios.post('http://30.30.6.248:3000/khelmela/changepassword',{oldPassword,newPassword},{
+  axios.post(`${process.env.baseUrl}/khelmela/changepassword`,{oldPassword,newPassword},{
     headers:{
       Authorization:`${token}`,
       "Content-Type":'application/json'
@@ -50,7 +50,7 @@ useEffect(()=>{
   const getProfile =async()=>{
   const token =await AsyncStorage.getItem('token')
     try {
-       axios.get('http://30.30.6.248:3000/khelmela/getprofile',{
+       axios.get(`${process.env.baseUrl}/khelmela/getprofile`,{
         headers:{
           Authorization:`${token}`
         }

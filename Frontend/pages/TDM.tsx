@@ -1,12 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Line } from "react-native-svg";
 import TdmCard from "../components/TdmCard";
-import { FlatList, ScrollView, TextInput } from "react-native-gesture-handler";
+import { FlatList, ScrollView, TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import axios from "axios";
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
+import { CheckAdminContext } from "./ContextApi";
 
 // const Box = ({ style, label }) => (
 //   <View
@@ -30,9 +31,13 @@ import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
 
 const TDM = ({navigation}) => {
 const[data,setData]=useState([])
+const{checkrole,checkadmin}=useContext(CheckAdminContext);
+      useEffect(()=>{
+        checkrole()
+      },[])
 useEffect(()=>{
     const getcard =()=>{
-      axios.get('http://30.30.6.248:3000/khelmela/gettdm')
+      axios.get(`${process.env.baseUrl}/khelmela/gettdm`)
       .then((response)=>{
         setData(response.data.data)
       })
@@ -58,6 +63,12 @@ useEffect(()=>{
              <Text style={styles.note}>
                Note: All matches are made by the admin everyday in same time
               </Text>
+        {
+          checkadmin === "admin"?
+                  <TouchableOpacity>
+                  <Text>admin</Text>
+                </TouchableOpacity>:<Text>hello user</Text>
+        }
       <FlatList data={data} keyExtractor={(item)=>item._id} renderItem={({item})=>(<TdmCard matches={item} key={item._id} />)}  contentContainerStyle={{ gap: 30,paddingBottom:30 }} scrollEnabled={false}/>
       </ScrollView>
   );

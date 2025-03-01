@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from "react-native";
+import LinearGradient from "react-native-linear-gradient";
 
 const LeaderboardScreen = () => {
     const [leaderboardData, setLeaderboardData] = useState([]);
@@ -16,6 +17,12 @@ const LeaderboardScreen = () => {
     }, [filter]);
 
     return (
+        <LinearGradient
+            colors={['#5e00c0', '#8a00d4', '#b100e8']} // Adjust colors to match the design
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.linearColor}
+          >
         <View style={styles.container}>
             <Text style={styles.title}>LEADERBOARD</Text>
             
@@ -67,11 +74,12 @@ const LeaderboardScreen = () => {
                 )}
             />
         </View>
+        </LinearGradient>
     );
 };
 
 const styles = StyleSheet.create({
-    container: { flex: 1, backgroundColor: "#5D0EAD", padding: 20 },
+    container: {  padding: 20 },
     title: { fontSize: 22, color: "#fff", textAlign: "center", fontWeight: "bold" },
     filterContainer: { flexDirection: "row", justifyContent: "center", marginVertical: 10 },
     filterButton: { backgroundColor: "#FFB400", padding: 10, marginHorizontal: 5, borderRadius: 10 },
@@ -87,6 +95,11 @@ const styles = StyleSheet.create({
     playerName: { color: "#fff", fontSize: 14, marginTop: 5 },
     score: { color: "#fff", fontSize: 16, fontWeight: "bold", },
     listItem: { flexDirection: "row", alignItems: "center", backgroundColor: "#7D26CD", padding: 10, marginVertical: 5, borderRadius: 10 },
+    linearColor:{
+        flex:1,
+        alignItems:'center',
+        justifyContent:'center'
+    },
     rank: { color: "#fff", fontSize: 18, fontWeight: "bold", marginRight: 10 }
 });
 

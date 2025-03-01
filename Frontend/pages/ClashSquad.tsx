@@ -9,7 +9,6 @@ import MatchCard from '../components/MatchCard'
 import { FlatList} from 'react-native-gesture-handler'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
-import { Alert } from 'react-native'
 import ShimmerBox from '../components/ShimmerBox'
 const ClashSquad = ({navigation}) => {
   const[page,setPage]=useState(1)
@@ -30,8 +29,6 @@ const ClashSquad = ({navigation}) => {
       gameName: '',
       betAmount: '',
     });
-
-    
     const modal =(messages)=>{
       setVisible(true)
       setMessage(String(messages))
@@ -72,7 +69,7 @@ const ClashSquad = ({navigation}) => {
         return
       }
       const token = await AsyncStorage.getItem('token')
-      await axios.post('http://30.30.6.248:3000/khelmela/create',{matchDetails},{
+      await axios.post(`${process.env.baseUrl}/khelmela/create`,{matchDetails},{
         headers:{
           Authorization:`${token}`
         }
@@ -94,7 +91,7 @@ const ClashSquad = ({navigation}) => {
       console.log(matchId)
      try {
       const token = await AsyncStorage.getItem('token')
-      await axios.post('http://30.30.6.248:3000/khelmela/addinhost',{matchId},{
+      await axios.post(`${process.env.baseUrl}/khelmela/addinhost`,{matchId},{
         headers:{
           Authorization:`${token}`
         }
@@ -105,10 +102,11 @@ const ClashSquad = ({navigation}) => {
      }
       } 
 
+
       useEffect(()=>{
         try {
           const getMatches = async()=>{
-            await axios.get(`http://30.30.6.248:3000/khelmela/get`)
+            await axios.get(`${process.env.baseUrl}/khelmela/get`)
             .then((response)=>{
               setData(response.data.card)
               console.log(data)

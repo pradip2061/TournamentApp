@@ -39,7 +39,7 @@ const PubgFullMatchCard = ({matches}) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        'http://30.30.6.248:3000/khelmela/joinuserPubg',
+        `${process.env.baseUrl}/khelmela/joinuserPubg`,
         {matchId},
         {
           headers: {
@@ -59,7 +59,7 @@ const PubgFullMatchCard = ({matches}) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          'http://30.30.6.248:3000/khelmela/checkuserPubg',
+          `${process.env.baseUrl}/khelmela/checkuserPubg`,
           {matchId},
           {
             headers: {
@@ -90,7 +90,7 @@ const PubgFullMatchCard = ({matches}) => {
     try {
       await axios
         .post(
-          'http://30.30.6.248:3000/khelmela/addName',
+          `${process.env.baseUrl}/khelmela/addName`,
           {matchId, player1, player2, player3},
           {
             headers: {
@@ -111,7 +111,7 @@ const PubgFullMatchCard = ({matches}) => {
   useEffect(() => {
     const checkmatchType = () => {
       axios
-        .post('http://30.30.6.248:3000/khelmela/checkmatchTypePubg', {matchId})
+        .post(`${process.env.baseUrl}/khelmela/checkmatchTypePubg`, {matchId})
         .then(response => {
           if (response.status === 200) {
             setCheckMatch(response.data.message);

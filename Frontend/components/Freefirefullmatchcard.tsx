@@ -39,7 +39,7 @@ console.log(matches)
     try {
       await axios
         .post(
-          'http://30.30.6.248:3000/khelmela/joinff',
+          `${process.env.baseUrl}/khelmela/joinff`,
           { matchId },
           {
             headers: {
@@ -71,7 +71,7 @@ console.log(matches)
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          'http://30.30.6.248:3000/khelmela/checkuserff',
+          `${process.env.baseUrl}/khelmela/checkuserff`,
           { matchId },
           {
             headers: {
@@ -101,7 +101,7 @@ console.log(matches)
     try {
       await axios
         .post(
-          'http://30.30.6.248:3000/khelmela/addName',
+          `${process.env.baseUrl}/khelmela/addName`,
           { matchId,player1,player2,player3 },
           {
             headers: {
@@ -131,7 +131,7 @@ setPlayer3(match[2])
       setMessage('')
      const token = await AsyncStorage.getItem('token')
      console.log(token)
-     await axios.post('http://30.30.6.248:3000/khelmela/check',{},{
+     await axios.post(`${process.env.baseUrl}/khelmela/check`,{},{
        headers:{
          Authorization:`${token}`
        }
@@ -277,8 +277,6 @@ setPlayer3(match[2])
 const styles = StyleSheet.create({
   container: {
     width: 340,
-    borderWidth: 2,
-    borderColor: 'black',
     backgroundColor: 'white',
     marginLeft: 20,
     padding: 10,
@@ -288,8 +286,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    borderWidth: 2,
-    borderColor: 'black',
     height: 50,
     paddingHorizontal: 10,
   },
@@ -363,7 +359,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
   },
   joinedButton: {
-    backgroundColor: 'green',
+  backgroundColor:'#ffb400',
     height: 40,
     width: '100%',
     justifyContent: 'center',

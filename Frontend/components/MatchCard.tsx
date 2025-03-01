@@ -24,7 +24,7 @@ const MatchCard = ({match}) => {
   useEffect(()=>{
     const checkUserOrAdmin =async()=>{
       const token = await AsyncStorage.getItem('token')
-  await axios.post('http://30.30.6.248:3000/khelmela/checkUserOrAdmin',{matchId},{
+  await axios.post(`${process.env.baseUrl}/checkUserOrAdmin`,{matchId},{
     headers:{
       Authorization:`${token}`
     }
@@ -43,7 +43,7 @@ const MatchCard = ({match}) => {
           setMessage('')
          const token = await AsyncStorage.getItem('token')
          console.log(token)
-         await axios.post('http://30.30.6.248:3000/khelmela/check',{},{
+         await axios.post(`${process.env.baseUrl}/khelmela/check`,{},{
            headers:{
              Authorization:`${token}`
            }
@@ -74,7 +74,7 @@ const MatchCard = ({match}) => {
        const customIdAndPassword =async(e)=>{
         e.preventDefault()
         try {
-         await axios.post('http://30.30.6.248:3000/khelmela/setpass',{customId,customPassword,matchId})
+         await axios.post(`${process.env.baseUrl}/khelmela/setpass`,{customId,customPassword,matchId})
          .then((response)=>{
            if(response.status == 200){
            setMessage(response.data.message)
@@ -91,7 +91,7 @@ const MatchCard = ({match}) => {
           setMessage('')
          const token = await AsyncStorage.getItem('token')
          console.log(token)
-         await axios.post('http://30.30.6.248:3000/khelmela/join',{matchId},{
+         await axios.post(`${process.env.baseUrl}/khelmela/join`,{matchId},{
            headers:{
              Authorization:`${token}`
            }
@@ -116,7 +116,7 @@ const MatchCard = ({match}) => {
        useEffect(()=>{
         const checkpublish =async()=>{
          try {
-          await axios.post('http://30.30.6.248:3000/khelmela/checkpublish',{matchId})
+          await axios.post(`${process.env.baseUrl}/khelmela/checkpublish`,{matchId})
           .then((response)=>{
            if(response.status == 200){
              setPublish(response.data.message)
@@ -139,7 +139,7 @@ const MatchCard = ({match}) => {
        try {
         setError('')
           setMessage('')
-        await axios.post('http://localhost:3000/khelmela/changecustom',{matchId,customId,customPassword})
+        await axios.post(`http://localhost:3000/khelmela/changecustom`,{matchId,customId,customPassword})
         .then((response)=>{
           if(response.status == 200){
             setPublish(response.data.message)
@@ -156,7 +156,7 @@ const MatchCard = ({match}) => {
         try {
         const boolean = false
         const token = await AsyncStorage.getItem('token')
-await axios.post('http://30.30.6.248:3000/khelmela/checkBoolean',{
+await axios.post(`${process.env.baseUrl}/khelmela/checkBoolean`,{
   matchId,
   boolean
 },{
@@ -178,7 +178,7 @@ await axios.post('http://30.30.6.248:3000/khelmela/checkBoolean',{
       try {
         const boolean = false
         const token = await AsyncStorage.getItem('token')
-await axios.post('http://30.30.6.248:3000/khelmela/checkBoolean',{
+await axios.post(`${process.env.baseUrl}/khelmela/checkBoolean`,{
   matchId,
 boolean
 },{
@@ -200,7 +200,7 @@ boolean
       useEffect(()=>{
         const checkresult = async()=>{
 try {
-  await axios.post('http://30.30.6.248:3000/khelmela/checkresult',{matchId})
+  await axios.post(`${process.env.baseUrl}/khelmela/checkresult`,{matchId})
   .then((response)=>{
     setResult(response.data.message)
   })

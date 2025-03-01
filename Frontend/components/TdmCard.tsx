@@ -38,7 +38,7 @@ const TdmCard = ({matches}) => {
     setError('')
   try {
     const token = await AsyncStorage.getItem('token')
-   const response = await axios.post('http://30.30.6.248:3000/khelmela/joinuserPubgtdm',{matchId},{
+   const response = await axios.post(`${process.env.baseUrl}/khelmela/joinuserPubgtdm`,{matchId},{
       headers:{
         Authorization:`${token}`
       }
@@ -55,7 +55,7 @@ const TdmCard = ({matches}) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          'http://30.30.6.248:3000/khelmela/checkuserPubg',
+          `${process.env.baseUrl}/khelmela/checkuserPubg`,
           { matchId },
           {
             headers: {
@@ -84,7 +84,7 @@ const TdmCard = ({matches}) => {
       try {
         await axios
           .post(
-            'http://30.30.6.248:3000/khelmela/addNametdm',
+            `${process.env.baseUrl}/khelmela/addNametdm`,
             { matchId,player1,player2,player3 },
             {
               headers: {
@@ -107,7 +107,7 @@ const TdmCard = ({matches}) => {
       const checkmatchType = () => {
         axios
          .post(
-           'http://30.30.6.248:3000/khelmela/checkmatchType',
+           `${process.env.baseUrl}/khelmela/checkmatchType`,
            { matchId },
          )
          .then((response) => {
