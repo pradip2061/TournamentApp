@@ -89,7 +89,23 @@ const verifyOtpandSignup = async (req, res) => {
           cod:[
             
           ]
-        }
+        },
+        victory:{
+          pubg:[
+
+          ],
+          Freefire:[
+
+          ],
+          cod:[
+            
+          ]
+        },
+        gameName:[{
+          freefire:"",
+          pubg:"",
+          cod:""
+      }]
 
     })
       res.status(200).json({ message: "OTP verified successfully" });

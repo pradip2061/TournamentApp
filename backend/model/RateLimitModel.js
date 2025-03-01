@@ -2,9 +2,9 @@ const mongoose = require('mongoose');
 
 // Define Rate Limit Schema
 const rateLimitSchema = new mongoose.Schema({
-  userId: { type: String, required: true, unique: true },
+  userId: { type: String, required: true,},
   requestCount: { type: Number, default: 1 },
-  lastRequest: { type: Date, default: Date.now },
+  lastRequest: { type: Date, default: Date.now ,expires: 7200},
 });
 
 // Create Model

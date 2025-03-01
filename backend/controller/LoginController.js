@@ -55,12 +55,10 @@ if(!userid){
     return
 }
 const userinfo = await signUp.findById(userid)
-
 res.status(200).json({
-    message:'this is user info'
+    message:'this is user info',
+    data:userinfo
 })
 
 }
-
-
 module.exports ={Login,getprofile}

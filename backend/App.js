@@ -5,7 +5,9 @@ const connectToDatabase = require("./database/db");
 const AuthenticateRouter = require("./router/user/AuthenticateRouter");
 const Admin = require("./router/admin/AdminRouter");
 const CreateRouter = require("./router/user/CreateRouter");
-
+const CheckResultRouter =require('./router/user/CheckResultRouter')
+const DeleteCardRouter =require('./router/user/DeleteCardRouter')
+const PubgRouter =require('./router/user/PubgRouter')
 const {
   router: ChatRouter,
   setupChatSocket,
@@ -16,7 +18,7 @@ connectToDatabase();
 
 app.use(express.json());
 app.use(cors());
-app.use("/khelmela", AuthenticateRouter, CreateRouter, ChatRouter);
+app.use("/khelmela", AuthenticateRouter, CreateRouter, ChatRouter,CheckResultRouter,PubgRouter);
 app.use("/khelmela/admin", Admin);
 
 const server = require("http").createServer(app);
@@ -34,5 +36,6 @@ setupChatSocket(io);
 // Start the server
 const PORT = process.env.SERVER_PORT || 3000;
 server.listen(PORT, "0.0.0.0", () => {
-  console.log(`Server running at ${process.env.IP || "localhost"}:${PORT}`);
+  console.log(`Server running at ${PORT}`);
 });
+

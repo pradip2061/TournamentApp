@@ -1,6 +1,7 @@
 const ClashSquad = require("../model/ClashSquadModel");
 const FFfreefire = require("../model/FullMatchFFModel");
 const signUp = require("../model/signUpModel");
+const namelimit = require("../model/updateNameLimit");
 
 const createCs = async (req, res) => {
   const { matchDetails } = req.body;
@@ -22,7 +23,7 @@ const userId = req.user
       teamopponent: [{userid:"",}],
       status: "pending",
       customId:null,
-      customPassword:null
+      customPassword:null,
     });
     await newMatch.save();
     userinfo.isplaying= true
@@ -61,7 +62,6 @@ const playingmatch = async(req,res)=>{
 const joinuser = async(req,res)=>{
   const userid = req.user
   const {matchId}=req.body
- 
   const user = await signUp.findOne({_id:userid})
   if(!user){
     res.status(404).json({
@@ -74,12 +74,12 @@ const userinfo = await signUp.findOne({_id:userid})
 const match = await ClashSquad.findOne(
   { _id: matchId}, // Find where userid is null
 );
-if(userinfo.balance >= match.matchDetails[0].betAmount){
+if(userinfo.balance < match.matchDetails[0].betAmount){
   return res.status(200).json({
     message:'you haven`t enough balance'
   })
 }
-user.matchId = matchId
+user.matchId.push(matchId)
 user.isplaying=true
 user.save()
 
@@ -204,20 +204,88 @@ const getFFmatch = async (req, res) => {
 };
 
 const joinuserff =async(req,res)=>{
+ try {
   const userid =req.user
   const{matchId}=req.body
   const userinfo =await signUp.findOne({_id:userid})
   const match = await FFfreefire.findOne({_id:matchId})
-  if(userinfo.balance >= match.entryFee)
+  if(userinfo.balance >= match.entryFee){
     userinfo.balance -= match.entryFee
-  userinfo.isplaying = true
-  userinfo.matchId = matchId
+  userinfo.matchId.push(matchId) 
   match.userid.push(userid)
-  await match.save()
+  if(!userinfo.gameName[0].pubg){
+    return res.status(400).json({
+      message:'add pubgGameName in your profile'
+    })
+  }
+  const objectcount = match.gameName.reduce((count,obj)=>count +Object.keys(obj),0)
+  const slot = objectcount+1
+  match.gameName.push({userid:userid,player1:userinfo.gameName[0].freefire,player2:'',player3:'',player4:'',slot:slot})
+  match.TotalPlayer =1
+  await match.save() 
   await userinfo.save()
   res.status(200).json({
     message:'user join successfully'
-  })
+  })}else{
+    res.status(400).json({
+      message:'you don`t have enough balance'
+    })
+  }
+ } catch (error) {
+  console.log(error)
+ }
 }
+const addName = async (req, res) => {
+  try {
+    const { player1, player2, player3, matchId } = req.body;
+  const userid = req.user;
 
-module.exports = {createCs,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};
+  // Validate input
+  if (!player1 || !player2 || !player3) {
+    return res.status(400).json({ message: 'All fields are mandatory' });
+  }
+
+  // Check if match exists
+  const matchinfo = await FFfreefire.findOne({ _id: matchId });
+  const userinfo = await signUp.findOne({_id:userid})
+  const gameName = userinfo.gameName[0].freefire
+  if(!gameName){
+    return res.status(400).json({
+      message:'plz set your gameName from your profile'
+    })
+  }
+  if (!matchinfo) {
+    return res.status(400).json({ message: 'No match found' });
+  }
+
+  // Check rate limit (2-hour restriction)
+  const checklimit = await namelimit.findOne({ matchId, userid });
+  if (checklimit) {
+    return res.status(400).json({ message: 'You can try again after 2 hours.' });
+  }
+
+  // Save the request timestamp with a TTL index (2 hours)
+  await namelimit.create({
+    userid,
+    matchId,
+    lastRequest: Date.now()
+  });
+
+  // ✅ Choose one:
+  // matchinfo.gameName.push(player1, player2, player3);  // Append names
+  const team = matchinfo.gameName.filter((item)=>item.player1 === gameName)
+  team[0].player2 = player1
+  team[0].player3 = player2
+  team[0].player4 = player3
+    const totalStrings = matchinfo.gameName.reduce((acc, obj) => acc + Object.keys(obj).length, 0);
+    matchinfo.TotalPlayer = totalStrings
+    matchinfo.save()
+
+  res.status(200).json({ message: 'Set successfully' });
+  } catch (error) {
+    console.log(error)
+  }
+};
+
+
+module.exports = {createCs,addName,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};

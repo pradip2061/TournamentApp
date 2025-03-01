@@ -1,18 +1,21 @@
-const express = require("express");
-const { Login, getprofile } = require("../../controller/LoginController");
-const { changePassword } = require("../../controller/ChangePasswordController");
-const Authverify = require("../../middleware/AuthVerify");
-const {
-  requestOtp,
-  verifyOtpandSignup,
-} = require("../../controller/OtpController");
-const router = express.Router();
-router.get("/", (req, res) => {
-  res.send("THis is Authnticate page");
-});
-router.post("/verifyotp", verifyOtpandSignup);
-router.post("/sendOtp", requestOtp);
-router.post("/login", Login);
-router.post("/changepassword", Authverify, changePassword);
-router.get("/getprofile", getprofile);
-module.exports = router;
+const express = require('express')
+const {Login,getprofile} = require('../../controller/LoginController')
+const {changePassword,customIdAndPassword, checkPublishOrNot, reset} = require('../../controller/ChangePasswordController')
+const Authverify = require('../../middleware/AuthVerify')
+const { requestOtp, verifyOtpandSignup } = require('../../controller/OtpController')
+const rateLimitMiddleware = require('../../middleware/changePasswordLimit')
+const {updateProfile,pubgprofile, freefireprofile} = require('../../controller/updateProfileController')
+const router = express.Router()
+
+router.post('/verifyotp',verifyOtpandSignup)
+router.post('/sendOtp',requestOtp)
+router.post('/login',Login)
+router.post('/changepassword',Authverify,changePassword)
+router.get('/getprofile',Authverify,getprofile)
+router.post('/setpass',customIdAndPassword)
+router.post('/checkpublish',checkPublishOrNot)
+router.post('/changeCustom',rateLimitMiddleware,reset)
+router.post('/updateprofile',Authverify,updateProfile)
+router.post('/freefirename',Authverify,freefireprofile)
+router.post('/pubgname',Authverify,pubgprofile)
+module.exports=router

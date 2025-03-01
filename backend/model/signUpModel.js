@@ -35,14 +35,24 @@ const schema = new mongoose.Schema(
         },
       },
     ],
+    gameName:[
+      {
+        freefire:{
+          type:String
+        },
+        pubg:{
+          type:String
+        },
+        cod:{
+          type:String
+        }
+      }
+    ],
     isplaying: {
       type: Boolean,
       default: false,
     },
-    matchId: {
-      type: String,
-      ref: "ClashSquad",
-    },
+    matchId:[String],
     victory: {
       pubg: [String],
       Freefire: [String],
@@ -58,6 +68,11 @@ const schema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    role:{
+      type:String,
+      enum:['user','admin'],
+      default:'user'
+    }
   },
   { timestamps: true }
 );
