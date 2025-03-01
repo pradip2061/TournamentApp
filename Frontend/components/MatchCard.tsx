@@ -24,13 +24,14 @@ const MatchCard = ({match}) => {
   useEffect(()=>{
     const checkUserOrAdmin =async()=>{
       const token = await AsyncStorage.getItem('token')
-  await axios.post(`${process.env.baseUrl}/checkUserOrAdmin`,{matchId},{
+  await axios.post(`${process.env.baseUrl}/khelmela/checkUserOrAdmin`,{matchId},{
     headers:{
       Authorization:`${token}`
     }
   })
   .then((response)=>{
       setCheck(response.data.message)
+      console.log(check)
   })
     }
     checkUserOrAdmin()
