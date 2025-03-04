@@ -55,7 +55,7 @@ const TdmCard = ({matches}) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          `${process.env.baseUrl}/khelmela/checkuserPubg`,
+          `${process.env.baseUrl}/khelmela/checkuserPubgtdm`,
           { matchId },
           {
             headers: {
@@ -78,28 +78,6 @@ const TdmCard = ({matches}) => {
   
     const clipboardpass = () => {
       Clipboard.setString('hello');
-    };
-    const addName = async () => {
-      const token = await AsyncStorage.getItem('token');
-      try {
-        await axios
-          .post(
-            `${process.env.baseUrl}/khelmela/addNametdm`,
-            { matchId,player1,player2,player3 },
-            {
-              headers: {
-                Authorization: `${token}`,
-              },
-            },
-          )
-          .then((response) => {
-            setMessage(response.data.message);
-          });
-      } catch (error) {
-        setError(error.response.data.message);
-      }finally{
-        notify();
-      }
     };
 
 
@@ -219,31 +197,10 @@ const TdmCard = ({matches}) => {
                               <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
                             </TouchableOpacity>
                           </View>
-                          <TouchableOpacity style={styles.joinedButton}>
+                        </View>
+                        <TouchableOpacity style={styles.joinedButton}>
                           <Text style={{ color: 'white' }}>Joined</Text>
                         </TouchableOpacity>
-                        </View>
-                        <View>
-                          <TextInput
-                            style={styles.inputs}
-                            placeholder="player 2"
-                            value={player1}
-                            onChangeText={(text) => setPlayer1(text)}
-                          />
-                          <TextInput
-                            style={styles.inputs}
-                            placeholder="player 3"
-                            value={player2}
-                            onChangeText={(text) => setPlayer2(text)}
-                          />
-                          <TextInput
-                            style={styles.inputs}
-                            placeholder="player 4"
-                            value={player3}
-                            onChangeText={(text) => setPlayer3(text)}
-                          />
-                          <TouchableOpacity style={styles.joinedButton} onPress={addName}><Text style={{color:'white'}} >Add gameName</Text></TouchableOpacity>
-                        </View>
                      </View>
                   ) : checkJoined === 'notjoined' ? (
                     <TouchableOpacity
@@ -273,41 +230,7 @@ const TdmCard = ({matches}) => {
         </View>
       </Modal>
       <ModalNotify visible={notifyModel} error={error} message={message}/>
-       <View style={styles.containers}>
-                  {/* First Round (8 players) */}
-                  <View style={styles.round}>
-                      {[...Array(8)].map((_, index) => (
-                          <View key={index} style={styles.smallBox}>
-                              <Text style={styles.playerText}>player </Text>
-                          </View>
-                      ))}
-                  </View>
       
-                  {/* Second Round (4 players) */}
-                  <View style={styles.round}>
-                      {[...Array(4)].map((_, index) => (
-                          <View key={index} style={styles.smallBox}>
-                              <Text style={styles.playerText}>player </Text>
-                          </View>
-                      ))}
-                  </View>
-      
-                  {/* Final Round (2 players) */}
-                  <View style={styles.round}>
-                      {[...Array(2)].map((_, index) => (
-                          <View key={index} style={styles.smallBox}>
-                              <Text style={styles.playerText}>player </Text>
-                          </View>
-                      ))}
-                  </View>
-      
-                  {/* Winner */}
-                  <View style={styles.round}>
-                      <View style={styles.winner}>
-                          <Text style={styles.playerText}>Winner</Text>
-                      </View>
-                  </View>
-              </View>
     </View>
   );
 };
@@ -368,8 +291,8 @@ const styles = StyleSheet.create({
   },
   joinedContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
+    gap:60
   },
   inputContainer: {
     gap: 10,
@@ -394,7 +317,7 @@ const styles = StyleSheet.create({
   joinedButton: {
     backgroundColor: 'green',
     height: 40,
-    width: '100%',
+    width: 80,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -411,35 +334,6 @@ const styles = StyleSheet.create({
     marginLeft: 10,
     marginTop: 20,
   },
-  round: {
-    justifyContent: 'center',
-    marginRight: 20,
-},
-smallBox: {
-    padding: 4,
-    marginVertical: 12,
-    backgroundColor: 'orange',
-    borderRadius: 8,
-    alignItems: 'center',
-    width: 65,
-    height:30,
-    
-},
-winner: {
-    padding: 20,
-    backgroundColor: 'gold',
-    borderRadius: 8,
-    alignItems: 'center',
-    width: 70,
-    marginVertical: 30,
-    height:10
-},
-playerText: {
-    color: 'white',
-    fontWeight: 'bold',
-    textAlign: 'center',
-    fontSize:12
-},
 containers: {
   flexDirection: 'row',
   alignItems: 'center',

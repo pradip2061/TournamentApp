@@ -1,39 +1,48 @@
 const ClashSquad = require("../model/ClashSquadModel");
 const FFfreefire = require("../model/FullMatchFFModel");
+const PubgFull = require("../model/PubgFullMatchModel");
 const signUp = require("../model/signUpModel");
+const tdm = require("../model/TdmModel");
 const namelimit = require("../model/updateNameLimit");
-
 const createCs = async (req, res) => {
   const { matchDetails } = req.body;
-const userId = req.user
-  if (!userId ||  !matchDetails) {
+  const userId = req.user;
+
+  if (!userId || !matchDetails) {
     return res.status(400).json({ error: "Invalid input data" });
   }
 
   try {
-    const userinfo = await signUp.findOne({_id:userId})
-    if(!userinfo){
-      res.status(200).json({
-        message:'user not found'
-      })
+    const userinfo = await signUp.findOne({ _id: userId });
+    if (!userinfo) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (userinfo.balance < matchDetails.betAmount) { // Fixed logic
+      return res.status(400).json({ message: "You don’t have enough balance" });
     }
     const newMatch = new ClashSquad({
-      matchDetails: matchDetails, 
-      teamHost: [{ userid: userId }], 
-      teamopponent: [{userid:"",}],
+      matchDetails: matchDetails,
+      teamHost: [{ userid: userId }],
+      teamopponent: [{ userid: "" }],
       status: "pending",
-      customId:null,
-      customPassword:null,
+      customId: null,
+      customPassword: null,
+      TotalPlayers:1,
     });
+
     await newMatch.save();
-    userinfo.isplaying= true
-    userinfo.save()
-    res.status(200).json({ message: "Match created successfully!",newMatch});
+    userinfo.isplaying = true;
+    userinfo.balance -= matchDetails.betAmount; // Ensure matchDetails is an object
+    await userinfo.save(); // Use await
+
+    res.status(200).json({ message: "Match created successfully!", newMatch });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({ error: "Internal Server Error" });
   }
 };
+
 
 
 const getCsData = async (req, res) => {
@@ -68,8 +77,6 @@ const joinuser = async(req,res)=>{
       message:'user not found'
     })
   }
-
-
 const userinfo = await signUp.findOne({_id:userid})
 const match = await ClashSquad.findOne(
   { _id: matchId}, // Find where userid is null
@@ -79,13 +86,14 @@ if(userinfo.balance < match.matchDetails[0].betAmount){
     message:'you haven`t enough balance'
   })
 }
-user.matchId.push(matchId)
+user.matchId.FreefireClashId.push(matchId)
 user.isplaying=true
 user.save()
 
 userinfo.balance -= match.matchDetails[0].betAmount
  await userinfo.save()
 match.teamopponent[0].userid=userid
+match.TotalPlayers +=1
  await match.save()
   res.status(200).json({
     message:'join successfully'
@@ -102,7 +110,7 @@ const trackusermodel = async(req,res)=>{
   }
 const match = await signUp.findOne({_id:userid})
 
-match.matchId = matchId
+match.matchId.FreefireClashId.push(matchId)
 await match.save()
 res.status(200).json({
   message:'matchid add successfully'
@@ -211,7 +219,7 @@ const joinuserff =async(req,res)=>{
   const match = await FFfreefire.findOne({_id:matchId})
   if(userinfo.balance >= match.entryFee){
     userinfo.balance -= match.entryFee
-  userinfo.matchId.push(matchId) 
+  userinfo.matchId.FreefireFullId.push(matchId)
   match.userid.push(userid)
   if(!userinfo.gameName[0].pubg){
     return res.status(400).json({
@@ -287,5 +295,40 @@ const addName = async (req, res) => {
   }
 };
 
+const EnrollMatch =async(req,res)=>{
+try {
+  const userid =req.user
+  if(!userid){
+    res.status(400).json({
+      message:'user not found!'
+    })
+  }
+const userinfo = await signUp.findOne({_id:userid})
+if(!userinfo){
+  res.status(400).json({
+    message:'user not found!'
+  })
+}
+const matchIdsclash =userinfo.matchId.FreefireClashId
+const matchesclash = await ClashSquad.find({ _id: { $in: matchIdsclash } });
+const matchIdff =userinfo.matchId.FreefireFullId
+const matchesff = await FFfreefire.find({ _id: { $in: matchIdff } });
+const matchIdspubg =userinfo.matchId.pubgFullId
+const matchespubg = await PubgFull.find({ _id: { $in: matchIdspubg } });
+const matchIdstdm =userinfo.matchId.pubgTdmId
+const matchestdm = await tdm.find({ _id: { $in: matchIdstdm } });
 
-module.exports = {createCs,addName,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};
+res.status(200).json({
+  matchesclash,
+  matchesff,
+  matchespubg,
+  matchestdm
+})
+} catch (error) {
+  res.status(400).json({
+    message:error
+  })
+}
+}
+
+module.exports = {EnrollMatch,createCs,addName,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};

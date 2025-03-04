@@ -5,20 +5,24 @@ import React, { createContext, useState, ReactNode, useEffect } from 'react';
 // Define Context Type
 interface CheckAdminContextType {
   checkadmin: string;
+  getdata:String,
   setCheckAdmin: (value: string) => void;
+  setGetData: (value: string) => void;
   checkrole: () => Promise<void>;
 }
 
 // Create Context with Default Values
 export const CheckAdminContext = createContext<CheckAdminContextType>({
   checkadmin: '',
+  getdata:'',
+  setGetData:()=>{},
   setCheckAdmin: () => {},
   checkrole: async () => {}
 });
 
 export const ContextApi = ({ children }: { children: ReactNode }) => {
   const [checkadmin, setCheckAdmin] = useState('');
-
+const[getdata,setGetData]=useState('')
   // Function to Check Role
   const checkrole = async () => {
     try {
@@ -44,7 +48,7 @@ export const ContextApi = ({ children }: { children: ReactNode }) => {
 
 
   return (
-    <CheckAdminContext.Provider value={{ checkadmin, setCheckAdmin, checkrole }}>
+    <CheckAdminContext.Provider value={{ checkadmin, setCheckAdmin, checkrole,getdata,setGetData }}>
       {children}
     </CheckAdminContext.Provider>
   );

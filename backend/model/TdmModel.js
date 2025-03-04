@@ -38,7 +38,8 @@ const mongoose = require("mongoose");
       enum: ["running", "pending", "completed"],
       default: "pending",
     },
-    userid: [String]
-},{timestamps:true});
+    userid: [String],
+createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) }
+});
 const tdm =mongoose.model('tdm',schema)
 module.exports = tdm

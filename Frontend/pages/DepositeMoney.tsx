@@ -4,6 +4,7 @@ import AntDesign from 'react-native-vector-icons/AntDesign'
 import { ScrollView } from "react-native";
 import InfoBox from "../components/InfoBox";
 import { launchImageLibrary } from "react-native-image-picker";
+import axios from "axios";
 const DepositMoney = () => {
   const [selectedMethod, setSelectedMethod] = useState("eSewa");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -14,7 +15,7 @@ console.log(selectedImage)
   const openGallery=()=>{
     const options = {
       mediaType: "photo",
-      quality: 1,
+      quality: 0.5,
     };
     launchImageLibrary(options, (response) => {
       if (response.didCancel) {
@@ -22,7 +23,8 @@ console.log(selectedImage)
       } else if (response.errorMessage) {
         console.log("ImagePicker Error: ", response.errorMessage);
       } else {
-        setSelectedImage(response.assets[0].uri); // Set the selected image
+        setSelectedImage(response.assets[0].uri); 
+        uploadPhoto()
       }
     });
   }
@@ -49,6 +51,13 @@ console.log(selectedImage)
       setLoading(false); // Hide loading bar after animation completes
     });
   };
+  const uploadPhoto = async()=>{
+    await axios.post(`${process.env.baseUrl}/khelmela/upload`,{
+      selectedImage
+    },{
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
   const handleLogin = async () => {
     setLoading(true);
     startLoadingAnimation();

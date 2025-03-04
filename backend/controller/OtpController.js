@@ -2,7 +2,7 @@ const Otp = require("../model/OtpModel");
 const sendOtpEmail = require("../config/nodemailer");
 const signUp = require("../model/signUpModel");
 const bcrypt = require('bcrypt')
-const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+const generateOtp = () => Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
 const OtpModel = require("../model/OtpModel")
 const requestOtp = async (req, res) => {
   try {
@@ -78,7 +78,13 @@ const verifyOtpandSignup = async (req, res) => {
     }
     ],
         password:await bcrypt.hash(password,11),
-        matchId:"",
+        matchId:{
+        pubgFullId: [],
+      pubgTdmId: [],
+      FreefireFullId: [],
+      FreefireClashId: [],
+      codId: [],
+        },
         Loss:{
           pubg:[
 
@@ -116,6 +122,53 @@ const verifyOtpandSignup = async (req, res) => {
     }
   };
   
-  
+  const resetPassword=async(req,res)=>{
+    const{email}=req.body
+    if(!email){
+      return res.status(400).json({
+        messsage:"plz provide the email"
+      })
+    }
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Enter a valid Gmail address" });
+    }
+    const otp = generateOtp();
+    const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // Expiry in 5 minutes
 
-module.exports = { requestOtp,verifyOtpandSignup};
+    await Otp.create({ email, otp, expiresAt });
+   
+    await sendOtpEmail(email, otp);
+
+    res.status(200).json({ message: "OTP sent to your email" });
+
+  }
+  const resetOtpVerify=async(req,res)=>{
+    const{otp,email,newPassword,confirmPassword}=req.body
+    const otpRecord = await Otp.findOne({ otp });
+    if(!otp || !email){
+      return res.status(400).json({
+        message:"both are required!"
+      })
+    }
+    if(newPassword != confirmPassword){
+      return res.status(400).json({
+        message:'password isnot match'
+      })
+    }
+
+    const hashPassword = await bcrypt.hash(confirmPassword,11)
+      if (!otpRecord) return res.status(400).json({ message: "Invalid OTP" });
+      if (otpRecord.expiresAt < new Date()) {
+        return res.status(400).json({ message: "OTP has expired" });
+      }
+
+      const userinfo = await signUp.findOne({email}).select('password')
+      userinfo.password = hashPassword
+      await userinfo.save()
+      res.status(200).json({
+        message:"password change successfully"
+      })
+  }
+
+module.exports = { requestOtp,verifyOtpandSignup,resetPassword,resetOtpVerify};

@@ -30,7 +30,6 @@ const schema = new mongoose.Schema(
         },
         coin: {
           type: String || null,
-          required: true,
         },
         gameName: {
           type: String,
@@ -70,8 +69,12 @@ const schema = new mongoose.Schema(
       enum: ["running", "pending","completed"],
       default: "pending",
     },
+    TotalPlayers:{
+      type:Number
+    },
+   createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) }
+
   },
-  { timestamps: true }
 );
 
 const ClashSquad = mongoose.model("ClashSquad", schema);

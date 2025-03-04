@@ -53,19 +53,34 @@ res.status(200).json({
 })
 }
 
-const checkPublishOrNot=async(req,res)=>{
-const{matchId}=req.body
- const match = await ClashSquad.findOne({_id:matchId})
- if(!match.customId || !match.customPassword){
-    return res.status(200).json({
-        message:'notpublish'
-    })
- }
- res.status(200).json({
-    message:'publish'
- })
-
-}
+const checkPublishOrNot = async (req, res) => {
+    const { matchId } = req.body;
+  
+    // Validate input
+    if (!matchId) {
+      return res.status(400).json({ message: "Match ID is required" });
+    }
+  
+    try {
+      const match = await ClashSquad.findOne({ _id: matchId });
+  
+      // If match is not found
+      if (!match) {
+        return res.status(404).json({ message: "Match not found" });
+      }
+  
+      // Check if match is published
+      if (!match.customId || !match.customPassword) {
+        return res.status(200).json({ message: "notpublish" });
+      }
+  
+      res.status(200).json({ message: "publish" });
+    } catch (error) {
+      console.error("Error fetching match:", error);
+      res.status(500).json({ message: "Internal Server Error" });
+    }
+  };
+  
 
 const reset =async(req,res)=>{
  const{matchId,customId,customPassword}=req.body

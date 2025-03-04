@@ -8,6 +8,7 @@ import Setting from "./Setting";
 import TDM from "./TDM";
 import Transcation from "./Transcation";
 import DepositMoney from "./DepositeMoney";
+import EnrollMatch from "./EnrollMatch";
 const Stack =createStackNavigator()
 
 const  HomeStackNavigator=()=> {
@@ -19,6 +20,7 @@ const  HomeStackNavigator=()=> {
       <Stack.Screen name='Pubg' component={Pubg} options={{headerShown:false}}/>
       <Stack.Screen name='Setting' component={Setting}/>
       <Stack.Screen name='TDM' component={TDM} options={{headerShown:false}}/>
+      <Stack.Screen name='EnrollMatch' component={EnrollMatch}/>
       <Stack.Screen name='Transcation' component={Transcation}
       />
         <Stack.Screen name='Deposite' component={DepositMoney} options={{headerShown:false}}

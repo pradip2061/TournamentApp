@@ -33,12 +33,10 @@ const FreeFire = ({navigation}) => {
    },[])
   return(
     <ScrollView style={styles.container}>
-    <LinearGradient
-    colors={['#5e00c0', '#8a00d4', '#b100e8']} // Adjust colors to match the design
-    start={{ x: 0, y: 0 }}
-    end={{ x: 1, y: 1 }}
-    style={styles.linearColor}
-  >
+       <LinearGradient
+            colors={["#0f0c29", "#302b63", "#24243e"]}
+            style={styles.gradient}
+          ></LinearGradient>
         <View style={styles.header}>
          <AntDesign name="arrowleft" size={30} color="white"   onPress={()=>navigation.navigate('Homes')} /> 
          <Text style={styles.headerTitle}> Full Map Matches</Text>
@@ -56,13 +54,6 @@ const FreeFire = ({navigation}) => {
        <Text style={styles.note}>
          Note: All matches are made by the admin everyday in same time
         </Text>
-        {
-          checkadmin === "admin"?
-                  <TouchableOpacity style={styles.createButton}  onPress={()=>setCreateModal(true)}>
-                          <Ionicons name="add-circle-outline" size={24} color="white" />
-                          <Text style={styles.createButtonText}>Create</Text>
-                        </TouchableOpacity>:<Text>hello user</Text>
-        }
         {
                       card.length !==0 ?  <FlatList
                       data={card}
@@ -85,7 +76,6 @@ const FreeFire = ({navigation}) => {
   </View>
   </TouchableWithoutFeedback>
 </Modal>
-</LinearGradient>
 </ScrollView>
   )
 }
@@ -94,7 +84,8 @@ const styles = StyleSheet.create({
     container: {
       width:"100%",
       height:'100%',
-      paddingRight:15
+      paddingRight:15,
+      backgroundColor:'white'
     },
     linearColor:{
 flex:1,
@@ -106,23 +97,6 @@ flex:1,
       marginRight: 100,
       marginLeft:60
     },
-    createButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "orange",
-      paddingVertical: 8,
-      paddingHorizontal: 16,
-      borderRadius: 24,
-      alignSelf: "flex-end",
-      marginBottom:10,
-      marginRight:20
-    },
-    createButtonText: {
-      marginLeft: 8,
-      fontWeight: 600,
-      color:'white',
-      fontSize:17
-    } ,
     headerTitle: {
       fontSize: 24,
       fontWeight: "bold",

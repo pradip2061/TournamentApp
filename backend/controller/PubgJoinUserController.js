@@ -10,7 +10,7 @@ const joinuserPubg = async (req, res) => {
   const match = await PubgFull.findOne({ _id: matchId });
   if (userinfo.balance >= match.entryFee) {
     userinfo.balance -= match.entryFee;
-  userinfo.matchId.push(matchId)
+  userinfo.matchId.pubgFullId.push(matchId)
   match.userid.push(userid);
   if(!userinfo.gameName[0].pubg){
     return res.status(400).json({
@@ -20,7 +20,7 @@ const joinuserPubg = async (req, res) => {
   const objectcount = match.gameName.reduce((count,obj)=>count +Object.keys(obj),0)
   const slot = objectcount+1
   match.gameName.push({userid:userid,player1:userinfo.gameName[0].pubg ,player2:'',player3:'',player4:'',slot:slot})
-  match.TotalPlayer=1
+  // match.TotalPlayer +=1
   await match.save();
   await userinfo.save();
   res.status(200).json({
@@ -49,19 +49,56 @@ const getpubgMatch = async (req, res) => {
 };
 
 const checkuserJoinPubg = async (req, res) => {
-  const { matchId } = req.body;
-  const userid = req.user;
-  const userinfo = await signUp.findOne({ _id: userid });
-  const gameNameArray = userinfo.matchId
-  const index = gameNameArray.findIndex(arr => arr.includes(matchId));
-  if (index !== -1) {
+  try {
+    const { matchId } = req.body;
+    const userid = req.user;
+
+    // Fetch user information
+    const userinfo = await signUp.findOne({ _id: userid });
+
+    // Handle if user not found
+    if (!userinfo) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Ensure matchId and pubgFullId exist
+    const gameNameArray = userinfo.matchId?.pubgFullId || [];
+
+    // Check if matchId exists in the array
+    const index = gameNameArray.findIndex(arr => arr.includes(matchId));
+
     res.status(200).json({
-      message: "joined",
+      message: index !== -1 ? "joined" : "notjoined",
     });
-  }else {
+  } catch (error) {
+    console.error("Error in checkuserJoinPubg:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+const checkuserJoinPubgtdm = async (req, res) => {
+  try {
+    const { matchId } = req.body;
+    const userid = req.user;
+
+    // Fetch user information
+    const userinfo = await signUp.findOne({ _id: userid });
+
+    // Handle if user not found
+    if (!userinfo) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Ensure matchId and pubgFullId exist
+    const gameNameArray = userinfo.matchId?.pubgTdmId || [];
+    // Check if matchId exists in the array
+    const index = gameNameArray.findIndex(arr => arr.includes(matchId));
+
     res.status(200).json({
-      message: "notjoined",
+      message: index !== -1 ? "joined" : "notjoined",
     });
+  } catch (error) {
+    console.error("Error in checkuserJoinPubg:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 };
 
@@ -135,10 +172,10 @@ team[0].player4 = player3
 };
 
 const createtdm =async(req,res)=>{
-  const{playermode,TotalPlayer,Time,entryFee}=req.body
+  const{playermode,Time,entryFee}=req.body // Correctly adds 6 minutes
 await tdm.create({
   playermode,
-  TotalPlayer,
+  TotalPlayer:1,
   Time,
   entryFee,
 })
@@ -171,7 +208,7 @@ const joinuserPubgtdm = async (req, res) => {
   const match = await tdm.findOne({ _id: matchId });
   if (userinfo.balance >= match.entryFee) {
     userinfo.balance -= match.entryFee;
-  userinfo.matchId.push(matchId)
+  userinfo.matchId.pubgTdmId.push(matchId)
   match.userid.push(userid);
   if(!userinfo.gameName[0].pubg){
     return res.status(400).json({
@@ -181,7 +218,7 @@ const joinuserPubgtdm = async (req, res) => {
   const objectcount = match.gameName.reduce((count,obj)=>count +Object.keys(obj),0)
   const slot = objectcount+1
   match.gameName.push({userid:userid,player1:userinfo.gameName[0].pubg ,player2:'',player3:'',player4:'',slot:slot})
-  match.TotalPlayer=1
+  match.TotalPlayer +=1
   await match.save();
   await userinfo.save();
   res.status(200).json({
@@ -245,4 +282,4 @@ team[0].player4 = player3
     console.log(error)
   }
 };
-module.exports = { joinuserPubg, getpubgMatch, checkuserJoinPubg,createPubgMatch,addName,addNametdm,createtdm,gettdm,joinuserPubgtdm};
+module.exports = { joinuserPubg, getpubgMatch, checkuserJoinPubg,createPubgMatch,addName,addNametdm,createtdm,gettdm,joinuserPubgtdm ,checkuserJoinPubgtdm};

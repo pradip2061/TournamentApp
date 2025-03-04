@@ -52,7 +52,13 @@ const schema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    matchId:[String],
+    matchId:{
+      pubgFullId: [String],
+      pubgTdmId: [String],
+      FreefireFullId: [String],
+      FreefireClashId: [String],
+      codId: [String],
+    },
     victory: {
       pubg: [String],
       Freefire: [String],

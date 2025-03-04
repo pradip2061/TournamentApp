@@ -16,6 +16,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
+import LinearGradient from 'react-native-linear-gradient';
 
 // Placeholder images (replace with your actual image paths)
 const freefire = require('../assets/freefire.jpeg');
@@ -144,7 +145,7 @@ setPlayer3(match[2])
         setJoinModel(false)
        }
      })
-    } catch (error) {
+    } catch (error) { 
      console.log(error)
      setError(error.response.data.message)
     }finally{
@@ -156,7 +157,11 @@ setPlayer3(match[2])
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       style={{ flex: 1 }}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <View>
+      <LinearGradient
+      colors={["#0f0c29", "#302b63", "#24243e"]}
+      style={styles.gradient}
+    >
         <View style={styles.container}>
           <View style={styles.header}>
             <View style={styles.headerLeft}>
@@ -269,7 +274,8 @@ setPlayer3(match[2])
             </View>
           </Modal>
         </View>
-      </ScrollView>
+        </LinearGradient>
+      </View>
     </KeyboardAvoidingView>
   );
 };

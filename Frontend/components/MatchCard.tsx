@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {View, Text, StyleSheet, Image, Animated, Button, TouchableOpacity, Modal, Alert} from 'react-native';
 import {FlatList, TextInput} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
@@ -6,6 +6,8 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from "@react-native-clipboard/clipboard";
 import ModalNotify from './ModalNotify';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { CheckAdminContext } from '../pages/ContextApi';
 const MatchCard = ({match}) => {
   const[check,setCheck]=useState('')
   const [customId, setCustomId] = useState("");
@@ -20,7 +22,10 @@ const MatchCard = ({match}) => {
   const custompassword = match.customPassword
   const[notifyModel,setNotifyModel]=useState(false)
   const[result,setResult]=useState('')
+   const [selectedImage, setSelectedImage] = useState(null);
+  console.log(result)
   const matchId = match._id
+  const{setGetData}=useContext(CheckAdminContext)
   useEffect(()=>{
     const checkUserOrAdmin =async()=>{
       const token = await AsyncStorage.getItem('token')
@@ -145,6 +150,7 @@ const MatchCard = ({match}) => {
           if(response.status == 200){
             setPublish(response.data.message)
             setModalReset(false)
+            setGetData('done')
           }
           })
        } catch (error) {
@@ -212,6 +218,36 @@ try {
         }
         checkresult()
       },[])
+      const openGallery=()=>{
+          const options = {
+            mediaType: "photo",
+            quality: 0.5,
+          };
+          launchImageLibrary(options, (response) => {
+            if (response.didCancel) {
+              console.log("User cancelled image picker");
+            } else if (response.errorMessage) {
+              console.log("ImagePicker Error: ", response.errorMessage);
+            } else {
+              setSelectedImage(response.assets[0].uri); 
+              const getFileNameFromUri = (selectedImage) => {
+                return selectedImage.split('/').pop(); // Get last part of URI
+              };
+              const filename = getFileNameFromUri(selectedImage)
+              console.log(filename)
+              uploadPhoto(filename)
+            }
+          });
+        }
+        const uploadPhoto = async(selectedImage)=>{
+          console.log(selectedImage)
+         const response = await axios.post(`${process.env.baseUrl}/khelmela/upload`,{
+            selectedImage
+          },{
+            headers: { 'Content-Type': 'multipart/form-data' }
+          })
+          console.log(response)
+        }
   return (
     <>
             <FlatList data={match.matchDetails}  scrollEnabled={false}  keyExtractor={(item,id)=>id.toString()}
@@ -260,7 +296,8 @@ try {
               check === 'host'?
                 <View style={styles.container}>
                 {
-                  publish === 'publish'? <><View style={styles.leftContainer}>
+                  publish === 'publish'? <View>
+                    <View style={{flexDirection:"row",alignItems:"center",paddingBottom:50,gap:30}}><View style={styles.leftContainer}>
                   <TouchableOpacity onPress={copyToClipboardId}>
                   <View style={styles.inputs}>
                   <Text>customId:{match.customId}</Text>
@@ -276,7 +313,18 @@ try {
                    <TouchableOpacity style={styles.button}>
                     <Text style={styles.buttonText}>Reset</Text>
                   </TouchableOpacity>               
-                </View></>:<> <View style={styles.leftContainer}>
+                </View>
+                </View>
+                <View>
+                {
+                  result === 'booleanMatch'? <Text style={{textAlign:'center'}}>result submitted</Text>:result === 'booleanNotMatch'?
+                  <TouchableOpacity onPress={openGallery}><Text style={{textAlign:'center'}}>upload your match photo</Text></TouchableOpacity>:
+                  result ==='noresponse'?<TouchableOpacity onPress={()=>setModalDidYouWin(true)} style={styles.footerText}>
+                    <Text style={{marginLeft:25,textDecorationLine:'underline'}}>Submit Your Result</Text>
+                  </TouchableOpacity>:null
+                }
+                </View>
+                </View>:<> <View style={styles.leftContainer}>
                   <TextInput
                     style={styles.input}
                     placeholder="Custom ID"
@@ -293,39 +341,39 @@ try {
                     onChangeText={setCustomPassword}
                   />
                 </View>
-          
+
                 <View style={styles.rightContainer}>
                    <TouchableOpacity style={styles.button}>
                     <Text style={styles.buttonText} onPress={customIdAndPassword}>Publish</Text>
                   </TouchableOpacity>               
                 </View></>
                 }
-                {
-                  result === 'booleanNotMatch'?<Text>hello hai</Text>:result === 'booleanMatch'?<Text></Text>:
-                  result ==='noresponse'?<TouchableOpacity onPress={()=>setModalDidYouWin(true)} style={styles.footerText}>
-                  <Text style={{marginLeft:25,textDecorationLine:'underline'}}>Submit Your Result</Text>
-                  </TouchableOpacity>:null
-                }
-        
             </View>
-            :check === 'userjoined'? <View style={styles.leftContainer}>
-           <TouchableOpacity onPress={copyToClipboardId}>
-           <View style={styles.inputs}>
-            <Text>customId:{match.customId}</Text>
+            :check === 'userjoined'? <View>
+            <View style={{flexDirection:"row",alignItems:"center",paddingBottom:50,gap:30}}><View style={styles.leftContainer}>
+          <TouchableOpacity onPress={copyToClipboardId}>
+          <View style={styles.inputs}>
+          <Text>customId:{match.customId}</Text>
           </View>
           </TouchableOpacity>
-          <TouchableOpacity onPress={copyToClipboardPass}>
-            <View style={styles.inputs}>
-            <Text>customPassword:{match.customPassword}</Text>
+          <TouchableOpacity  onPress={copyToClipboardPass}>
+          <View style={styles.inputs}>
+          <Text >customId:{match.customPassword}</Text>
           </View>
           </TouchableOpacity>
-          {
-                  result === 'booleanNotMatch'? <Text>result submitted</Text>:result === 'booleanMatch'?<Text>upload your match photo</Text>:
-                  result ==='noresponse'?<TouchableOpacity onPress={()=>setModalDidYouWin(true)} style={styles.footerText}>
-                  <Text style={{marginLeft:25,textDecorationLine:'underline'}}>Submit Your Result</Text>
-                  </TouchableOpacity>:null
-                }
-          </View>
+        </View>
+        </View>
+        <View>
+        {
+          result === 'booleanMatch'? <Text style={{textAlign:'center'}}>result submitted</Text>:result === 'booleanNotMatch'?
+          <TouchableOpacity onPress={openGallery}><Text style={{textAlign:'center'}}>upload your match photo</Text></TouchableOpacity>:
+          result ==='noresponse'?<TouchableOpacity onPress={()=>setModalDidYouWin(true)} style={styles.footerText}>
+            <Text style={{marginLeft:25,textDecorationLine:'underline'}}>Submit Your Result</Text>
+            </TouchableOpacity>
+          :null
+        }
+        </View>
+        </View>
         :null}
           </View> 
           <Modal transparent animationType="slide" visible={modalVisible}>
@@ -458,9 +506,6 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom:10
   },
-  leftContainer: {
-    flex: 1,
-  },
   input: {
     width:136,
     height: 50,
@@ -501,7 +546,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     paddingLeft:100,
-    marginTop:20
+    marginTop:20,
+    textAlign:'center'
   },
   openButton: { backgroundColor: "#007bff", padding: 10, borderRadius: 5 },
   openButtonText: { color: "#fff", fontSize: 16 },

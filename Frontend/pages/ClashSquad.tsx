@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet,Pressable, TextInput, Modal, Keyboard, TouchableOpacity,ScrollView,Animated } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
@@ -10,12 +10,14 @@ import { FlatList} from 'react-native-gesture-handler'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import ShimmerBox from '../components/ShimmerBox'
+import { CheckAdminContext } from './ContextApi'
 const ClashSquad = ({navigation}) => {
   const[page,setPage]=useState(1)
   const[data,setData]=useState([])
   const[trigger,setTrigger]=useState('')
   const[visible,setVisible]=useState(false)
   const[message,setMessage]=useState('')
+  const{getdata}=useContext(CheckAdminContext)
     const [matchDetails, setMatchDetails] = useState({
       show: false,
       showDetail: true,
@@ -49,6 +51,10 @@ const ClashSquad = ({navigation}) => {
         { id: 4, label: "4v4" },
       ];
     
+      const playerOption = [
+        { id: 1, label: "1v1" },
+        { id: 2, label: "2v2" },
+      ];
       const roundOptions = [
         { id: 1, label: 7 },
         { id: 2, label: 9},
@@ -116,7 +122,7 @@ const ClashSquad = ({navigation}) => {
         } catch (error) {
           setMessage(error.response.data.message)
         }
-      },[trigger])
+      },[getdata,trigger])
       
   return (
     <ScrollView>
@@ -166,8 +172,8 @@ const ClashSquad = ({navigation}) => {
         <View style={{marginLeft:40}}>
             <Text style={{fontSize:20,fontWeight:700}}>Room mode</Text>
             <View style={{display:'flex',flexDirection:'row',gap:100,alignItems:'center',marginTop:20,}}>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:true}))} style={ matchDetails.showDetail ?styles.toggle:null}><Text style={ matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Clash Squad</Text></TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:false,coin:''}))} style={ !matchDetails.showDetail ?styles.toggle:null}><Text style={!matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Lone Wolf</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:true,match:'clashSquad'}))} style={ matchDetails.showDetail ?styles.toggle:null}><Text style={ matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Clash Squad</Text></TouchableOpacity>
+                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,showDetail:false,coin:'',match:'loneWolf'}))} style={ !matchDetails.showDetail ?styles.toggle:null}><Text style={!matchDetails.showDetail ? styles.toggleText:styles.toggleTextN}>Lone Wolf</Text></TouchableOpacity>
             </View>
         </View>
         {
@@ -231,7 +237,7 @@ const ClashSquad = ({navigation}) => {
                 :
                 <View style={{marginTop:40}}>
                 <Text style={{fontSize:20,fontWeight:700,marginLeft:40}}>Player</Text>
-                <FlatList data={playerOptions} keyExtractor={(item,id)=>item.id.toString()} renderItem={({item})=>
+                <FlatList data={playerOption} keyExtractor={(item,id)=>item.id.toString()} renderItem={({item})=>
                   <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,player:item.label}))} style={matchDetails.player === item.label ?styles.select:null}><Text style={ matchDetails.player === item.label ? styles.selectText:styles.noselectText}>{item.label}</Text></TouchableOpacity>
                 } horizontal   contentContainerStyle={styles.flatListContainer}/>
                 <View style={{marginLeft:40,marginTop:40}}>

@@ -53,7 +53,7 @@ const Home = ({ navigation }) => {
             <Doller name="circle-dollar-to-slot" size={30} color="white" onPress={() =>navigation.navigate('Transcation')} />
           </TouchableOpacity>
           <View style={{ display: 'flex', flexDirection: 'row', gap: 20 }}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={()=>navigation.navigate('EnrollMatch')}>
               <Gamepad name="game-controller" size={30} color="white" />
             </TouchableOpacity>
             <TouchableOpacity>

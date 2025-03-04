@@ -10,11 +10,16 @@ import PrivateChat from './pages/PrivateChat';
 import TokenCheck from './pages/TokenCheck';
 import { navigationRef } from './pages/NavigationRef';
 import { ContextApi } from './pages/ContextApi';
-
-
+import Orientation from 'react-native-orientation-locker';
 const App = () => {
   const Stack = createStackNavigator();
+  useEffect(() => {
+    Orientation.lockToPortrait(); // Lock to Portrait mode
 
+    return () => {
+      Orientation.unlockAllOrientations(); // Unlock when component unmounts
+    };
+  }, []);
   return (
     <ContextApi>
     <NavigationContainer ref={navigationRef}>

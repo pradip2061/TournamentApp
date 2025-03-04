@@ -9,10 +9,17 @@ const verifyDidYouWinMatch = async (req, res, next) => {
         if (!match) {
             return res.status(404).json({ message: "Match not found" });
         }
+        if (
+            typeof match.teamHost[0].teamHostStatus === "boolean" &&
+            typeof match.teamopponent[0].team2Status === "boolean" &&
+            match.teamHost[0].teamHostStatus === match.teamopponent[0].team2Status
+        ) {
+            return res.status(400).json({ message: " result suspicious!" });
+        }
 
         if (typeof match.teamHost[0].teamHostStatus === "boolean" &&
             typeof match.teamopponent[0].team2Status === "boolean" &&
-            match.teamHost[0].teamHostStatus != match.teamopponent.team2Status) {
+            match.teamHost[0].teamHostStatus != match.teamopponent[0].team2Status) {
                 const useridHost=match.teamHost[0].userid
                 const userid=match.teamopponent[0].userid
                 const host = await signUp.findOne({_id:useridHost})
@@ -39,14 +46,6 @@ const verifyDidYouWinMatch = async (req, res, next) => {
                await match.save()
             return res.status(200).json({ message: " result validate" });
         }
-        if (
-            typeof match.teamHost[0].teamHostStatus === "boolean" &&
-            typeof match.teamopponent[0].team2Status === "boolean" &&
-            match.teamHost[0].teamHostStatus === match.teamopponent.team2Status
-        ) {
-            return res.status(400).json({ message: " result suspicious!" });
-        }
-        
 
         next(); // Only call next() if no response is sent
 
