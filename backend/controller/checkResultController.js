@@ -24,6 +24,12 @@ const checkResult = async (req, res) => {
     if (hostStatus === null || opponentStatus === null) {
         return res.status(200).json({ message: "noresponse" });
     }
+    if(hostStatus === true||false || opponentStatus === null){
+        return res.status(200).json({ message: "oneresponse" });
+    }
+    if(hostStatus === null || opponentStatus === true||false){
+        return res.status(200).json({ message: "oneresponse" });
+    }
 };
 
 const checkuserJoinFF =async(req,res)=>{
@@ -108,4 +114,22 @@ const checkrole =async(req,res)=>{
         data:role
     })
 }
-module.exports = {checkResult,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff};
+
+const getchampions = async(req,res)=>{
+    const userid = req.user
+    const userinfo = await signUp.findOne({_id:userid}).select('username trophy').lean()
+    const userdata = await signUp.find().select('username trophy image').sort({ trophy: -1 }).lean()
+    if(!userinfo || !userdata){
+        return res.status(404).json({
+            message:'data not found'
+        })
+    }
+
+    res.status(200).json({
+        message:'data sent!',
+        userinfo,
+        userdata
+    })
+}
+
+module.exports = {checkResult,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions};

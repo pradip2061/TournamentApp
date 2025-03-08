@@ -15,8 +15,8 @@ const styles = StyleSheet.create({
     color: 'black',
     fontSize: 20,
     paddingBottom:20,
-    marginLeft:15,
     fontWeight:800,
+    marginLeft:25
   },map:{
     width:220,
     height:130,

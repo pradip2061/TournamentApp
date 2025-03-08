@@ -89,7 +89,7 @@ const reset =async(req,res)=>{
    return res.status(400).json({message:'no matchcard found'})
  }
  if(customId !== match.customId){
-    match.customId = matchId
+    match.customId = customId
     await match.save()
     res.status(200).json({message:'customId changed!'})
  } else if(customPassword !== match.customPassword){

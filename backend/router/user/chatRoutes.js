@@ -1,13 +1,16 @@
 const express = require("express");
+const multer = require("multer");
+const path = require("path");
 const { Chat, User } = require("../../model/schema");
 
 const router = express.Router();
+const upload = multer({ dest: "uploads/" }); // Save uploaded files in 'uploads' folder
 
 router.get("/chat", (req, res) => {
-  res.send("Welcome to Khelma  USer Chat");
+  res.send("Welcome to Khelma User Chat");
 });
 
-// API route to get chat messages by room ID
+// Get chat messages by room ID
 router.get("/chat/:id", async (req, res) => {
   try {
     const id = req.params.id;
@@ -20,7 +23,7 @@ router.get("/chat/:id", async (req, res) => {
   }
 });
 
-// Function to handle WebSocket events
+// Handle WebSocket events
 const setupChatSocket = (io) => {
   io.on("connection", (socket) => {
     console.log("A user connected", socket.id);
@@ -32,43 +35,19 @@ const setupChatSocket = (io) => {
 
     socket.on("message", async ({ room, message }) => {
       console.log(room, message);
-
       try {
-        // Save the message to the database
         const chat = new Chat({
           roomId: message.roomId,
           senderID: message.senderID,
           message: message.message,
           time: message.time,
+          fileUrl: message.fileUrl || null, // Save file URL if available
         });
         await chat.save();
         console.log("Message saved to DB");
-
-        // Emit the message to users in the room
         socket.to(room).emit("message", message);
       } catch (err) {
         console.error("DB error:", err);
-      }
-    });
-
-    socket.on("notification", async ({ notification }) => {
-      try {
-        // Send notification to the user's room
-        socket
-          .to(`notification:${notification.userId}`)
-          .emit("new_notification", notification);
-
-        // Update the user's notifications in the database
-        await User.updateOne(
-          { _id: notification.userId },
-          { $push: { notification: notification } }
-        );
-
-        socket.disconnect(true);
-        console.log("Socket disconnected after notification.");
-      } catch (error) {
-        console.error("Error handling notification:", error);
-        socket.disconnect(true);
       }
     });
 
@@ -78,9 +57,17 @@ const setupChatSocket = (io) => {
   });
 };
 
-router.get("/chat/find_people/:id", (req, res) => {
-  const id = req.params.id;
-  const user = User.findById(id);
+// File upload route
+router.post("/chat/upload", upload.single("file"), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).send("No file uploaded");
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    res.send({ fileUrl });
+  } catch (error) {
+    console.error("File upload error:", error);
+    res.status(500).send("Server error");
+  }
 });
 
 module.exports = { router, setupChatSocket };

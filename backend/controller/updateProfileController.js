@@ -94,5 +94,13 @@ const freefireprofile =async(req,res)=>{
             message:'saved successfully'
         })
 }
+const uploadImage =async(req, res) => {
+    if (!req.file) return res.status(400).json({ message: 'No file uploaded' });
+    console.log(req.file)
+    res.json({
+      message: 'File uploaded successfully',
+      filePath: `/uploads/${req.file.filename}`,
+    });
+  }
 
-module.exports = {updateProfile,pubgprofile,freefireprofile}
+module.exports = {updateProfile,pubgprofile,freefireprofile,uploadImage}

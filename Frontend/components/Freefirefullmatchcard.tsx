@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
 import LinearGradient from 'react-native-linear-gradient';
+import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
 
 // Placeholder images (replace with your actual image paths)
 const freefire = require('../assets/freefire.jpeg');
@@ -34,6 +35,7 @@ const Freefirefullmatchcard = ({ matches }) => {
   const [player2, setPlayer2] = useState('');
   const [player3, setPlayer3] = useState('');
   const matchId = matches._id;
+  const {setTrigger}=useContext(CheckAdminContext)
 console.log(matches)
   const joinuser = async () => {
     const token = await AsyncStorage.getItem('token');
@@ -50,6 +52,7 @@ console.log(matches)
         )
         .then((response) => {
           setMessage(response.data.message);
+          setTrigger('done')
         });
     } catch (error) {
       setError(error.response.data.message);
@@ -102,7 +105,7 @@ console.log(matches)
     try {
       await axios
         .post(
-          `${process.env.baseUrl}/khelmela/addName`,
+          `${process.env.baseUrl}/khelmela/addNameff`,
           { matchId,player1,player2,player3 },
           {
             headers: {
@@ -126,32 +129,6 @@ setPlayer2(match[1])
 setPlayer3(match[2])
   },[])
 
-  const checking =async()=>{
-    try {
-      setError('')
-      setMessage('')
-     const token = await AsyncStorage.getItem('token')
-     console.log(token)
-     await axios.post(`${process.env.baseUrl}/khelmela/check`,{},{
-       headers:{
-         Authorization:`${token}`
-       }
-     })
-     .then((response)=>{
-       if(response.status == 200){
-         setJoinModel(true)
-         setMessage('user is free')
-       }else{
-        setJoinModel(false)
-       }
-     })
-    } catch (error) { 
-     console.log(error)
-     setError(error.response.data.message)
-    }finally{
-     notify()
-    }
-   }
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -242,7 +219,7 @@ setPlayer3(match[2])
           ) : checKJoined === 'notjoined' ? (
             <TouchableOpacity
               style={styles.entryButton}
-              onPress={checking}
+              onPress={()=>setJoinModel(true)}
             >
               <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
             </TouchableOpacity>

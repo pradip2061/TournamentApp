@@ -1,5 +1,7 @@
+const RateLimit = require("../model/RateLimitModel");
+
 const rateLimitMiddleware = async (req, res, next) => {
-    const userId = req.body.userId; // Assuming userId is sent in request
+    const userId = req.user; // Assuming userId is sent in request
   
     let userRate = await RateLimit.findOne({ userId });
   

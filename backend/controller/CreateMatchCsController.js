@@ -117,6 +117,23 @@ res.status(200).json({
 })
 }
 
+const trackusermodeltdm = async(req,res)=>{
+  const{matchId}=req.body
+  const userid = req.user
+  if(!matchId){
+    return res.status(400).json({
+      message:'all fields are required'
+    })
+  }
+const match = await signUp.findOne({_id:userid})
+
+match.matchId.pubgTdmId.push(matchId)
+await match.save()
+res.status(200).json({
+  message:'matchid add successfully'
+})
+}
+
 const checkUserOrAdmin =async(req,res)=>{
  const userId = req.user
  const{matchId}=req.body
@@ -256,11 +273,8 @@ const addName = async (req, res) => {
   // Check if match exists
   const matchinfo = await FFfreefire.findOne({ _id: matchId });
   const userinfo = await signUp.findOne({_id:userid})
-  const gameName = userinfo.gameName[0].freefire
-  if(!gameName){
-    return res.status(400).json({
-      message:'plz set your gameName from your profile'
-    })
+  if (!userinfo || !userinfo.gameName || !userinfo.gameName[0]?.freefire) {
+    return res.status(400).json({ message: 'Please set your gameName from your first' });
   }
   if (!matchinfo) {
     return res.status(400).json({ message: 'No match found' });
@@ -281,10 +295,10 @@ const addName = async (req, res) => {
 
   // ✅ Choose one:
   // matchinfo.gameName.push(player1, player2, player3);  // Append names
-  const team = matchinfo.gameName.filter((item)=>item.player1 === gameName)
-  team[0].player2 = player1
-  team[0].player3 = player2
-  team[0].player4 = player3
+  const teamIndex = matchinfo.gameName.findIndex((team) => team.userid === userid);
+  matchinfo.gameName[teamIndex].player2 =player1
+  matchinfo.gameName[teamIndex].player3 =player2
+  matchinfo.gameName[teamIndex].player4 =player3
     const totalStrings = matchinfo.gameName.reduce((acc, obj) => acc + Object.keys(obj).length, 0);
     matchinfo.TotalPlayer = totalStrings
     matchinfo.save()
@@ -295,40 +309,52 @@ const addName = async (req, res) => {
   }
 };
 
-const EnrollMatch =async(req,res)=>{
-try {
-  const userid =req.user
-  if(!userid){
-    res.status(400).json({
-      message:'user not found!'
-    })
+const EnrollMatch = async (req, res) => {
+  try {
+    const userid = req.user;
+    if (!userid) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    const userinfo = await signUp.findOne({ _id: userid });
+    if (!userinfo) {
+      return res.status(400).json({ message: "User not found!" });
+    }
+
+    const matchIdsclash = userinfo.matchId.FreefireClashId;
+    const matchesclash = await ClashSquad.find({
+      _id: { $in: matchIdsclash },
+      status: { $in: ["pending", "running"] },
+    });
+
+    const matchIdff = userinfo.matchId.FreefireFullId;
+    const matchesff = await FFfreefire.find({
+      _id: { $in: matchIdff },
+      status: { $in: ["pending", "running"] },
+    });
+
+    const matchIdspubg = userinfo.matchId.pubgFullId;
+    const matchespubg = await PubgFull.find({
+      _id: { $in: matchIdspubg },
+      status: { $in: ["pending", "running"] },
+    });
+
+    const matchIdstdm = userinfo.matchId.pubgTdmId;
+    const matchestdm = await tdm.find({
+      _id: { $in: matchIdstdm },
+      status: { $in: ["pending", "running"] },
+    });
+
+    res.status(200).json({
+      matchesclash,
+      matchesff,
+      matchespubg,
+      matchestdm,
+    });
+  } catch (error) {
+    res.status(400).json({ message: error.message || error });
   }
-const userinfo = await signUp.findOne({_id:userid})
-if(!userinfo){
-  res.status(400).json({
-    message:'user not found!'
-  })
-}
-const matchIdsclash =userinfo.matchId.FreefireClashId
-const matchesclash = await ClashSquad.find({ _id: { $in: matchIdsclash } });
-const matchIdff =userinfo.matchId.FreefireFullId
-const matchesff = await FFfreefire.find({ _id: { $in: matchIdff } });
-const matchIdspubg =userinfo.matchId.pubgFullId
-const matchespubg = await PubgFull.find({ _id: { $in: matchIdspubg } });
-const matchIdstdm =userinfo.matchId.pubgTdmId
-const matchestdm = await tdm.find({ _id: { $in: matchIdstdm } });
+};
 
-res.status(200).json({
-  matchesclash,
-  matchesff,
-  matchespubg,
-  matchestdm
-})
-} catch (error) {
-  res.status(400).json({
-    message:error
-  })
-}
-}
 
-module.exports = {EnrollMatch,createCs,addName,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};
+module.exports = {EnrollMatch,createCs,addName,trackusermodeltdm,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};

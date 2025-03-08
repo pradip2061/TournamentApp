@@ -122,24 +122,20 @@ const createPubgMatch = async (req, res) => {
 };
 
 
-const addName = async (req, res) => {
+const addName = async(req, res) => {
   try {
     const { player1, player2, player3, matchId } = req.body;
   const userid = req.user;
-
   // Validate input
   if (!player1 || !player2 || !player3) {
     return res.status(400).json({ message: 'All fields are mandatory' });
   }
-
   // Check if match exists
-  const matchinfo = await PubgFull.findOne({ _id: matchId });
-  const userinfo = await signUp.findOne({_id:userid})
-  const gameName = userinfo.gameName[0].pubg
-  if(!gameName){
-    return res.status(400).json({
-      message:'plz set your gameName from your profile'
-    })
+  
+  const matchinfo = await PubgFull.findOne({_id: matchId });
+  const userinfo = await signUp.findOne({ _id: userid });
+  if (!userinfo || !userinfo.gameName || !userinfo.gameName[0]?.pubg) {
+    return res.status(400).json({ message: 'Please set your gameName from your first' });
   }
   if (!matchinfo) {
     return res.status(400).json({ message: 'No match found' });
@@ -151,20 +147,18 @@ const addName = async (req, res) => {
     return res.status(400).json({ message: 'You can try again after 2 hours.' });
   }
 
-  // Save the request timestamp with a TTL index (2 hours)
   await namelimit.create({
     userid,
     matchId,
     lastRequest: Date.now()
   });
-const team = matchinfo.gameName.filter((item)=>item.player1 === gameName)
-team[0].player2 = player1
-team[0].player3 = player2
-team[0].player4 = player3
+  const teamIndex = matchinfo.gameName.findIndex((team) => team.userid === userid);
+  matchinfo.gameName[teamIndex].player2 =player1
+  matchinfo.gameName[teamIndex].player3 =player2
+  matchinfo.gameName[teamIndex].player4 =player3
   const totalStrings = matchinfo.gameName.reduce((acc, obj) => acc + Object.keys(obj).length, 0);
   matchinfo.TotalPlayer = totalStrings
-  matchinfo.save()
-
+  await matchinfo.save()
   res.status(200).json({ message: 'Set successfully' });
   } catch (error) {
     console.log(error)
@@ -172,15 +166,27 @@ team[0].player4 = player3
 };
 
 const createtdm =async(req,res)=>{
-  const{playermode,Time,entryFee}=req.body // Correctly adds 6 minutes
-await tdm.create({
-  playermode,
+  const{matchDetails}=req.body // Correctly adds 6 minutes
+  const userid =req.user
+  const userinfo = await signUp.findOne({_id:userid})
+  if(userinfo.balance < matchDetails.betAmount){
+    return res.status(400).json({
+      message:'you dont have enough balance'
+    })
+  }
+  const newMatch = new tdm({
+   playermode:matchDetails.match,
   TotalPlayer:1,
-  Time,
-  entryFee,
-})
+  Time:matchDetails.Time,
+  entryFee:matchDetails.betAmount,
+      });
+
+      await newMatch.save()
+      userinfo.balance -= matchDetails.betAmount
+      userinfo.save()
 res.status(200).json({
-  message:'match create successfully'
+  message:'match create successfully',
+  newMatch
 })
 }
 
