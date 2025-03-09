@@ -49,7 +49,7 @@ const Authenticate = ({ navigation }) => {
       }
       Keyboard.dismiss() // Dismiss keyboard before login
       setLoading(true)
-      await axios.post('${process.env.baseUrl}/khelmela/login', { email, password }, {
+      await axios.post(`${process.env.baseUrl}/khelmela/login`, { email, password }, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -72,7 +72,7 @@ const Authenticate = ({ navigation }) => {
     try {
       Keyboard.dismiss() // Dismiss keyboard before sending OTP
       setLoading(true)
-      await axios.post('${process.env.baseUrl}/khelmela/verifyotp', { otp, username, email, password })
+      await axios.post(`${process.env.baseUrl}/khelmela/verifyotp`, { otp, username, email, password })
         .then((response) => {
           Alert.alert(response.data.message)
           setEmail('')
@@ -95,12 +95,14 @@ const Authenticate = ({ navigation }) => {
   const signin = async (e) => {
     try {
       e.preventDefault()
+      console.log('hello')
       if (!username || !email || !password) {
         return
       }
+      
       Keyboard.dismiss() // Dismiss keyboard before signup
       setLoading(true)
-      await axios.post('${process.env.baseUrl}/khelmela/sendOtp', { username, email, password }, {
+      await axios.post(`${process.env.baseUrl}/khelmela/sendOtp`, { username, email, password }, {
         headers: {
           'Content-Type': 'application/json',
         },

@@ -17,7 +17,7 @@ const[matchestdm,setMatchesTdm]=useState([])
         try {
          const getmatch=async()=>{
            const token = await AsyncStorage.getItem('token')
-         const response =  await axios.get(`${process.env.baseUrl}/khelmela/enrollmatch`,{
+         const response =  await axios.get('http://30.30.17.80:3000/khelmela/enrollmatch',{
             headers:{
                 Authorization:`${token}`
             }

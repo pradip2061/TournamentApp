@@ -29,7 +29,7 @@ const MatchCard = ({ match }) => {
     const checkUserOrAdmin = async () => {
       const token = await AsyncStorage.getItem('token');
       await axios
-        .post(`${process.env.baseUrl}/khelmela/checkUserOrAdmin`, { matchId }, {
+        .post('http://30.30.17.80:3000/khelmela/checkUserOrAdmin', { matchId }, {
           headers: { Authorization: `${token}` },
         })
         .then((response) => {
@@ -45,7 +45,7 @@ const MatchCard = ({ match }) => {
       setMessage('');
       const token = await AsyncStorage.getItem('token');
       await axios
-        .post(`${process.env.baseUrl}/khelmela/check`, {}, { headers: { Authorization: `${token}` } })
+        .post('http://30.30.17.80:3000/khelmela/check', {}, { headers: { Authorization: `${token}` } })
         .then((response) => {
           if (response.status === 200) {
             setModalVisible(true);
@@ -70,7 +70,7 @@ const MatchCard = ({ match }) => {
     e.preventDefault();
     try {
       await axios
-        .post(`${process.env.baseUrl}/khelmela/setpass`, { customId, customPassword, matchId })
+        .post('http://30.30.17.80:3000/khelmela/setpass', { customId, customPassword, matchId })
         .then((response) => {
           if (response.status === 200) setMessage(response.data.message);
         });
@@ -85,7 +85,7 @@ const MatchCard = ({ match }) => {
       setMessage('');
       const token = await AsyncStorage.getItem('token');
       await axios
-        .post(`${process.env.baseUrl}/khelmela/join`, { matchId }, { headers: { Authorization: `${token}` } })
+        .post('http://30.30.17.80:3000/khelmela/join', { matchId }, { headers: { Authorization: `${token}` } })
         .then((response) => {
           if (response.status === 200) {
             setModalVisible(false);
@@ -105,7 +105,7 @@ const MatchCard = ({ match }) => {
     const checkpublish = async () => {
       try {
         await axios
-          .post(`${process.env.baseUrl}/khelmela/checkpublish`, { matchId })
+          .post('http://30.30.17.80:3000/khelmela/checkpublish', { matchId })
           .then((response) => {
             if (response.status === 200) setPublish(response.data.message);
           });
@@ -125,7 +125,7 @@ const MatchCard = ({ match }) => {
       setError('');
       setMessage('');
       await axios
-        .post(`${process.env.baseUrl}/khelmela/changecustom`, { matchId, customId, customPassword },{
+        .post('http://30.30.17.80:3000/khelmela/changecustom', { matchId, customId, customPassword },{
           headers:{
             Authorization:`${token}`
           }
@@ -150,7 +150,7 @@ const MatchCard = ({ match }) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          `${process.env.baseUrl}/khelmela/checkBoolean`,
+          'http://30.30.17.80:3000/khelmela/checkBoolean',
           { matchId, boolean },
           { headers: { Authorization: `${token}` } }
         )
@@ -169,7 +169,7 @@ const MatchCard = ({ match }) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          `${process.env.baseUrl}/khelmela/checkBoolean`,
+          'http://30.30.17.80:3000/khelmela/checkBoolean',
           { matchId, boolean },
           { headers: { Authorization: `${token}` } }
         )
@@ -186,7 +186,7 @@ const MatchCard = ({ match }) => {
     const checkresult = async () => {
       try {
         await axios
-          .post(`${process.env.baseUrl}/khelmela/checkresult`, { matchId })
+          .post('http://30.30.17.80:3000/khelmela/checkresult',{ matchId })
           .then((response) => setResult(response.data.message));
       } catch (error) {
         setError(error.response.data.message);
@@ -215,7 +215,7 @@ const MatchCard = ({ match }) => {
   const uploadPhoto = async (filename) => {
     try {
       await axios.post(
-        `${process.env.baseUrl}/khelmela/upload`,
+        'http://30.30.17.80:3000/khelmela/upload',
         { selectedImage: filename },
         { headers: { 'Content-Type': 'multipart/form-data' } }
       );
@@ -236,8 +236,8 @@ const MatchCard = ({ match }) => {
               <TouchableOpacity activeOpacity={1}>
                 <View style={styles.cardContent}>
                   <View style={styles.headerRow}>
-                    <Text style={styles.title}>Battle</Text>
                     <Image source={require('../assets/freefire.jpeg')} style={styles.gameIcon} />
+                    <Text style={styles.title}>FREEFIRE CLASH SQUAD</Text>
                   </View>
                   <View style={styles.row}>
                     <View style={styles.column}>
@@ -465,7 +465,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden', // Clips the gradient to the border
   },
   card: {
-    height: 450,
+    
     backgroundColor: 'transparent', // Let gradient handle the background
   },
   gradient: {
@@ -478,13 +478,13 @@ const styles = StyleSheet.create({
   },
   headerRow: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    gap:20
+    
   },
   gameIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: 10,
+    width: 43,
+    height: 43,
+    borderRadius: 100,
   },
   row: {
     flexDirection: 'row',
@@ -527,12 +527,12 @@ const styles = StyleSheet.create({
   entryButton: {
     backgroundColor: 'green',
     padding: 5,
-    borderRadius: 5,
+    borderRadius: 25,
   },
   joinedButton: {
     backgroundColor: 'green',
     padding: 5,
-    borderRadius: 15,
+    borderRadius: 25,
   },
   entryText: {
     fontSize: 16,

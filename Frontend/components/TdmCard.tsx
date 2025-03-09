@@ -55,7 +55,7 @@ const TdmCard = ({matches}) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          `${process.env.baseUrl}/khelmela/checkuserPubgtdm`,
+          'http://30.30.17.80:3000/khelmela/checkuserPubgtdm',
           { matchId },
           {
             headers: {

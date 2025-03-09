@@ -13,7 +13,7 @@ const Champions = () => {
         try {
           const getMatches = async()=>{
                  const token = await AsyncStorage.getItem('token')
-            await axios.get(`${process.env.baseUrl}/khelmela/getchampions`,{
+            await axios.get('http://30.30.17.80:3000/khelmela/getchampions',{
                 headers:{
                     Authorization:`${token}`
                 }

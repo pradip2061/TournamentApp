@@ -29,6 +29,7 @@ const Profile = () => {
     const getProfile = async () => {
       const token = await AsyncStorage.getItem('token');
       try {
+        console.log(process.env.baseUrl)
         const response = await axios.get(`${process.env.baseUrl}/khelmela/getprofile`, {
           headers: { Authorization: `${token}` },
         });
