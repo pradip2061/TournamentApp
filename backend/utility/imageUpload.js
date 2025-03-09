@@ -4,6 +4,7 @@ const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const mime = require("mime-types");
 const fireBase_key = require("./accountKey");
+const Authverify = require("../middleware/AuthVerify");
 
 const router = express.Router();
 
@@ -33,9 +34,12 @@ router.get("/", (req, res) => {
   console.log("Upload Route Active >>>>>>>>>>>>>>>>>>>>>>>");
   res.send("Hello World!");
 });
-router.post("/upload", async (req, res) => {
+router.post("/upload",Authverify, async (req, res) => {
   try {
+    console.log('hit bhayo')
+    const userid =req.user
     const { image, filename, folderName } = req.body;
+    const fileNameid = userid+filename
     if (!image || !filename || !folderName) {
       return res
         .status(400)
@@ -43,7 +47,7 @@ router.post("/upload", async (req, res) => {
     }
 
     // Get the file extension from filename
-    const ext = filename.split(".").pop().toLowerCase();
+    const ext = fileNameid.split(".").pop().toLowerCase();
 
     // Supported file types
     const allowedTypes = [

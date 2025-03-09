@@ -28,9 +28,9 @@ const ChatTabButton = props => {
       const decoded = jwtDecode(token)
       const userId = decoded.id
 
-      const response = await axios.get(`${process.env.baseUrl}/khelmela/friends/${userId}`)
+      const response = await axios.get(`${process.env.baseUrl}/khelmela/friends/${token}`)
 
-      navigation.navigate('LandingChat', {friends: response.data})
+      navigation.navigate('Chat', {friends: response.data})
     } catch (error) {
       console.error('Error fetching friends:', error.message)
     }

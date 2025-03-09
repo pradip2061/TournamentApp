@@ -1,7 +1,6 @@
 const express = require('express')
 const Authverify = require('../../middleware/AuthVerify')
 const { checkuserJoinPubg, joinuserPubg, getpubgMatch, createPubgMatch, addName, createtdm, gettdm, joinuserPubgtdm, addNametdm, checkuserJoinPubgtdm } = require('../../controller/PubgJoinUserController')
-const router = require('./AuthenticateRouter')
 const router4 = express.Router()
 router4.post('/joinuserPubg',Authverify,joinuserPubg)
 router4.post('/joinuserPubgtdm',Authverify,joinuserPubgtdm)

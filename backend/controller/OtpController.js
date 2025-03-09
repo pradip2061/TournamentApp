@@ -1,6 +1,6 @@
 const Otp = require("../model/OtpModel");
 const sendOtpEmail = require("../config/nodemailer");
-const signUp = require("../model/signUpModel");
+const {User}= require("../model/schema");
 const bcrypt = require('bcrypt')
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000); // 6-digit OTP
 const OtpModel = require("../model/OtpModel")
@@ -22,7 +22,7 @@ const requestOtp = async (req, res) => {
          res.status(400).json({ message: "Password must be at least 8 characters long" });
          return
       }
-      const verifyemail = await signUp.findOne({email:email})
+      const verifyemail = await User.findOne({email:email})
       if(verifyemail){
           res.status(400).json({
               message:'email already use'
@@ -30,7 +30,7 @@ const requestOtp = async (req, res) => {
           return
       }
       
-    const verifyuser = await signUp.findOne({username:username})
+    const verifyuser = await User.findOne({username:username})
     if(verifyuser){
         res.status(400).json({
             message:'username already taken'
@@ -53,7 +53,7 @@ const requestOtp = async (req, res) => {
     res.status(500).json({ message: "Error sending OTP", error: error.message });
   }
 };
-const verifyOtpandSignup = async (req, res) => {
+const verifyOtpanduser = async (req, res) => {
     try {
       const { email, otp,password,username } = req.body;
       
@@ -67,7 +67,7 @@ const verifyOtpandSignup = async (req, res) => {
         return res.status(400).json({ message: "OTP has expired" });
       }
   
-      await signUp.create({
+      await User.create({
         username,
         email,
         image:"",
@@ -163,7 +163,7 @@ const verifyOtpandSignup = async (req, res) => {
         return res.status(400).json({ message: "OTP has expired" });
       }
 
-      const userinfo = await signUp.findOne({email}).select('password')
+      const userinfo = await User.findOne({email}).select('password')
       userinfo.password = hashPassword
       await userinfo.save()
       res.status(200).json({
@@ -171,4 +171,4 @@ const verifyOtpandSignup = async (req, res) => {
       })
   }
 
-module.exports = { requestOtp,verifyOtpandSignup,resetPassword,resetOtpVerify};
+module.exports = { requestOtp,verifyOtpanduser,resetPassword,resetOtpVerify};

@@ -1,4 +1,4 @@
-const signUp = require("../model/signUpModel")
+const {User} = require("../model/schema")
 const generateTokens = require('../token/generateToken')
 const bcrypt = require('bcrypt')
 const Login =async(req,res)=>{
@@ -11,7 +11,7 @@ if(!email || !password){
     return
 }
 
-const emailCheck = await signUp.findOne({email:email})
+const emailCheck = await User.findOne({email:email})
 if(!emailCheck){
     res.status(404).json({
         message:'user not found!'
@@ -54,7 +54,7 @@ if(!userid){
     })
     return
 }
-const userinfo = await signUp.findById(userid)
+const userinfo = await User.findById(userid)
 res.status(200).json({
     message:'this is user info',
     data:userinfo

@@ -4,7 +4,7 @@ const { jwtDecode } = require("jwt-decode");
 const { User } = require("../../model/schema");
 const ClashSquad = require("../../model/ClashSquadModel");
 
-//   Route to send specific data only *****************************
+  // Route to send specific data only *****************************
 router.get("/:request/:token", async (req, res) => {
   console.log("Route request Active >>>>>>>>>>>>>>>>>>>>>>>>>>>");
 

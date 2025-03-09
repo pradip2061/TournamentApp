@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert, Image, ActivityIndicator, BackHandler, Keyboard } from 'react-native'
+import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, BackHandler, Keyboard } from 'react-native'
 import React, { useCallback, useEffect, useState } from 'react'
 import Icon from 'react-native-vector-icons/AntDesign'
 import Lock from 'react-native-vector-icons/AntDesign'
@@ -8,6 +8,7 @@ import axios from 'axios'
 import Modal from "react-native-modal";
 import { useFocusEffect } from '@react-navigation/native'
 import LinearGradient from 'react-native-linear-gradient'
+
 const Authenticate = ({ navigation }) => {
   const [show, setShow] = useState(true)
   const [value, setValue] = useState('Signup')
@@ -23,6 +24,7 @@ const Authenticate = ({ navigation }) => {
   const[verifyModal,setVerifyModal]=useState(false)
   const[confirmPassword,setConfirmPassword]=useState('')
   const[newPassword,setNewPassword]=useState('')
+
   const shows = () => {
     show ? setShow(false) : setShow(true)
     show ? setValue('Login') : setValue('Signup')
@@ -34,22 +36,20 @@ const Authenticate = ({ navigation }) => {
     await AsyncStorage.setItem('token', token)
     await AsyncStorage.setItem('tokenExpiry', expiryTime.toString())
   }
+
   useEffect(() => {
-    // After token is updated, save it to AsyncStorage
     settoken()
   }, [token])
-
-
 
   const login = async (e) => {
     try {
       e.preventDefault()
-      Keyboard.dismiss()
       if (!email || !password) {
         return
       }
+      Keyboard.dismiss() // Dismiss keyboard before login
       setLoading(true)
-      await axios.post(`${process.env.baseUrl}/khelmela/login`, { email, password }, {
+      await axios.post('${process.env.baseUrl}/khelmela/login', { email, password }, {
         headers: {
           'Content-Type': 'application/json'
         }
@@ -70,9 +70,9 @@ const Authenticate = ({ navigation }) => {
 
   const sendOtp = async () => {
     try {
+      Keyboard.dismiss() // Dismiss keyboard before sending OTP
       setLoading(true)
-      Keyboard.dismiss()
-      await axios.post(`${process.env.baseUrl}/khelmela/verifyotp`, { otp, username, email, password })
+      await axios.post('${process.env.baseUrl}/khelmela/verifyotp', { otp, username, email, password })
         .then((response) => {
           Alert.alert(response.data.message)
           setEmail('')
@@ -91,15 +91,16 @@ const Authenticate = ({ navigation }) => {
       setLoading(false)
     }
   }
+
   const signin = async (e) => {
     try {
       e.preventDefault()
-      Keyboard.dismiss()
       if (!username || !email || !password) {
         return
       }
+      Keyboard.dismiss() // Dismiss keyboard before signup
       setLoading(true)
-      await axios.post('http://30.30.14.54:3000/khelmela/sendOtp', { username, email, password }, {
+      await axios.post('${process.env.baseUrl}/khelmela/sendOtp', { username, email, password }, {
         headers: {
           'Content-Type': 'application/json',
         },
@@ -109,7 +110,6 @@ const Authenticate = ({ navigation }) => {
             setError('')
             setOtpmodel(true)
           }
-
         })
     } catch (error) {
       setError(error.response.data.message)
@@ -118,6 +118,7 @@ const Authenticate = ({ navigation }) => {
       setLoading(false)
     }
   }
+
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {
@@ -125,327 +126,402 @@ const Authenticate = ({ navigation }) => {
           { text: "Cancel", onPress: () => null, style: "cancel" },
           { text: "YES", onPress: () => BackHandler.exitApp() },
         ]);
-        return true; // Prevent default back action
+        return true;
       };
-
       const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
-
-      return () => backHandler.remove(); // Remove event listener when screen is unfocused
+      return () => backHandler.remove();
     }, [])
   );
-  const resetPassword =async()=>{
+
+  const resetPassword = async () => {
+    Keyboard.dismiss() // Dismiss keyboard before reset
     setLoading(true)
-   try {
-    const response =await axios.post(`${process.env.baseUrl}/khelmela/forgetpassword`,{email})
-    if(response.status == 200){
-      setResetModal(false)
-      setVerifyModal(true)
+    try {
+      const response = await axios.post(`${process.env.baseUrl}/khelmela/forgetpassword`, { email })
+      if (response.status == 200) {
+        setResetModal(false)
+        setVerifyModal(true)
+      }
+    } catch (error) {
+      setError(error.response.data.message)
+    } finally {
+      setLoading(false)
     }
-   } catch (error) {
-    setError(error.response.data.message)
-   }finally{
-    setLoading(false)
-   }
   }
 
-  const verifyforgetpassword=async()=>{
+  const verifyforgetpassword = async () => {
+    Keyboard.dismiss() // Dismiss keyboard before verify
     setLoading(true)
-   try {
-    Keyboard.dismiss()
-    const response =await axios.post(`${process.env.baseUrl}/khelmela/verifyforgetpassword`,{email,otp,newPassword,confirmPassword})
-    if(response.status ==200){
-      Alert.alert('password changed!!')
-      setVerifyModal(false)
-      setShow((prev)=>!prev)
-      setValue((prev)=>"Login")
-      setError('')
+    try {
+      const response = await axios.post(`${process.env.baseUrl}/khelmela/verifyforgetpassword`, { email, otp, newPassword, confirmPassword })
+      if (response.status == 200) {
+        Alert.alert('password changed!!')
+        setVerifyModal(false)
+        setShow((prev) => !prev)
+        setValue((prev) => "Login")
+        setError('')
+      }
+    } catch (error) {
+      setError(error.response.data.message)
+    } finally {
+      setLoading(false)
     }
-   } catch (error) {
-    setError(error.response.data.message)
-   }finally{
-    setLoading(false)
-   }
   }
+
   return (
     <LinearGradient
       colors={["#0f0c29", "#302b63", "#24243e"]}
-      style={styles.gradient}
+      style={styles.container}
     >
-      <View style={{ padding: 20, width: '100%', height: '100%' }}>
-
-        <TouchableOpacity onPress={() => navigation.navigate('First')} style={{ position: 'absolute', left: 5 , top:19}}>
-          <Icon name="arrowleft" size={40} color="white" />
+      <View style={styles.mainContent}>
+        <TouchableOpacity onPress={() => navigation.navigate('First')} style={styles.backButton}>
+          <Icon name="arrowleft" size={30} color="#FFFFFF" />
         </TouchableOpacity>
 
-        {
-          show ? <View style={styles.loginContainer}>
-            <Text style={{ fontSize: 37, marginTop: 40, fontWeight: 900, color: 'white' }}>Log in</Text>
-            <Email name="email-outline" size={30} color="black" style={styles.loginemailIcon} />
-            <TextInput placeholder="Enter your email id" style={[styles.input, email === '' && styles.placeholderShift]} placeholderTextColor="gray" value={email} onChangeText={setEmail} />
-
-            <Lock name='lock1' size={30} color='black' style={styles.loginlockIcon} />
-            <TextInput placeholder="Enter your password" secureTextEntry style={[styles.input, password === '' && styles.placeholderShift]} placeholderTextColor="gray" value={password} onChangeText={setPassword} />
-
-            <Text style={{ color: 'white', fontSize: 20 }}>{error}</Text>
-            <Text style={{ fontSize: 15, marginTop: 10, color: 'red', marginLeft: 189 }}>Forgot Password?</Text>
-            <TouchableOpacity style={styles.button} onPress={login}><Text style={{ fontSize: 30, fontWeight: 700, color: 'white', textAlign: 'center' }} disabled={loading}>Login</Text></TouchableOpacity>
-            <Text style={{ fontSize: 30, marginTop: 20, fontWeight: 400, color: 'white' }}>OR</Text>
-          </View> : <View style={styles.loginContainer}>
-            <Text style={{ fontSize: 40, marginTop: 30, fontWeight: 900, color: 'white' }}>Sign in</Text>
-            <Icon name="user" size={30} color="black" style={{ position: 'absolute', marginRight: 260, marginTop: 135, zIndex: 10 }} />
-            <TextInput placeholder="Enter your username" style={[styles.input, username === '' && styles.placeholderShift]} placeholderTextColor="gray" value={username} onChangeText={setUsername} />
-
-            <Email name="email-outline" size={30} color="black" style={styles.emailIcon} />
-            <TextInput placeholder="Enter your email id" style={[styles.input, email === '' && styles.placeholderShift]} placeholderTextColor="gray" value={email} onChangeText={setEmail} />
-            <Lock name='lock1' size={30} color='black' style={styles.lockIcon} />
-            <TextInput placeholder="Enter your password" secureTextEntry style={[styles.input, password === '' && styles.placeholderShift]} placeholderTextColor="gray" value={password} onChangeText={setPassword} />
-            <TouchableOpacity style={styles.button} onPress={signin}><Text style={styles.signupButton} disabled={loading}>Signup</Text></TouchableOpacity>
-            <Text style={{ fontSize: 30, marginTop: 20, fontWeight: 400, color: 'white' }}>or</Text>
-          </View>
-        }
-        <View style={{ display: 'flex', flexDirection: 'row', marginLeft: 30, marginTop: 210 }}>
-          <Text style={{ fontSize: 20, color: 'white' }}>   {value === "Login" ? "Already account exist? " : "Don't have account? "}</Text>
-          <TouchableOpacity onPress={shows}><Text style={{ color: 'green', fontSize: 20 }}>{value}</Text></TouchableOpacity>
-        </View>
-        {
-          loading ? <View style={styles.overlay}><ActivityIndicator color="#fff" size={'large'} /></View> : null
-        }
-        <Modal isVisible={otpmodel} animationIn="zoomIn" animationOut="zoomOut">
-          <View style={styles.modalContainer}>
-            {/* Close Button */}
-            <TouchableOpacity style={styles.CloseButton} onPress={() => setOtpmodel(false)}>
-              <Icon name="close" size={24} color="black" />
+        {show ? (
+          <View style={styles.formContainer}>
+            <Text style={styles.title}>Log In</Text>
+            <View style={styles.inputWrapper}>
+              <Email name="email-outline" size={24} color="#666" style={styles.inputIcon} />
+              <TextInput 
+                placeholder="Enter your email" 
+                style={styles.input} 
+                placeholderTextColor="#999999" 
+                value={email} 
+                onChangeText={setEmail} 
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Lock name="lock1" size={24} color="#666" style={styles.inputIcon} />
+              <TextInput 
+                placeholder="Enter your password" 
+                secureTextEntry 
+                style={styles.input} 
+                placeholderTextColor="#999999" 
+                value={password} 
+                onChangeText={setPassword} 
+              />
+            </View>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity onPress={() => setResetModal(true)}>
+              <Text style={styles.forgotPassword}>Forgot Password?</Text>
             </TouchableOpacity>
+            <TouchableOpacity style={styles.actionButton} onPress={login} disabled={loading}>
+              <Text style={styles.buttonText}>Login</Text>
+            </TouchableOpacity>
+            <Text style={styles.orText}>OR</Text>
+          </View>
+        ) : (
+          <View style={styles.formContainer}>
+            <Text style={styles.title}>Sign Up</Text>
+            <View style={styles.inputWrapper}>
+              <Icon name="user" size={24} color="#666" style={styles.inputIcon} />
+              <TextInput 
+                placeholder="Enter your username" 
+                style={styles.input} 
+                placeholderTextColor="#999999" 
+                value={username} 
+                onChangeText={setUsername} 
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Email name="email-outline" size={24} color="#666" style={styles.inputIcon} />
+              <TextInput 
+                placeholder="Enter your email" 
+                style={styles.input} 
+                placeholderTextColor="#999999" 
+                value={email} 
+                onChangeText={setEmail} 
+              />
+            </View>
+            <View style={styles.inputWrapper}>
+              <Lock name="lock1" size={24} color="#666" style={styles.inputIcon} />
+              <TextInput 
+                placeholder="Enter your password" 
+                secureTextEntry 
+                style={styles.input} 
+                placeholderTextColor="#999999" 
+                value={password} 
+                onChangeText={setPassword} 
+              />
+            </View>
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity style={styles.actionButton} onPress={signin} disabled={loading}>
+              <Text style={styles.buttonText}>Sign Up</Text>
+            </TouchableOpacity>
+            <Text style={styles.orText}>OR</Text>
+          </View>
+        )}
 
-            {/* Title */}
-            <Text style={styles.title}>Enter OTP</Text>
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            {value === "Login" ? "Already have an account? " : "Don't have an account? "}
+          </Text>
+          <TouchableOpacity onPress={shows}>
+            <Text style={styles.footerLink}>{value}</Text>
+          </TouchableOpacity>
+        </View>
 
-            {/* Email Input */}
+        {loading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator color="#FFFFFF" size="large" />
+          </View>
+        )}
+
+        {/* OTP Modal */}
+        <Modal isVisible={otpmodel} animationIn="slideInUp" animationOut="slideOutDown">
+          <View style={styles.modalContent}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setOtpmodel(false)}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Enter OTP</Text>
             <TextInput
-              style={styles.inputs}
+              style={styles.modalInput}
               placeholder="Enter email"
+              placeholderTextColor="#999999"
               keyboardType="email-address"
               value={email}
               onChangeText={setEmail}
-
             />
-
-            {/* OTP Input */}
             <TextInput
-              style={styles.inputs}
+              style={styles.modalInput}
               placeholder="Enter OTP"
+              placeholderTextColor="#999999"
               keyboardType="numeric"
               value={otp}
               onChangeText={setOtp}
             />
-            <Text style={{ color: 'red' }}>{error}</Text>
-            {/* Send Button */}
-            <TouchableOpacity style={styles.sendButton} disabled={loading}>
-              <Text style={loading ? styles.sendButtonText : styles.buttonpress} onPress={sendOtp}>{loading ? '...loading' : 'send'}</Text>
+            <Text style={styles.modalError}>{error}</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={sendOtp} disabled={loading}>
+              <Text style={styles.modalButtonText}>{loading ? 'Loading...' : 'Send'}</Text>
             </TouchableOpacity>
           </View>
         </Modal>
-        <Modal isVisible={resetModal} animationIn="zoomIn" animationOut="zoomOut">
-      <View style={styles.modalContainer}>
-        {/* Close Button */}
-        <TouchableOpacity style={styles.CloseButton} onPress={()=>setResetModal(false)}>
-          <Icon name="close" size={24} color="black" />
-        </TouchableOpacity>
 
-        {/* Title */}
-        <Text style={styles.title}>Enter the email</Text>
-
-        {/* Email Input */}
-        <TextInput
-          style={styles.inputs}
-          placeholder="Enter email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <Text style={{color:'red'}}>{error}</Text>
-        {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} disabled={loading}>
-          <Text style={loading ?styles.sendButtonText :styles.buttonpress} onPress={resetPassword}>{loading  ?'...loading':'send'}</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
-
-    <Modal isVisible={verifyModal} animationIn="zoomIn" animationOut="zoomOut">
-      <View style={styles.modalContainer}>
-        {/* Close Button */}
-        <TouchableOpacity style={styles.CloseButton} onPress={()=>setVerifyModal(false)}>
-          <Icon name="close" size={24} color="black" />
-        </TouchableOpacity>
-
-        {/* Title */}
-        <Text style={styles.title}>Enter the otp</Text>
-
-        {/* Email Input */}
-        <TextInput
-          style={styles.inputs}
-          placeholder="Enter email"
-          keyboardType="email-address"
-          value={email}
-          onChangeText={setEmail}
-        />
-        <TextInput
-          style={styles.inputs}
-          placeholder="Enter OTP"
-          keyboardType="numeric"
-          value={otp}
-          onChangeText={setOtp}
-        />
+        {/* Reset Password Modal */}
+        <Modal isVisible={resetModal} animationIn="slideInUp" animationOut="slideOutDown">
+          <View style={styles.modalContent}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setResetModal(false)}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Reset Password</Text>
             <TextInput
-          style={styles.inputs}
-          placeholder="new Password"
-          keyboardType="numeric"
-          value={newPassword}
-          onChangeText={setNewPassword}
-        />
+              style={styles.modalInput}
+              placeholder="Enter email"
+              placeholderTextColor="#999999"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <Text style={styles.modalError}>{error}</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={resetPassword} disabled={loading}>
+              <Text style={styles.modalButtonText}>{loading ? 'Loading...' : 'Send'}</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
+
+        {/* Verify Password Modal */}
+        <Modal isVisible={verifyModal} animationIn="slideInUp" animationOut="slideOutDown">
+          <View style={styles.modalContent}>
+            <TouchableOpacity style={styles.closeButton} onPress={() => setVerifyModal(false)}>
+              <Icon name="close" size={24} color="#333" />
+            </TouchableOpacity>
+            <Text style={styles.modalTitle}>Verify New Password</Text>
             <TextInput
-          style={styles.inputs}
-          placeholder="Confirm Password"
-          keyboardType="numeric"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-        />
-        <Text style={{color:'red'}}>{error}</Text>
-        {/* Send Button */}
-        <TouchableOpacity style={styles.sendButton} disabled={loading}>
-          <Text style={loading ?styles.sendButtonText :styles.buttonpress} onPress={verifyforgetpassword}>{loading  ?'...loading':'send'}</Text>
-        </TouchableOpacity>
-      </View>
-    </Modal>
+              style={styles.modalInput}
+              placeholder="Enter email"
+              placeholderTextColor="#999999"
+              keyboardType="email-address"
+              value={email}
+              onChangeText={setEmail}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Enter OTP"
+              placeholderTextColor="#999999"
+              keyboardType="numeric"
+              value={otp}
+              onChangeText={setOtp}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="New Password"
+              placeholderTextColor="#999999"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={setNewPassword}
+            />
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Confirm Password"
+              placeholderTextColor="#999999"
+              secureTextEntry
+              value={confirmPassword}
+              onChangeText={setConfirmPassword}
+            />
+            <Text style={styles.modalError}>{error}</Text>
+            <TouchableOpacity style={styles.modalButton} onPress={verifyforgetpassword} disabled={loading}>
+              <Text style={styles.modalButtonText}>{loading ? 'Loading...' : 'Verify'}</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
       </View>
     </LinearGradient>
   )
 }
+
 const styles = StyleSheet.create({
-
-  input: {
-    width: 325,
-    height: 50,
-    paddingLeft: 60,
-    backgroundColor: 'white',
-    color: 'black',
-    borderWidth: 1,
-    borderRadius: 19,
-
-    fontSize: 18,
-    marginTop: 40
+  container: {
+    flex: 1,
   },
-  placeholderShift: {
-    paddingLeft: 60, // Apply extra left padding only for placeholder
-  },
-  gradient: {
+  mainContent: {
+    flex: 1,
     padding: 20,
-
   },
-  button: {
-    width: 300,
-    height: 50,
-    borderRadius: 20,
-    backgroundColor: '#007BFF',
-    marginTop: 25
-
+  backButton: {
+    position: 'absolute',
+    top: 40,
+    left: 20,
+    zIndex: 1,
   },
-  loginContainer: {
-    width: '100%',
-    display: 'flex',
-    flexDirection: 'column',
+  formContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    marginTop:15
-
-  },
-  overlay: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)", // Semi-transparent background
-  },
-  emailIcon: {
-    position: 'absolute',
-    marginRight: 260,
-    marginTop: 227,
-    zIndex: 20
-  },
-  lockIcon: {
-    position: 'absolute',
-    marginTop: 315,
-    zIndex: 20,
-    marginRight: 260
-  },
-  loginemailIcon: {
-    position: 'absolute',
-    marginRight: 255,
-    marginTop: 135,
-    zIndex: 20
-  },
-  loginlockIcon: {
-    position: 'absolute',
-    marginTop: 225,
-    zIndex: 20,
-    marginRight: 260
-  },
-  closeButton: {
-    backgroundColor: "red",
-    padding: 12,
-    borderRadius: 8,
-  },
-  modalContainer: {
-    backgroundColor: "white",
-    padding: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    position: "relative",
-  },
-  CloseButton: {
-    position: "absolute",
-    top: 10,
-    right: 10,
   },
   title: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 20,
+    fontSize: 36,
+    fontWeight: 'bold',
+    color: '#FFFFFF',
+    marginBottom: 30,
   },
-  inputs: {
-    width: 250,
-    height: 40,
-    borderColor: "#ccc",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
+  inputWrapper: {
+    position: 'relative',
+    width: '100%',
     marginBottom: 15,
   },
-  sendButton: {
-    backgroundColor: "#007BFF",
-    paddingVertical: 10,
-    paddingHorizontal: 30,
-    borderRadius: 8,
+  input: {
+    width: '100%',
+    height: 55,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 12,
+    paddingLeft: 45,
+    fontSize: 16,
+    color: '#333',
+    borderWidth: 2,
+    borderColor: '#E0E0E0',
+    
+  },
+  inputIcon: {
+    position: 'absolute',
+    left: 15,
+    top: 15,
+    zIndex: 1,
+  },
+  errorText: {
+    color: '#FF4444',
+    fontSize: 14,
     marginTop: 10,
+    textAlign: 'center',
   },
-  sendButtonText: {
-    color: "white",
+  forgotPassword: {
+    color: '#FF6666',
+    fontSize: 14,
+    marginTop: 10,
+    marginLeft:210,
+    paddingBottom:5
+    
+  },
+  actionButton: {
+    width: 200,
+    height: 50,
+    backgroundColor: '#007BFF',
+    borderRadius: 25,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 25,
+    elevation: 3,
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  orText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: "bold",
+    marginTop: 20,
+    fontWeight: '500',
   },
-  buttonpress: {
-    color: "white",
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 30,
+  },
+  footerText: {
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: "bold",
   },
-  signupButton: {
-    fontSize: 30, fontWeight: 700, color: 'white', textAlign: 'center'
+  footerLink: {
+    color: '#00CC00',
+    fontSize: 16,
+    fontWeight: '600',
+    marginLeft: 5,
   },
-  signupButtonDisable: {
-    backgroundColor: 'grey'
-  }
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modalContent: {
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginHorizontal: 20,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
+    padding: 5,
+  },
+  modalTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+  },
+  modalInput: {
+    width: 250,
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    marginBottom: 15,
+    fontSize: 16,
+    color: '#333',
+  },
+  modalError: {
+    color: '#FF4444',
+    fontSize: 14,
+    marginBottom: 15,
+  },
+  modalButton: {
+    backgroundColor: '#007BFF',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 25,
+    marginBottom: 10,
+  },
+  modalButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
 })
 
 export default Authenticate

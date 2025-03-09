@@ -1,17 +1,88 @@
 const express = require("express");
 const mongoose = require("mongoose");
 
-const Userschema = new mongoose.Schema({
-  id: String,
-  gameName: String,
-  balance: Number,
-  email: String,
-  password: String,
-  trpohy: Number,
-  Victory: [],
-  Loss: [],
-  notification: [],
-});
+const Userschema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+    },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+    },
+    password: {
+      type: String,
+      required: true,
+    },
+    trophy: {
+      type: Number,
+      default: 0,
+    },
+    image: {
+      type: String,
+    },
+    uid: [
+      {
+        freefire: {
+          type: String,
+        },
+        pubg: {
+          type: String,
+        },
+        cod: {
+          type: String,
+        },
+      },
+    ],
+    gameName: [
+      {
+        freefire: {
+          type: String,
+        },
+        pubg: {
+          type: String,
+        },
+        cod: {
+          type: String,
+        },
+      },
+    ],
+    isplaying: {
+      type: Boolean,
+      default: false,
+    },
+    matchId: {
+      pubgFullId: [String],
+      pubgTdmId: [String],
+      FreefireFullId: [String],
+      FreefireClashId: [String],
+      codId: [String],
+    },
+    victory: {
+      pubg: [String],
+      Freefire: [String],
+      cod: [String],
+    },
+    Loss: {
+      pubg: [String],
+      Freefire: [String],
+      cod: [String],
+    },
+    balance: {
+      type: Number,
+      default: 0,
+    },
+    role: {
+      type: String,
+      enum: ["user", "admin"],
+      default: "user",
+    },
+    friends: [{}],
+  },
+  { timestamps: true }
+);
 
 const ChatSchema = new mongoose.Schema({
   roomId: String,

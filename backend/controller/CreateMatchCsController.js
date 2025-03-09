@@ -1,7 +1,7 @@
 const ClashSquad = require("../model/ClashSquadModel");
 const FFfreefire = require("../model/FullMatchFFModel");
 const PubgFull = require("../model/PubgFullMatchModel");
-const signUp = require("../model/signUpModel");
+const {User} = require("../model/schema");
 const tdm = require("../model/TdmModel");
 const namelimit = require("../model/updateNameLimit");
 const createCs = async (req, res) => {
@@ -13,7 +13,7 @@ const createCs = async (req, res) => {
   }
 
   try {
-    const userinfo = await signUp.findOne({ _id: userId });
+    const userinfo = await User.findOne({ _id: userId });
     if (!userinfo) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -61,7 +61,7 @@ const getCsData = async (req, res) => {
 
 const playingmatch = async(req,res)=>{
   const userId = req.user
-  const data = await signUp.findById(userId).populate("matchId")
+  const data = await User.findById(userId).populate("matchId")
   res.status(200).json({
     message:'data is sent ',
     data:data
@@ -71,13 +71,13 @@ const playingmatch = async(req,res)=>{
 const joinuser = async(req,res)=>{
   const userid = req.user
   const {matchId}=req.body
-  const user = await signUp.findOne({_id:userid})
+  const user = await User.findOne({_id:userid})
   if(!user){
     res.status(404).json({
       message:'user not found'
     })
   }
-const userinfo = await signUp.findOne({_id:userid})
+const userinfo = await User.findOne({_id:userid})
 const match = await ClashSquad.findOne(
   { _id: matchId}, // Find where userid is null
 );
@@ -108,7 +108,7 @@ const trackusermodel = async(req,res)=>{
       message:'all fields are required'
     })
   }
-const match = await signUp.findOne({_id:userid})
+const match = await User.findOne({_id:userid})
 
 match.matchId.FreefireClashId.push(matchId)
 await match.save()
@@ -125,7 +125,7 @@ const trackusermodeltdm = async(req,res)=>{
       message:'all fields are required'
     })
   }
-const match = await signUp.findOne({_id:userid})
+const match = await User.findOne({_id:userid})
 
 match.matchId.pubgTdmId.push(matchId)
 await match.save()
@@ -164,7 +164,7 @@ if( matchCard){
 const checkisplaying =async(req,res)=>{
   try {
     const userId = req.user; 
-    const user = await signUp.findById(userId);
+    const user = await User.findById(userId);
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -232,7 +232,7 @@ const joinuserff =async(req,res)=>{
  try {
   const userid =req.user
   const{matchId}=req.body
-  const userinfo =await signUp.findOne({_id:userid})
+  const userinfo =await User.findOne({_id:userid})
   const match = await FFfreefire.findOne({_id:matchId})
   if(userinfo.balance >= match.entryFee){
     userinfo.balance -= match.entryFee
@@ -272,7 +272,7 @@ const addName = async (req, res) => {
 
   // Check if match exists
   const matchinfo = await FFfreefire.findOne({ _id: matchId });
-  const userinfo = await signUp.findOne({_id:userid})
+  const userinfo = await User.findOne({_id:userid})
   if (!userinfo || !userinfo.gameName || !userinfo.gameName[0]?.freefire) {
     return res.status(400).json({ message: 'Please set your gameName from your first' });
   }
@@ -316,7 +316,7 @@ const EnrollMatch = async (req, res) => {
       return res.status(400).json({ message: "User not found!" });
     }
 
-    const userinfo = await signUp.findOne({ _id: userid });
+    const userinfo = await User.findOne({ _id: userid });
     if (!userinfo) {
       return res.status(400).json({ message: "User not found!" });
     }

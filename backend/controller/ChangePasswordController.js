@@ -1,4 +1,4 @@
-const signUp = require("../model/signUpModel")
+const {User} = require("../model/schema")
 const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const ClashSquad = require("../model/ClashSquadModel")
@@ -15,10 +15,10 @@ if(!oldPassword || !newPassword){
 const cleanUserId = userid.trim();
 const objectId = new mongoose.Types.ObjectId(cleanUserId);
 const NewPassword = await bcrypt.hash(newPassword,11)
-const userinfo = await signUp.findById(objectId)
+const userinfo = await User.findById(objectId)
 if(!userinfo){
     res.status(400).json({
-        message:'user not signup!'
+        message:'user not user!'
     })
     return
 }

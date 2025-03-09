@@ -17,13 +17,14 @@ const {
 } = require("./router/user/chatRoutes");
 const addFriends = require("./router/user/addFreind");
 const userMoney = require("./router/user/money");
-// const upload = require("./utility/imageUpload");
+const upload = require("./utility/imageUpload");
 dotenv.config();
 
 const app = express();
 
 const server = require("http").createServer(app);
 const { Server } = require("socket.io");
+const Authverify = require("./middleware/AuthVerify");
 
 connectToDatabase();
 
@@ -44,7 +45,7 @@ app.use(
 
 app.use("/khelmela/admin", Admin);
 
-// app.use("khelmela/upload", upload);
+app.use("/khelmela/upload", upload);
 
 const io = new Server(server, {
   cors: {

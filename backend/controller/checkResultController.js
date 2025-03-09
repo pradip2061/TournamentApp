@@ -1,7 +1,7 @@
 const ClashSquad = require("../model/ClashSquadModel");
 const FFfreefire = require("../model/FullMatchFFModel");
 const PubgFull = require("../model/PubgFullMatchModel");
-const signUp = require("../model/signUpModel");
+const {User} = require("../model/schema");
 const tdm = require("../model/TdmModel");
 
 const checkResult = async (req, res) => {
@@ -35,7 +35,7 @@ const checkResult = async (req, res) => {
 const checkuserJoinFF =async(req,res)=>{
     const { matchId } = req.body;
     const userid = req.user;
-    const userinfo = await signUp.findOne({ _id: userid });
+    const userinfo = await User.findOne({ _id: userid });
     const gameNameArray = userinfo.matchId.FreefireFullId
     const index = gameNameArray.findIndex(arr => arr.includes(matchId));
     if (index !== -1) {
@@ -102,7 +102,7 @@ const checkmatchtypeff =async(req,res)=>{
 
 const checkrole =async(req,res)=>{
     const userid =req.user
-    const role  = await signUp.findById(userid).select("role").lean();
+    const role  = await User.findById(userid).select("role").lean();
     if(!role){
         return res.status(400).json({
             message:'user not found'
@@ -117,8 +117,8 @@ const checkrole =async(req,res)=>{
 
 const getchampions = async(req,res)=>{
     const userid = req.user
-    const userinfo = await signUp.findOne({_id:userid}).select('username trophy').lean()
-    const userdata = await signUp.find().select('username trophy image').sort({ trophy: -1 }).lean()
+    const userinfo = await User.findOne({_id:userid}).select('username trophy').lean()
+    const userdata = await User.find().select('username trophy image').sort({ trophy: -1 }).lean()
     if(!userinfo || !userdata){
         return res.status(404).json({
             message:'data not found'

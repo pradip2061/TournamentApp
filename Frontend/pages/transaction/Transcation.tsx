@@ -17,7 +17,7 @@ const Transcation = ({navigation}) => {
           <Text style={styles.text}>Deposit</Text>
         </View>
       </TouchableOpacity>
-
+      <TouchableOpacity onPress={()=>navigation.navigate('Withdraw')}>
       <View
         style={{
           backgroundColor: 'white',
@@ -27,8 +27,10 @@ const Transcation = ({navigation}) => {
           marginBottom: 5,
           alignItems: 'center',
         }}>
-        <Text style={styles.text}>Withdraw Money</Text>
+          <Text style={styles.text}>Withdraw Money</Text>
+      
       </View>
+      </TouchableOpacity>
     </View>
   );
 };

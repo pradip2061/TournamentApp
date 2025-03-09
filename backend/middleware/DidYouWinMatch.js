@@ -1,5 +1,5 @@
 const ClashSquad = require("../model/ClashSquadModel");
-const signUp = require("../model/signUpModel");
+const User = require("../model/schema");
 
 const verifyDidYouWinMatch = async (req, res, next) => {
     try {
@@ -22,8 +22,8 @@ const verifyDidYouWinMatch = async (req, res, next) => {
             match.teamHost[0].teamHostStatus != match.teamopponent[0].team2Status) {
                 const useridHost=match.teamHost[0].userid
                 const userid=match.teamopponent[0].userid
-                const host = await signUp.findOne({_id:useridHost})
-                const user = await signUp.findOne({_id:userid})
+                const host = await User.findOne({_id:useridHost})
+                const user = await User.findOne({_id:userid})
                 if(match.teamHost[0].teamHostStatus === true){
                     host.balance +=25
                     host.victory.Freefire.push(matchId)

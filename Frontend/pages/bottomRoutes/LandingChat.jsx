@@ -1,61 +1,77 @@
-import React, {useState, useEffect} from 'react'
-import {View, Text, StyleSheet, TouchableOpacity, Image, FlatList, TextInput} from 'react-native'
-import axios from 'axios'
-import AsyncStorage from '@react-native-async-storage/async-storage'
+import React, {useState, useEffect} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Image,
+  FlatList,
+  TextInput,
+} from 'react-native';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import {jwtDecode} from 'jwt-decode'
+import {jwtDecode} from 'jwt-decode';
 
 const LandingChat = ({navigation, route}) => {
-  const {friends} = route.params
-  const [user, setUser] = useState(null)
+  const {friends} = route.params;
+  const [user, setUser] = useState(null);
 
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filteredFriends, setFilteredFriends] = useState(friends)
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredFriends, setFilteredFriends] = useState(friends);
 
   useEffect(() => {
     const getUser = async () => {
       try {
-        const token = await AsyncStorage.getItem('token')
-        const decoded = jwtDecode(token)
-        setUser(decoded.id)
+        const token = await AsyncStorage.getItem('token');
+        const decoded = jwtDecode(token);
+        setUser(decoded.id);
       } catch (error) {
-        console.error('Error retrieving token:', error)
+        console.error('Error retrieving token:', error);
       }
-    }
-    getUser()
-  }, []) // Run only on component mount
+    };
+    getUser();
+  }, []); // Run only on component mount
 
   useEffect(() => {
     if (searchTerm.trim() === '') {
-      setFilteredFriends(friends)
+      setFilteredFriends(friends);
     } else {
       const fetchFilteredFriends = async () => {
         try {
-          const response = await axios.get(`${process.env.baseUrl}/khelmela/users/search?name=${searchTerm}`)
-          setFilteredFriends(response.data)
+          const response = await axios.get(
+            `${process.env.baseUrl}/khelmela/users/search?name=${searchTerm}`,
+          );
+          setFilteredFriends(response.data);
         } catch (error) {
-          console.error('Error fetching filtered friends:', error)
-          setFilteredFriends([])
+          console.error('Error fetching filtered friends:', error);
+          setFilteredFriends([]);
         }
-      }
-      fetchFilteredFriends()
+      };
+      fetchFilteredFriends();
     }
-  }, [searchTerm, friends])
+  }, [searchTerm, friends]);
 
   const handleOnpress = item => {
     navigation.navigate('PrivateChat', {
       userId: user,
       FriendId: item.id,
       photoUrl: item.photoUrl,
-      name: item.name
-    })
-  }
+      name: item.name,
+    });
+  };
 
   return (
     <View style={styles.mainCointainer}>
       <View style={styles.container}>
         <Text style={styles.header}>Chat</Text>
-        <TextInput style={styles.searchBar} placeholder="Search friends..." value={searchTerm} onChangeText={setSearchTerm} />
+        <TextInput
+          style={styles.searchBar}
+          placeholder="Search player ......."
+          value={searchTerm}
+          onChangeText={setSearchTerm}
+        />
+
         <FlatList
           data={filteredFriends}
           keyExtractor={item => item.id}
@@ -63,39 +79,39 @@ const LandingChat = ({navigation, route}) => {
             <TouchableOpacity onPress={() => handleOnpress(item)}>
               <View style={styles.friends}>
                 <Image source={{uri: item.photoUrl}} style={styles.image} />
-                <Text style={styles.friendstext}>{item.name}</Text>
+                <Text style={styles.friendstext}>{item.username}</Text>
               </View>
             </TouchableOpacity>
           )}
         />
       </View>
     </View>
-  )
-}
+  );
+};
 
-export default LandingChat
+export default LandingChat;
 
 const styles = StyleSheet.create({
   mainCointainer: {
     backgroundColor: '#5DADB0',
-    height: '100%'
+    height: '100%',
   },
   container: {
     padding: 16,
-    backgroundColor: '#5DADB0'
+    backgroundColor: '#5DADB0',
   },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 16,
-    color: 'white'
+    color: 'white',
   },
   searchBar: {
     backgroundColor: 'white',
     padding: 10,
     borderRadius: 8,
     marginBottom: 16,
-    fontSize: 16
+    fontSize: 16,
   },
   friends: {
     flexDirection: 'row',
@@ -105,17 +121,17 @@ const styles = StyleSheet.create({
     marginVertical: 8,
     borderRadius: 10,
     elevation: 4,
-    borderWidth: 1
+    borderWidth: 1,
   },
   image: {
     width: 40,
     height: 40,
     backgroundColor: '#ccc',
     borderRadius: 20,
-    marginRight: 12
+    marginRight: 12,
   },
   friendstext: {
     fontSize: 16,
-    fontWeight: '500'
-  }
-})
+    fontWeight: '500',
+  },
+});

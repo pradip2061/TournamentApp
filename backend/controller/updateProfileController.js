@@ -1,11 +1,11 @@
 const RateLimit = require("../model/RateLimitModel")
-const signUp = require("../model/signUpModel")
+const {User} = require("../model/schema")
 const timelimit = require("../model/TimeLimitModel")
 
 const updateProfile =async(req,res)=>{
     const userid =req.user
     const {username}=req.body
- const userinfo =await signUp.findOne({_id:userid})
+ const userinfo =await User.findOne({_id:userid})
  const limit =await RateLimit.findOne({userId:userid})
 
  if(limit){
@@ -41,7 +41,7 @@ if(!pubgName||!pubgUid){
     })
 }
 const userid =req.user
-const userinfo =await signUp.findOne({_id:userid})
+const userinfo =await User.findOne({_id:userid})
 const limitCheck = await timelimit.findOne({ userId: userid });
 
 if (limitCheck) {
@@ -73,7 +73,7 @@ const freefireprofile =async(req,res)=>{
         })
     }
     const userid =req.user
-    const userinfo =await signUp.findOne({_id:userid})
+    const userinfo =await User.findOne({_id:userid})
     const limitCheck = await timelimit.findOne({ userId: userid });
     
     if (limitCheck) {
@@ -103,4 +103,11 @@ const uploadImage =async(req, res) => {
     });
   }
 
+  const uploadimage =async(req,res)=>{
+    const{image}=req.body
+    const userid =req.user
+   const userinfo = await User.findOne({_id:userid})
+   userinfo.image = image
+   await userinfo.save()
+  }
 module.exports = {updateProfile,pubgprofile,freefireprofile,uploadImage}

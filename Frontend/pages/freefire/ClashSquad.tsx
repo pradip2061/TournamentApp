@@ -97,7 +97,7 @@ const ClashSquad = ({navigation}) => {
       console.log(matchId)
      try {
       const token = await AsyncStorage.getItem('token')
-      await axios.post('http://30.30.17.80:3000/khelmela/addinhost',{matchId},{
+      await axios.post(`${process.env.baseUrl}/khelmela/addinhost`,{matchId},{
         headers:{
           Authorization:`${token}`
         }
@@ -112,7 +112,7 @@ const ClashSquad = ({navigation}) => {
       useEffect(()=>{
         try {
           const getMatches = async()=>{
-            await axios.get('http://30.30.17.80:3000/khelmela/get')
+            await axios.get(`${process.env.baseUrl}/khelmela/get`)
             .then((response)=>{
               setData(response.data.card)
               console.log(data)

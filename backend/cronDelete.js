@@ -1,13 +1,12 @@
 const cron = require("node-cron");
 const ClashSquad = require("./model/ClashSquadModel");
-const signUp = require("./model/signUpModel");
+const User = require("./model/schema");
 const tdm = require("./model/TdmModel");
 
 // Function to delete match cards older than 6 minutes
 const deleteOldMatchCards = async () => {
   try {
     const now = new Date();
-
     // Find match cards that need to be deleted
     const matchCards = await ClashSquad.find({
       createdAt: { $lte: now }, // Match cards older than now
@@ -23,7 +22,7 @@ const deleteOldMatchCards = async () => {
     for (const match of matchCards) {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
-        const userinfo = await signUp.findOne({ _id: userId });
+        const userinfo = await User.findOne({ _id: userId });
         if (userinfo) {
           userinfo.isplaying = false;
           userinfo.matchId = "";
@@ -62,7 +61,7 @@ const deleteOldMatchCard = async () => {
     for (const match of matchCards) {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
-        const userinfo = await signUp.findOne({ _id: userId });
+        const userinfo = await User.findOne({ _id: userId });
         if (userinfo) {
           userinfo.isplaying = false;
           userinfo.matchId = "";

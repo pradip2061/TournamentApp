@@ -1,20 +1,21 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput } from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios'
 const img = require('../../assets/loading.gif')
 import { Modal } from 'react-native';
-import { CheckAdminContext } from '../ContextApi/ContextApi';
 const Setting = ({navigation}) => {
   const[changepass,setChangepass]=useState(false)
   const[loading,setLoading]=useState(false)
+  const[data,setData]=useState([])
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const{data}=useContext(CheckAdminContext)
+
   
  const logout=async()=>{
   await AsyncStorage.clear()
@@ -46,18 +47,38 @@ try {
   setLoading(false)
 }
  }
+useEffect(()=>{
+  const getProfile =async()=>{
+  const token =await AsyncStorage.getItem('token')
+    try {
+       axios.get(`${process.env.baseUrl}/khelmela/getprofile`,{
+        headers:{
+          Authorization:`${token}`
+        }
+      })
+      .then((response)=>{
+        setData(response.data.data)
+      })
+    } catch (error) {
+      
+    }
+     }
+     getProfile()
+},[])
   return (
+    
     <ScrollView style={styles.container}>
+      
       {/* User Info Section with Icons */}
       <View style={styles.userSection}>
-        <Image source={require('../../assets/pubgfull.jpg')} style={styles.profileImage} />
+        <Image source={require('../../assets/player.png')} style={styles.profileImage} />
         <View style={styles.userInfo}>
           <View style={styles.userRow}>
-            <Ionicons name="person-circle-outline" size={20} color="#555" />
+            <Ionicons name="person-circle-outline" size={24} color="#555" />
             <Text style={styles.username}>{data?.username}</Text>
           </View>
           <View style={styles.userRow}>
-            <MaterialIcons name="email" size={20} color="#555" />
+            <MaterialIcons name="email" size={24} color="#555" />
             <Text style={styles.email}>{data?.email}</Text>
           </View>
         </View>
@@ -65,19 +86,21 @@ try {
 
       {/* Personal Details & Password */}
       <View style={styles.section}>
+        
         <TouchableOpacity style={styles.item}  onPress={()=>setChangepass(true)}>
-          <Ionicons name="lock-closed-outline" size={24} color="#555" />
+          <Ionicons name="lock-closed-outline" size={27} color="#555" />
           <Text style={styles.itemText}>Change Password</Text>
         </TouchableOpacity>
       </View>
+
       {/* Deposit & Withdraw Money */}
       <View style={styles.section}>
         <TouchableOpacity style={styles.item} onPress={()=>navigation.navigate('Deposite')}>
-          <FontAwesome name="money" size={24} color="#555" />
+          <FontAwesome name="money" size={27} color="#555" />
           <Text style={styles.itemText}>Deposit Money</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
-          <MaterialIcons name="account-balance-wallet" size={24} color="#555" />
+          <MaterialIcons name="account-balance-wallet" size={27} color="#555" />
           <Text style={styles.itemText}>Withdraw Money</Text>
         </TouchableOpacity>
       </View>
@@ -85,19 +108,23 @@ try {
       {/* Other Options */}
       <View style={styles.section}>
       <TouchableOpacity style={styles.item}>
-          <Entypo name="back-in-time" size={24} color="#555" />
+          <Entypo name="back-in-time" size={27} color="#555" />
           <Text style={styles.itemText}>History</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
-          <Ionicons name="share-social-outline" size={24} color="#555" />
-          <Text style={styles.itemText}>Share App</Text>
+          <Ionicons name="notifications-circle-outline" size={33} color="#555" />
+          <Text style={styles.itemText}>Notification </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
-          <Ionicons name="headset-outline" size={24} color="#555" />
+          <Ionicons name="share-social-outline" size={27} color="#555" />
+          <Text style={styles.itemText}>Refer a Friend </Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.item}>
+          <Ionicons name="headset-outline" size={27} color="#555" />
           <Text style={styles.itemText}>Customer Service</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={logout}>
-          <Ionicons name="log-out-outline" size={24} color="red" />
+          <Ionicons name="log-out-outline" size={27} color="red" />
           <Text style={[styles.itemText, { color: 'red' }]} >Logout</Text>
         </TouchableOpacity>
       </View>
@@ -105,13 +132,13 @@ try {
       {/* Social Media Links */}
       <View style={styles.socialMedia}>
         <TouchableOpacity>
-          <Entypo name="instagram" size={30} color="#E1306C" />
+          <Entypo name="instagram" size={35} color="#E1306C" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Entypo name="facebook" size={30} color="#3b5998" />
+          <Entypo name="facebook" size={35} color="#3b5998" />
         </TouchableOpacity>
         <TouchableOpacity>
-          <Entypo name="youtube" size={30} color="#ff0000" />
+          <Entypo name="youtube" size={35} color="#ff0000" />
         </TouchableOpacity>
       </View>
       <Modal transparent={true} animationType="fade" visible={changepass}>
@@ -148,16 +175,20 @@ try {
       <Image source={img} alt='no image'/>
       </View>
       </Modal>
+      
     </ScrollView>
+    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    backgroundColor: 'rgb(0,18,64)',
-    paddingHorizontal: 20,
+    padding: 19,
+    backgroundColor:'F2F2F2',
+    
+
   },
+  
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -165,7 +196,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     marginBottom: 10,
-    marginTop:10
+    marginTop:10,
+    elevation: 5
   },
   profileImage: {
     width: 80,
@@ -182,19 +214,20 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 18,
-    fontWeight: 'bold',
+    fontWeight:"500",
     marginLeft: 10,
   },
   email: {
-    fontSize: 14,
-    color: '#777',
+    fontSize: 18,
+   
+    fontWeight:"500",
     marginLeft: 10,
   },
   section: {
     backgroundColor: '#FFF',
     borderRadius: 10,
     padding: 10,
-    marginBottom: 20,
+    marginBottom: 20,elevation: 5
   },
   item: {
     flexDirection: 'row',
@@ -214,7 +247,7 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     backgroundColor:'#fff',
     paddingBlock:10,
-    borderRadius:10
+    borderRadius:15,elevation: 5
   }, overlay: {
     flex: 1,
     justifyContent: 'center',

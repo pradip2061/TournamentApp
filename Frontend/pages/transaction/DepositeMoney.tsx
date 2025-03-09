@@ -74,7 +74,7 @@ const DepositMoney = () => {
       return
     }
     console.log(token)
-    console.log(`${process.env.baseUrl}/khelmela/money`)
+    console.log('http://192.168.162.225:3000/khelmela/money')
     try {
       const response = await axios.post(`${process.env.baseUrl}/khelmela/Addmoney`, {
         amount: amount,
@@ -87,7 +87,9 @@ const DepositMoney = () => {
       Alert.alert(response.data.message)
     } catch (error) {
       stopLoadingAnimation()
-      Alert.alert('Failed to deposit. Please check credentials.')
+      Alert.alert(error)
+    }finally{
+      stopLoadingAnimation()
     }
   }
 

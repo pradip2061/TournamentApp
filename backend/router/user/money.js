@@ -11,13 +11,13 @@ router.get("/money", (req, res) => {
 router.post("/Addmoney", async (req, res) => {
   console.log("Addmoney Route >>>>>>>>>>>>>>>>>>>>> ");
   const { amount, selectedMethod, image, token, esewaNumber, date } = req.body;
-
+console.log(amount, selectedMethod, image, token)
   if (!amount || !selectedMethod || !token) {
     return res.status(400).json({ error: "All fields are required." });
   }
 
   let gameName = "";
-  console.log(amount, selectedMethod, image, token);
+
 
   try {
     const decoded = jwtDecode(token);

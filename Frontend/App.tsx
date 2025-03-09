@@ -11,6 +11,7 @@ import TokenCheck from './pages/TokenExpiryCheck/TokenCheck';
 import { navigationRef } from './pages/NavigationRef';
 import { ContextApi } from './pages/ContextApi/ContextApi';
 import Orientation from 'react-native-orientation-locker';
+import Withdraw from './pages/transaction/Withdraw';
 const App = () => {
   const Stack = createStackNavigator();
   useEffect(() => {
@@ -47,6 +48,7 @@ const App = () => {
         />
 
         <Stack.Screen name="AddMoney" component={AddMoney} />
+        <Stack.Screen name="Withdraw" component={Withdraw} />
       </Stack.Navigator>
     </NavigationContainer>
     </ContextApi>

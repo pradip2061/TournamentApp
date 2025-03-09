@@ -12,15 +12,16 @@ const Card = ({image,name}) => {
 }
 const styles = StyleSheet.create({
   title: {
-    color: 'black',
+    color: '#333',
     fontSize: 20,
     paddingBottom:20,
-    fontWeight:800,
-    marginLeft:25
+    textAlign: 'center',
+    fontWeight:400,
   },map:{
-    width:220,
-    height:130,
-    borderRadius:40,
+    width:244,
+    height:137,
+    borderRadius:25,
+    marginLeft:11
   },
 })
 export default Card

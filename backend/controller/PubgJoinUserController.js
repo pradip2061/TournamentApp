@@ -1,12 +1,12 @@
 const PubgFull = require("../model/PubgFullMatchModel");
-const signUp = require("../model/signUpModel");
+const {User} = require("../model/schema");
 const tdm = require("../model/TdmModel");
 const namelimit = require("../model/updateNameLimit");
 
 const joinuserPubg = async (req, res) => {
   const userid = req.user;
   const { matchId } = req.body;
-  const userinfo = await signUp.findOne({ _id: userid });
+  const userinfo = await User.findOne({ _id: userid });
   const match = await PubgFull.findOne({ _id: matchId });
   if (userinfo.balance >= match.entryFee) {
     userinfo.balance -= match.entryFee;
@@ -54,7 +54,7 @@ const checkuserJoinPubg = async (req, res) => {
     const userid = req.user;
 
     // Fetch user information
-    const userinfo = await signUp.findOne({ _id: userid });
+    const userinfo = await User.findOne({ _id: userid });
 
     // Handle if user not found
     if (!userinfo) {
@@ -81,7 +81,7 @@ const checkuserJoinPubgtdm = async (req, res) => {
     const userid = req.user;
 
     // Fetch user information
-    const userinfo = await signUp.findOne({ _id: userid });
+    const userinfo = await User.findOne({ _id: userid });
 
     // Handle if user not found
     if (!userinfo) {
@@ -133,7 +133,7 @@ const addName = async(req, res) => {
   // Check if match exists
   
   const matchinfo = await PubgFull.findOne({_id: matchId });
-  const userinfo = await signUp.findOne({ _id: userid });
+  const userinfo = await User.findOne({ _id: userid });
   if (!userinfo || !userinfo.gameName || !userinfo.gameName[0]?.pubg) {
     return res.status(400).json({ message: 'Please set your gameName from your first' });
   }
@@ -168,7 +168,7 @@ const addName = async(req, res) => {
 const createtdm =async(req,res)=>{
   const{matchDetails}=req.body // Correctly adds 6 minutes
   const userid =req.user
-  const userinfo = await signUp.findOne({_id:userid})
+  const userinfo = await User.findOne({_id:userid})
   if(userinfo.balance < matchDetails.betAmount){
     return res.status(400).json({
       message:'you dont have enough balance'
@@ -210,7 +210,7 @@ const joinuserPubgtdm = async (req, res) => {
   const userid = req.user;
   console.log(userid)
   const { matchId } = req.body;
-  const userinfo = await signUp.findOne({ _id: userid });
+  const userinfo = await User.findOne({ _id: userid });
   const match = await tdm.findOne({ _id: matchId });
   if (userinfo.balance >= match.entryFee) {
     userinfo.balance -= match.entryFee;
@@ -249,7 +249,7 @@ const addNametdm = async (req, res) => {
 
   // Check if match exists
   const matchinfo = await tdm.findOne({ _id: matchId });
-  const userinfo = await signUp.findOne({_id:userid})
+  const userinfo = await User.findOne({_id:userid})
   const gameName = userinfo.gameName[0].pubg
   if(!gameName){
     return res.status(400).json({

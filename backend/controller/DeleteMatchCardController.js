@@ -1,5 +1,5 @@
 const ClashSquad = require("../model/ClashSquadModel")
-const signUp = require("../model/signUpModel")
+const {User} = require("../model/schema")
 
 const deleteCard =async(req,res)=>{
 try {
@@ -11,7 +11,7 @@ if(!match){
         message:'matchCard not found'
     })
 }
-const userinfo =await signUp.findOne({_id:userid})
+const userinfo =await User.findOne({_id:userid})
 userinfo.balance +=match.matchDetails[0].betAmount
 userinfo.isplaying =false
 userinfo.matchId =""
