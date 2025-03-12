@@ -1,5 +1,5 @@
-const  express = require('express');
-const { models } = require('mongoose');
+const express = require("express");
+const { models } = require("mongoose");
 
 const fireBase_key = {
   type: "service_account",
@@ -15,6 +15,6 @@ const fireBase_key = {
   client_x509_cert_url:
     "https://www.googleapis.com/robot/v1/metadata/x509/firebase-adminsdk-fbsvc%40khelmela-98.iam.gserviceaccount.com",
   universe_domain: "googleapis.com",
-}
+};
 
 module.exports = fireBase_key;

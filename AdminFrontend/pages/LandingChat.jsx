@@ -25,7 +25,7 @@ const LandingChat = ({navigation, route}) => {
           <TouchableOpacity onPress={() => handleOnpress(item.id)}>
             <View style={styles.friends}>
               <View style={styles.image}></View>
-              <Text style={styles.friendstext}>{item.name}</Text>
+              <Text style={styles.friendstext}>{item.username}</Text>
             </View>
           </TouchableOpacity>
         )}

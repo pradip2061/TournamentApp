@@ -2,9 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const { moneyRequest, User } = require("../../model/schema");
+const { getFormattedDate } = require("../../utility/dateformat");
 
-const jwtDecode = require("jwt-decode");
-const { decode } = require("jsonwebtoken");
+const { jwtDecode } = require("jwt-decode");
 
 router.get("/getMoneyRequest", async (req, res) => {
   console.log("getMoney Route >>>>>>");
@@ -18,88 +18,117 @@ router.get("/getMoneyRequest", async (req, res) => {
     res.status(500).json({ error: "Error fetching money requests" });
   }
 });
+
 router.post("/:option/:token", async (req, res) => {
   console.log("Release Money Request >>>>>>>>>>>>********<<<<<<<<<<");
   const { option, token } = req.params;
-  const { released, date, balance, senderId, message } = req.body;
+  const { id, senderId, message } = req.body;
+  console.log(req.body);
 
   if (!token) {
     return res.status(400).json({ error: "Invalid token" });
   }
 
-  const decoded = jwtDecode(token).id;
-  const admin = await User.findById(decoded);
+  const request = await moneyRequest.findById(id);
 
-  if (!admin || admin.role !== "admin") {
-    return res.status(400).json({ error: "Unauthorized Request" });
+  if (!request) {
+    return res.status(404).json({ error: "Request not found" });
   }
+  console.log("money Request ;", request);
 
-  if (option === "release") {
-    try {
-      const request = await moneyRequest.findById(req.body.id);
-      if (!request) {
-        return res.status(404).json({ error: "Request not found" });
-      }
+  try {
+    const decoded = jwtDecode(token);
+    const admin = await User.findById(decoded.id).lean();
 
-      const sender = await User.findById(senderId);
-      if (!sender) {
-        return res.status(404).json({ error: "Sender not found" });
-      }
-      sender.balance += balance;
-      const historyRecord = {
-        released,
-        date,
-        balance,
-      };
+    console.log("adminUserName", admin.username);
+    const amount = request.amount || 200; // Use request amount or fallback to 200
 
-      sender.history.push(historyRecord);
-
-      await sender.save();
-
-      return res
-        .status(200)
-        .json({ message: "Balance updated and history recorded successfully" });
-    } catch (error) {
-      console.error("Error processing request:", error);
-      return res.status(500).json({ error: "Internal Server Error" });
+    if (!admin || admin.role !== "admin") {
+      return res.status(401).json({ error: "Unauthorized Request" });
     }
-  }
 
-  if (option === "drop") {
-    try {
-      const request = await moneyRequest.findById(req.body.id);
-      if (!request) {
-        return res.status(404).json({ error: "Request not found" });
-      }
+    //  >>>>>>>>>>>>>>> if released <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    if (option === "release") {
+      // Set status to approved for release
+      request.status = "approved";
 
       const sender = await User.findById(senderId);
+
+      console.log("user Name ---------->", sender.username);
+
       if (!sender) {
         return res.status(404).json({ error: "Sender not found" });
       }
 
-      // Create history record for dropped request
+      // Create the history record
+      const oldBalance = sender.balance;
+
+      // Ensure accountHistory exists
+      if (!Array.isArray(sender.accountHistory)) {
+        sender.accountHistory = [];
+      }
+
+      // Update balance
+      sender.balance += amount;
+
       const historyRecord = {
-        message,
-        date,
+        updated: new getFormattedDate(),
+        admin: admin.username,
+        message: `${oldBalance} to ${sender.balance}`,
       };
 
+      // Push to history array
+      sender.accountHistory.push(historyRecord);
+
+      // Save the user document and request
+      await sender.save();
+      await request.save();
+
+      return res.status(200).json({
+        message:
+          "Balance updated, history recorded, and request released successfully",
+      });
+    }
+    //  >>>>>>>>>>>>>>> if dropped <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+    else if (option === "drop") {
+      // Set status to rejected for drop
+      request.status = "rejected";
+      const sender = await User.findById(senderId);
+
+      if (!sender) {
+        return res.status(404).json({ error: "Sender not found" });
+      }
+
+      // Ensure history array exists
+      if (!Array.isArray(sender.history)) {
+        sender.history = [];
+      }
+
+      const historyRecord = {
+        message:
+          message ||
+          `Deposite request dropped by admin : ${admin.username} : Reason ${message}`,
+        date: new Date(),
+      };
+
+      // Add to history
       sender.history.push(historyRecord);
 
-      // Delete request
-      await moneyRequest.findByIdAndDelete(req.body.id);
-
+      // Save changes
       await sender.save();
+      await request.save();
 
-      return res
-        .status(200)
-        .json({ message: "Request dropped and history recorded successfully" });
-    } catch (error) {
-      console.error("Error processing request:", error);
-      return res.status(500).json({ error: "Internal Server Error" });
+      return res.status(200).json({
+        message: "Request dropped and history recorded successfully",
+      });
+    } else {
+      console.log("Invalid option");
+      return res.status(400).json({ error: "Invalid option" });
     }
+  } catch (error) {
+    console.error("Error processing request:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
-
-  return res.status(400).json({ error: "Invalid option" });
 });
 
 module.exports = router;

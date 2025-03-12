@@ -4,9 +4,11 @@ const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const mime = require("mime-types");
 const fireBase_key = require("./accountKey");
-const Authverify = require("../middleware/AuthVerify");
-
+const { User } = require("../model/schema");
 const router = express.Router();
+const { getFormattedDate } = require("../utility/dateformat");
+
+const { jwtDecode } = require("jwt-decode");
 
 const serviceAccount = fireBase_key;
 
@@ -34,12 +36,19 @@ router.get("/", (req, res) => {
   console.log("Upload Route Active >>>>>>>>>>>>>>>>>>>>>>>");
   res.send("Hello World!");
 });
-router.post("/upload",Authverify, async (req, res) => {
+router.post("/upload/:token", async (req, res) => {
+  console.log("upload route ----------------->......");
+
   try {
-    console.log('hit bhayo')
-    const userid =req.user
-    const { image, filename, folderName } = req.body;
-    const fileNameid = userid+filename
+    const token = req.params.token;
+    const user_id = await jwtDecode(token).id;
+    if (!user_id) {
+      return res.status(401).send({ message: "Invalid Token" });
+    }
+
+    const { image, folderName } = req.body;
+    let { filename } = req.body;
+
     if (!image || !filename || !folderName) {
       return res
         .status(400)
@@ -47,7 +56,7 @@ router.post("/upload",Authverify, async (req, res) => {
     }
 
     // Get the file extension from filename
-    const ext = fileNameid.split(".").pop().toLowerCase();
+    const ext = filename.split(".").pop().toLowerCase();
 
     // Supported file types
     const allowedTypes = [
@@ -66,33 +75,56 @@ router.post("/upload",Authverify, async (req, res) => {
         .json({ error: `File type .${ext} is not allowed.` });
     }
 
-    // Detect MIME type
     const mimeType = mime.lookup(ext) || "application/octet-stream";
 
-    // Convert Base64 to Buffer
     const buffer = base64ToBuffer(image);
+
+    if (folderName === "Deposite") {
+      const Number = req.body.esewaNumber?.Number || "unknown";
+      filename =
+        folderName +
+        "_Number:" +
+        Number +
+        "_user:" +
+        user_id +
+        "_date:" +
+        getFormattedDate() +
+        "." +
+        ext;
+      console.log(filename);
+    }
+    console.log("here ------------->");
 
     // Construct the file path in the specified folder
     const fileName = `${folderName}/${uuidv4()}-${filename}`;
     const file = bucket.file(fileName);
 
-    // Upload file to Firebase Storage
-    await file.save(buffer, {
-      metadata: {
-        contentType: mimeType,
-      },
-    });
+    // Fix: Add error handling for file operations
+    try {
+      // Upload file to Firebase Storage
+      await file.save(buffer, {
+        metadata: {
+          contentType: mimeType,
+        },
+      });
 
-    // Make file publicly accessible
-    await file.makePublic();
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+      // Make file publicly accessible
+      await file.makePublic();
+      const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
-    res.status(200).json({
-      message: "File uploaded successfully",
-      url: publicUrl,
-    });
+      return res.status(200).json({
+        message: "File uploaded successfully",
+        url: publicUrl,
+      });
+    } catch (fileError) {
+      console.error("Firebase storage error:", fileError);
+      return res
+        .status(500)
+        .json({ error: "Failed to upload to storage: " + fileError.message });
+    }
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("General error:", error);
+    return res.status(500).json({ error: error.message });
   }
 });
 module.exports = router;

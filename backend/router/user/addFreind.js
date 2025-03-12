@@ -1,8 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const User = require("../../model/schema");
+const { User } = require("../../model/schema");
 
-router.post("/addFriend/:userId", async (req, res) => {
+router.get("/addFriends", (req, res) => {
+  res.send("Add Friends Page");
+});
+
+router.post("/addFriends/:userId", async (req, res) => {
+  console.log("add Friend route hit >>>>>>>>> ");
   try {
     const { userId } = req.params;
     const { friendId, username, photoUrl } = req.body; // Expecting friend data in request body

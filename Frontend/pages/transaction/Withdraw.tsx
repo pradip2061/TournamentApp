@@ -1,41 +1,104 @@
-import React, { useState } from "react";
-import { View, Text, Image, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import axios from 'axios';
+import React, {useState} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
+  Alert,
+} from 'react-native';
+import {baseUrl} from '../../env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Withdraw = () => {
-  const [selectedMethod, setSelectedMethod] = useState("eSewa");
+  const [selectedMethod, setSelectedMethod] = useState('eSewa');
+  const [amount, setAmount] = useState('');
+  const [number, setNumber] = useState('');
+
+  const handleWithdraw = async () => {
+    console.log('withDraw ----------------->>>>>> ');
+    if (!amount || !number) {
+      Alert.alert('All fields are required ');
+      return;
+    }
+
+    const token = await AsyncStorage.getItem('token');
+
+    console.log(token);
+
+    if (!token) {
+      Alert.alert('Please login first');
+    }
+
+    const data = {
+      method: selectedMethod,
+      amount: amount,
+      number: number,
+    };
+
+    console.log(`${baseUrl}/khelmela/withDrawl/${token}`);
+
+    const res = await axios.post(
+      `${baseUrl}/khelmela/withDrawl/${token}`,
+      data,
+    );
+
+    Alert.alert(res.body.message);
+    console.log(selectedMethod);
+    console.log(data);
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.heading}>Select Payment Method</Text>
       <View style={styles.methodContainer}>
-        <TouchableOpacity onPress={() => setSelectedMethod("eSewa")}>
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedMethod('eSewa');
+          }}>
           <Image
-            source={require("../../assets/esewa.jpg")}
-            style={selectedMethod === "eSewa" ? styles.selectedIcon : styles.icon}
+            source={require('../../assets/esewa.jpg')}
+            style={
+              selectedMethod === 'eSewa' ? styles.selectedIcon : styles.icon
+            }
           />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setSelectedMethod("Khalti")}>
+        <TouchableOpacity onPress={() => setSelectedMethod('Khalti')}>
           <Image
-            source={require("../../assets/khalti.jpg")}
-            style={selectedMethod === "Khalti" ? styles.selectedIcon : styles.icon}
+            source={require('../../assets/khalti.jpg')}
+            style={
+              selectedMethod === 'Khalti' ? styles.selectedIcon : styles.icon
+            }
           />
         </TouchableOpacity>
       </View>
 
       <TextInput
         style={styles.input}
-        placeholder={selectedMethod === "eSewa" ? "Enter your eSewa number" : "Enter your Khalti number"}
+        placeholder={
+          selectedMethod === 'eSewa'
+            ? 'Enter your eSewa number'
+            : 'Enter your Khalti number'
+        }
         placeholderTextColor="black" // Placeholder text set to black
         keyboardType="default"
+        onChangeText={text => setNumber(text)}
       />
       <TextInput
         style={styles.input}
         placeholder="Enter Amount"
         placeholderTextColor="black" // Placeholder text set to black
         keyboardType="numeric"
+        onChangeText={text => {
+          setAmount(text);
+        }}
       />
 
-      <TouchableOpacity style={styles.saveButton}>
+      <TouchableOpacity
+        style={styles.saveButton}
+        onPress={() => handleWithdraw(selectedMethod)}>
         <Text style={styles.saveButtonText}>Save</Text>
       </TouchableOpacity>
     </View>
@@ -45,18 +108,18 @@ const Withdraw = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     padding: 20,
     backgroundColor: 'grey',
   },
   heading: {
     fontSize: 25,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginTop: 95,
   },
   methodContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     marginTop: 25,
   },
   icon: {
@@ -73,8 +136,8 @@ const styles = StyleSheet.create({
   },
   input: {
     borderWidth: 1,
-    borderColor: "#ccc",
-    width: "80%",
+    borderColor: '#ccc',
+    width: '80%',
     padding: 10,
     marginTop: 39,
     borderRadius: 5,
@@ -87,15 +150,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 5,
     marginTop: 39, // Matches input spacing
-    height:50,
-    width:100
+    height: 50,
+    width: 100,
   },
   saveButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 18,
-   
-    textAlign:'center'
+
+    textAlign: 'center',
   },
 });
 
