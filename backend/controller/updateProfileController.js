@@ -1,7 +1,7 @@
 const RateLimit = require("../model/RateLimitModel")
 const {User} = require("../model/schema")
 const timelimit = require("../model/TimeLimitModel")
-
+const mongoose =require('mongoose')
 const updateProfile =async(req,res)=>{
     const userid =req.user
     const {username}=req.body
@@ -106,8 +106,23 @@ const uploadImage =async(req, res) => {
   const uploadimage =async(req,res)=>{
     const{image}=req.body
     const userid =req.user
-   const userinfo = await User.findOne({_id:userid})
-   userinfo.image = image
+    console.log(userid)
+    const userinfo = await User.findOne({ _id: userid});
+   console.log(userinfo)
+   if(!userinfo){
+    return res.status(400).json({
+        message:'not user found'
+
+    })
+   }
+   if(userinfo.image){
+    userinfo.image = ""
+   }
+   userinfo.image=image
    await userinfo.save()
+   console.log('save bhayo')
+   res.status(200).json({
+    message:'profile updated!!'
+   })
   }
-module.exports = {updateProfile,pubgprofile,freefireprofile,uploadImage}
+module.exports = {updateProfile,pubgprofile,freefireprofile,uploadImage,uploadimage}

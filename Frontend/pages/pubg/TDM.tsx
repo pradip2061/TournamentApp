@@ -1,384 +1,392 @@
-import { View, Text, StyleSheet,Pressable, TextInput, Modal, Keyboard, TouchableOpacity,ScrollView,Animated } from 'react-native'
+import { View, Text, StyleSheet, Pressable, TextInput, Modal, Keyboard, TouchableOpacity, ScrollView, Animated } from 'react-native'
 import React, { useContext, useEffect, useState } from 'react'
 import AntDesign from 'react-native-vector-icons/AntDesign'
 import Ionicons from 'react-native-vector-icons/Ionicons'
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
-
 import Entypo from 'react-native-vector-icons/Entypo'
 import MatchCard from '../../components/MatchCard'
-import { FlatList} from 'react-native-gesture-handler'
+import { FlatList } from 'react-native-gesture-handler'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import ShimmerBox from '../../components/ShimmerBox'
 import { CheckAdminContext } from '../ContextApi/ContextApi'
 import TdmCard from '../../components/TdmCard'
-const TDM = ({navigation}) => {
-  const[page,setPage]=useState(1)
-  const[data,setData]=useState([])
-  const[trigger,setTrigger]=useState('')
-  const[visible,setVisible]=useState(false)
-  const[message,setMessage]=useState('')
-  const{getdata}=useContext(CheckAdminContext)
-    const [matchDetails, setMatchDetails] = useState({
-      show: false,
-      showDetail: true,
-        match:'1v1',
-      gameName: '',
-      betAmount: '',
-      Time:'',
+import{BASE_URL} from '../../env'
+const TDM = ({ navigation }) => {
+  const [page, setPage] = useState(1)
+  const [data, setData] = useState([])
+  const [trigger, setTrigger] = useState('')
+  const [visible, setVisible] = useState(false)
+  const [message, setMessage] = useState('')
+  const { getdata } = useContext(CheckAdminContext)
+  const [matchDetails, setMatchDetails] = useState({
+    show: false,
+    showDetail: true,
+    match: '1v1',
+    gameName: '',
+    betAmount: '',
+  });
 
-    });
-    console.log(matchDetails.match)
-    const modal =(messages)=>{
-      setVisible(true)
-      setMessage(String(messages))
-      setTimeout(()=>{
-        setVisible(false)
-        setMessage('')
-      },1000)
-    }
-    const handleOutsidePress = () => {
-        Keyboard.dismiss(); // To dismiss keyboard if it's open
-        setMatchDetails((prev)=>({...prev,show:false})); // Close the modal
-      }
+  console.log(matchDetails.match)
+  
+  const modal = (messages) => {
+    setVisible(true)
+    setMessage(String(messages))
+    setTimeout(() => {
+      setVisible(false)
+      setMessage('')
+    }, 1000)
+  }
 
-      // const playerOptions = [
-      //   { id: 1, label: "1v1" },
-      //   { id: 2, label: "2v2" },
-      //   { id: 3, label: "3v3" },
-      // ];
+  const handleOutsidePress = () => {
+    Keyboard.dismiss();
+    setMatchDetails((prev) => ({ ...prev, show: false }));
+  }
 
-      const sendData =async(e)=>{
-        e.preventDefault()
-     try {
-      if(!matchDetails.betAmount || !matchDetails.gameName){
-        modal('fill All fields')
+  const sendData = async (e) => {
+    e.preventDefault()
+    try {
+      if (!matchDetails.betAmount || !matchDetails.gameName) {
+        modal('Fill all fields')
         return
       }
       const token = await AsyncStorage.getItem('token')
-      await axios.post(`${process.env.baseUrl}/khelmela/creatematchtdm`,{matchDetails},{
-        headers:{
-          Authorization:`${token}`
+      await axios.post(`${BASE_URL}/khelmela/creatematchtdm`, { matchDetails }, {
+        headers: {
+          Authorization: `${token}`
         }
       })
-      .then((response)=>{
+      .then((response) => {
         console.log(response)
-     modal(response.data.message)
-      setTrigger('done')
-      setMatchDetails((prev)=>({...prev,show:false}))
-      matchidSend(response.data.newMatch._id)
+        modal(response.data.message)
+        setTrigger('done')
+        setMatchDetails((prev) => ({ ...prev, show: false }))
+        matchidSend(response.data.newMatch._id)
       })
-     } catch (error) {
-      const errorMessage = error.response.data.message || "exceed the limit";
+    } catch (error) {
+      const errorMessage = error.response.data.message || "Exceed the limit";
       modal(errorMessage)
-     }
-      }  
-      
-      const matchidSend =async(matchId)=>{
-      console.log(matchId)
-     try {
+    }
+  }
+
+  const matchidSend = async (matchId) => {
+    console.log(matchId)
+    try {
       const token = await AsyncStorage.getItem('token')
-      await axios.post(`${process.env.baseUrl}/khelmela/addinhosttdm`,{matchId},{
-        headers:{
-          Authorization:`${token}`
+      await axios.post(`${BASE_URL}/khelmela/addinhosttdm`, { matchId }, {
+        headers: {
+          Authorization: `${token}`
         }
       })
-     } catch (error) {
-      const errorMessage = error.response?.data?.message || "exceed the limit";
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || "Exceed the limit";
       modal(errorMessage)
-     }
-      } 
+    }
+  }
 
+  useEffect(() => {
+    try {
+      const getMatches = async () => {
+        await axios.get(`${BASE_URL}/khelmela/gettdm`)
+          .then((response) => {
+            setData(response.data.data)
+          })
+      }
+      getMatches()
+    } catch (error) {
+      setMessage(error.response.data.message)
+    }
+  }, [getdata, trigger])
 
-      useEffect(()=>{
-        try {
-          const getMatches = async()=>{
-            await axios.get(`${process.env.baseUrl}/khelmela/gettdm`)
-            .then((response)=>{
-              setData(response.data.data)
-            })
-          }
-          getMatches()
-        } catch (error) {
-          setMessage(error.response.data.message)
-        }
-      },[getdata,trigger])
-      
   return (
     <ScrollView>
-    <View style={styles.container}>
-       <View style={styles.header}>
-        <AntDesign name="arrowleft" size={30} color="white" onPress={()=>navigation.navigate('Homes')} />
-        <Text style={styles.headerTitle}>Clash Squad Matches</Text>
-      </View>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="menu-outline" size={24} color="black" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search your match"
-          placeholderTextColor="#666"
-        />
-        <FontAwesome5 name="search" size={20} color="black" />
-      </View>
-      <Text style={styles.note}>
-        Note: All matches are made by host player not admin
-      </Text>
-      <Pressable style={styles.createButton} onPress={() => setMatchDetails((prev)=>({...prev,show:true}))}>
-        <Ionicons name="add-circle-outline" size={24} color="white" />
-        <Text style={styles.createButtonText}>Create</Text>
-      </Pressable>
-      <View style={styles.liveMatches}>
-        <Entypo name="game-controller" size={24} color="black" />
-        <Text style={styles.liveMatchesText}>Live Matches</Text>
-      </View>
-      <View style={{paddingBottom:10}}>
-                  <View>
-                    {
-                      data?.length  ?  <FlatList
-                      data={data}
-                      scrollEnabled={false} 
-                      keyExtractor={(item,id) =>id.toString() }
-                      renderItem={({ item }) => <TdmCard matches={item} />}
-                    /> :<ShimmerBox/>
-                    }
-                  </View>
-      </View>
-      <Modal visible={matchDetails.show}  transparent animationType='fade' onRequestClose={handleOutsidePress}>
-      <View style={styles.modal}>
-        <Text style={{borderColor:'black',borderBottomWidth:2,width:100,height:4,marginTop:5,marginLeft:140}}>hello</Text>
-        <Text style={styles.modalTitle}>Create your match</Text>
-        <ScrollView>
-        <View style={{marginLeft:40}}>
-            <Text style={{fontSize:20,fontWeight:700}}>Room mode</Text>
-            <View style={{display:'flex',flexDirection:'row',gap:50,alignItems:'center',marginTop:20,}}>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,match:'1v1'}))} style={ matchDetails.match === '1v1' ?styles.toggle:null}><Text style={ matchDetails.match === '1v1' ? styles.toggleText:styles.toggleTextN}>1v1</Text></TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,match:'2v2'}))} style={ matchDetails.match === '2v2' ?styles.toggle:null}><Text style={matchDetails.match === '2v2' ? styles.toggleText:styles.toggleTextN}>2v2</Text></TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,match:'3v3'}))} style={ matchDetails.match === '3v3' ?styles.toggle:null}><Text style={matchDetails.match === '3v3' ? styles.toggleText:styles.toggleTextN}>3v3</Text></TouchableOpacity>
-                <TouchableOpacity onPress={()=>setMatchDetails((prev)=>({...prev,match:'4v4'}))} style={ matchDetails.match === '4v4' ?styles.toggle:null}><Text style={matchDetails.match === '4v4' ? styles.toggleText:styles.toggleTextN}>4v4</Text></TouchableOpacity>
-            </View>
+      <View style={styles.container}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="menu-outline" size={24} color="#333" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search your match"
+            placeholderTextColor="#666"
+          />
+          <FontAwesome5 name="search" size={20} color="#333" />
         </View>
-                <View>
-                <View style={{marginLeft:40}}>
-            <View style={{display:'flex',marginTop:40}}>
-                <Text style={{fontSize:20,fontWeight:700}}> 
-                    Game name:
-                </Text>
-                <TextInput placeholder='Give your name' style={styles.textinput} value={matchDetails.gameName} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,gameName:text}))}/>
-               
-            </View>
-            <View style={{display:'flex',marginTop:30}}>
-                <Text style={{fontSize:20,fontWeight:700}}>
-                    Entry Fee:
-                </Text>
-                <TextInput placeholder='Enter the amount'  keyboardType="numeric" style={styles.textinput} value={matchDetails.betAmount} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,betAmount:text}))}/>
-            </View>
-            <View style={{display:'flex',marginTop:30}}>
-                <Text style={{fontSize:20,fontWeight:700}}>
-                    Time:
-                </Text>
-                <TextInput placeholder='Enter the time'   style={styles.textinput} value={matchDetails.Time} onChangeText={(text)=>setMatchDetails((prev)=>({...prev,Time:text}))}/>
-            </View>
-                  <TouchableOpacity style={styles.button} onPress={sendData}><Text style={{ fontSize: 25,fontWeight:700,color:'white',textAlign:'center',marginTop:6}}>Publish</Text></TouchableOpacity>
-                </View>
-                </View>
-        </ScrollView>
-      </View>
-      </Modal>
-      <Modal
-      animationType="fade"
-      transparent={true}
-      visible={visible}
-    >
-      <View style={styles.modalContainer}>
-        <View style={styles.modalContent}>
-        <Text style={styles.title}>{message}</Text>
+
+        <Text style={styles.note}>
+          Note: All matches are made by host player not admin
+        </Text>
+
+        <Pressable style={styles.createButton} onPress={() => setMatchDetails((prev) => ({ ...prev, show: true }))}>
+          <Ionicons name="add-circle-outline" size={24} color="white" />
+          <Text style={styles.createButtonText}>Create</Text>
+        </Pressable>
+
+        <View style={styles.liveMatches}>
+          <Entypo name="game-controller" size={24} color="#333" />
+          <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
+
+        <View style={{ paddingBottom: 300 }}>
+          <View>
+            {data?.length ? (
+              <FlatList
+                data={data}
+                scrollEnabled={false}
+                keyExtractor={(item, id) => id.toString()}
+                renderItem={({ item }) => <TdmCard matches={item} />}
+                ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+              />
+            ) : (
+              <ShimmerBox />
+            )}
+          </View>
+        </View>
+
+        <Modal visible={matchDetails.show} transparent animationType='fade' onRequestClose={handleOutsidePress}>
+          <View style={styles.modal}>
+            <View style={styles.modalHandle} />
+            <Text style={styles.modalTitle}>Create Your Match</Text>
+            <ScrollView>
+              <View style={{ marginHorizontal: 20 }}>
+                <Text style={styles.sectionTitle}>Room Mode</Text>
+                <View style={styles.toggleContainer}>
+                  {['1v1', '2v2', '3v3', '4v4'].map((mode) => (
+                    <TouchableOpacity
+                      key={mode}
+                      onPress={() => setMatchDetails((prev) => ({ ...prev, match: mode }))}
+                      style={[styles.toggle, matchDetails.match === mode && styles.toggleActive]}
+                    >
+                      <Text style={[styles.toggleText, matchDetails.match === mode && styles.toggleTextActive]}>
+                        {mode}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <View style={styles.inputSection}>
+                  <Text style={styles.sectionTitle}>Game Name</Text>
+                  <TextInput
+                    placeholder='Enter game name'
+                    style={styles.textInput}
+                    value={matchDetails.gameName}
+                    onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
+                  />
+
+                  <Text style={styles.sectionTitle}>Entry Fee</Text>
+                  <TextInput
+                    placeholder='Enter amount'
+                    keyboardType="numeric"
+                    style={styles.textInput}
+                    value={matchDetails.betAmount}
+                    onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
+                  />
+
+                  <TouchableOpacity style={styles.publishButton} onPress={sendData}>
+                    <Text style={styles.publishButtonText}>Publish</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+        </Modal>
+
+        <Modal animationType="fade" transparent={true} visible={visible}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalMessage}>{message}</Text>
+            </View>
+          </View>
+        </Modal>
       </View>
-    </Modal>
-    </View>
     </ScrollView>
   )
 }
+
 const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: 'rgb(0,18,64)',
-      padding: 16,
-      paddingBottom:190
-    },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 20,
-    },
-    headerTitle: {
-      fontSize: 20,
-      fontWeight: "bold",
-      marginLeft: 16,
-      color:'white'
-    },
-    searchContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      backgroundColor: "#F5F5F5",
-      borderRadius: 24,
-      paddingHorizontal: 16,
-      height: 48,
-      marginBottom: 12,
-    },
-    searchInput: {
-      flex: 1,
-      marginHorizontal: 12,
-      fontSize: 16,
-    },
-    note: {
-      color: "#FF4444",
-      fontSize: 12,
-      marginBottom: 16,
-      marginLeft:30
-    }
-,
-createButton: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "orange",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 24,
-    alignSelf: "flex-end",
+  container: {
+    flex: 1,
+    backgroundColor: '#F5F5F5',
+    padding: 20,
+    paddingBottom: 100,
+  },
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 19,
+    paddingHorizontal: 15,
+    height: 50,
+    marginBottom: 15,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    borderWidth:1
+
+  },
+  searchInput: {
+    flex: 1,
+    marginHorizontal: 10,
+    fontSize: 16,
+    color: '#333',
+  },
+  note: {
+    color: '555',
+    fontSize: 14,
+    marginBottom: 20,
+    marginLeft: 15,
+    fontStyle: 'italic',
+  },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FF6B00',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 25,
+    alignSelf: 'flex-end',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   createButtonText: {
     marginLeft: 8,
-    fontWeight: 600,
-    color:'white',
-    fontSize:17
-  }  ,liveMatches: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#EEE",
-    padding: 8,
-    borderRadius: 8,
-    width:135,
-    marginLeft:10,
+    fontWeight: '700',
+    color: '#FFFFFF',
+    fontSize: 16,
+  },
+  liveMatches: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 10,
+    width: 150,
+    marginVertical: 15,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   liveMatchesText: {
     marginLeft: 8,
-    fontWeight: "600",
+    fontWeight: '600',
+    color: '#333',
+    fontSize: 16,
   },
-  modal:{
-    width:'100%',
-    height:'100%',
-    backgroundColor:'white',
-    paddingBottom:40,
-    zIndex:20
+  modal: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    paddingTop: 10,
+  },
+  modalHandle: {
+    width: 40,
+    height: 4,
+    backgroundColor: '#DDD',
+    borderRadius: 2,
+    alignSelf: 'center',
+    marginTop: 10,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    textAlign: "center",
-    marginBottom: 24,
-    marginTop:20
+    fontSize: 22,
+    fontWeight: '700',
+    textAlign: 'center',
+    marginVertical: 20,
+    color: '#333',
   },
-  toggle:{
-    height:40,
-    borderRadius:30,
-    backgroundColor:'orange',
-    display:'flex',
-    justifyContent:'center',
-    padding:5
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    marginBottom: 10,
+    marginTop: 20,
   },
-  toggleText:{
-    color:'white',
-    fontSize:20
+  toggleContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginVertical: 10,
   },
-  toggleTextN:{
-    fontSize:20,
+  toggle: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+    backgroundColor: '#F0F0F0',
   },
-  select:{
-    width:60,
-    height:40,
-    backgroundColor:'orange',
-    display:'flex',
-    justifyContent:'center',
-     borderRadius:30,
-     alignItems:'center',
+  toggleActive: {
+    backgroundColor: '#FF6B00',
   },
-  round:{
-    width:60,
-    height:40,
-    backgroundColor:'orange',
-    display:'flex',
-    justifyContent:'center',
-     borderRadius:30,
-     alignItems:'center',
-     
+  toggleText: {
+    fontSize: 16,
+    color: '#666',
   },
-  coin:{
-    width:70,
-    height:40,
-    backgroundColor:'orange',
-    display:'flex',
-    justifyContent:'center',
-     borderRadius:30,
-     alignItems:'center',
+  toggleTextActive: {
+    color: '#FFFFFF',
+    fontWeight: '600',
   },
-  selectText:{
-    color:'white',
-    fontSize:20
+  inputSection: {
+    marginTop: 20,
   },
-  noselectText:{
-    color:'black',
-    fontSize:20
+  textInput: {
+    width: '100%',
+    height: 50,
+    backgroundColor: '#F8F8F8',
+    borderRadius: 10,
+    paddingHorizontal: 15,
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 15,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
   },
-  flatListContainer:{
-    gap:50,
-    marginLeft:40,
-    display:'flex',
-    alignItems:'center',
-    marginTop:16
+  publishButton: {
+    width: '100%',
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FF6B00',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 30,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
-  roundContainer:{
-    gap:50,
-    display:'flex',
-    alignItems:'center',
-    marginTop:16
+  publishButtonText: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  textinput:{
-    width:300,
-   height:50,
-   backgroundColor:'rgb(227,227,227)',
-   paddingLeft:20,
-   marginTop:10,
-   fontSize:17
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  button:{
-    width:300,
-    height:50,
-    borderRadius:20,
-    backgroundColor:'orange',
-    marginTop:40
-},  
-modalContainer: {
-  flex: 1,
-  alignItems: 'center',
-  marginTop:650
-// Semi-transparent background
-},
-modalContent: {
-  width: 320,
-  padding: 20,
-  backgroundColor: 'rgb(255, 255, 255)',
-  borderRadius: 10,
-  alignItems: 'center',
-  borderWidth:2,
-  borderColor:'orange',
-  marginTop:35
-},
-title: {
-  fontSize: 20,
-  fontWeight:900
-},
- 
+  modalContent: {
+    width: 300,
+    padding: 20,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  modalMessage: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#333',
+    textAlign: 'center',
+  },
 })
+
 export default TDM

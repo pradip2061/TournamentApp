@@ -29,6 +29,13 @@ const createCs = async (req, res) => {
       customId: null,
       customPassword: null,
       TotalPlayers:1,
+      matchId:{
+        pubgFullId:[],
+      pubgTdmId: [],
+      FreefireFullId: [],
+      FreefireClashId: [],
+      codId: [],
+      }
     });
 
     await newMatch.save();
@@ -187,8 +194,10 @@ const createFF = async (req, res) => {
     const { playermode, gameName,entryFee } = req.body;
 
     // Create a new match document
-    const match = await FFfreefire.create({ playermode, gameName,entryFee});
-
+    const match = await FFfreefire.create({ playermode, gameName,entryFee,
+      customId:null,
+      customPassword:null
+    });
     // Fetch all matches
     const matches = await FFfreefire.find();
 
@@ -238,9 +247,9 @@ const joinuserff =async(req,res)=>{
     userinfo.balance -= match.entryFee
   userinfo.matchId.FreefireFullId.push(matchId)
   match.userid.push(userid)
-  if(!userinfo.gameName[0].pubg){
+  if(!userinfo.gameName[0].freefire){
     return res.status(400).json({
-      message:'add pubgGameName in your profile'
+      message:'add freefireGameName in your profile'
     })
   }
   const objectcount = match.gameName.reduce((count,obj)=>count +Object.keys(obj),0)
@@ -262,11 +271,11 @@ const joinuserff =async(req,res)=>{
 }
 const addName = async (req, res) => {
   try {
-    const { player1, player2, player3, matchId } = req.body;
+    const { player1, player2, player3,player4,matchId } = req.body;
   const userid = req.user;
 
   // Validate input
-  if (!player1 || !player2 || !player3) {
+  if (!player2 || !player3 || !player4 ||!player1) {
     return res.status(400).json({ message: 'All fields are mandatory' });
   }
 
@@ -296,9 +305,10 @@ const addName = async (req, res) => {
   // ✅ Choose one:
   // matchinfo.gameName.push(player1, player2, player3);  // Append names
   const teamIndex = matchinfo.gameName.findIndex((team) => team.userid === userid);
-  matchinfo.gameName[teamIndex].player2 =player1
-  matchinfo.gameName[teamIndex].player3 =player2
-  matchinfo.gameName[teamIndex].player4 =player3
+  matchinfo.gameName[teamIndex].player1 =player1
+  matchinfo.gameName[teamIndex].player2 =player2
+  matchinfo.gameName[teamIndex].player3 =player3
+  matchinfo.gameName[teamIndex].player4 =player4
     const totalStrings = matchinfo.gameName.reduce((acc, obj) => acc + Object.keys(obj).length, 0);
     matchinfo.TotalPlayer = totalStrings
     matchinfo.save()

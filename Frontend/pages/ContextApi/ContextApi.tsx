@@ -1,6 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import React, { createContext, useState, ReactNode, useEffect } from 'react';
+import { BASE_URL } from '../../env';
 
 // Define Context Type
 interface CheckAdminContextType {
@@ -10,6 +11,7 @@ interface CheckAdminContextType {
   checkrole: () => Promise<void>;
   data: any;
   trigger:any;
+  getProfile: () => Promise<void>;
 }
 
 // Create Context with Default Values
@@ -19,7 +21,8 @@ export const CheckAdminContext = createContext<CheckAdminContextType>({
   checkrole: async () => {},
   data: null,
   trigger:null,
-  setTrigger:()=>{}
+  setTrigger:()=>{},
+  getProfile: async () => {}
 });
 
 export const ContextApi = ({ children }: { children: ReactNode }) => {
@@ -37,7 +40,7 @@ export const ContextApi = ({ children }: { children: ReactNode }) => {
       }
 
       const response = await axios.get(
-        `${process.env.baseUrl}/khelmela/checkrole`, // Use uppercase BASE_URL for env
+        `${BASE_URL}/khelmela/checkrole`, // Use uppercase BASE_URL for env
         { headers: { Authorization: token } }
       );
       
@@ -56,7 +59,7 @@ export const ContextApi = ({ children }: { children: ReactNode }) => {
         return;
       }
 
-      const response = await axios.get(`${process.env.baseUrl}/khelmela/getprofile`, {
+      const response = await axios.get(`${BASE_URL}/khelmela/getprofile`, {
         headers: { Authorization: `${token}` }
       });
 
@@ -66,13 +69,13 @@ export const ContextApi = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  useEffect(()=>{
+    getProfile()
+  },[])
   // Fetch Profile on Mount
-  useEffect(() => {
-    getProfile();
-  }, [trigger]);
 
   return (
-    <CheckAdminContext.Provider value={{ checkadmin, setCheckAdmin, checkrole, data,trigger,setTrigger }}>
+    <CheckAdminContext.Provider value={{ checkadmin, setCheckAdmin, checkrole, data,trigger,setTrigger,getProfile }}>
       {children}
     </CheckAdminContext.Provider>
   );

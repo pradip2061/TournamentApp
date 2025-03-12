@@ -10,7 +10,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import{BASE_URL} from '../../env'
 import {jwtDecode} from 'jwt-decode';
 
 const LandingChat = ({navigation, route}) => {
@@ -40,7 +40,7 @@ const LandingChat = ({navigation, route}) => {
       const fetchFilteredFriends = async () => {
         try {
           const response = await axios.get(
-            `${process.env.baseUrl}/khelmela/users/search?name=${searchTerm}`,
+            `${BASE_URL}/khelmela/users/search?name=${searchTerm}`,
           );
           setFilteredFriends(response.data);
         } catch (error) {

@@ -8,6 +8,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios'
 const img = require('../../assets/loading.gif')
+import{BASE_URL} from '../../env'
 import { Modal } from 'react-native';
 const Setting = ({navigation}) => {
   const[changepass,setChangepass]=useState(false)
@@ -28,7 +29,7 @@ const Setting = ({navigation}) => {
   setLoading(true)
   const token =await AsyncStorage.getItem('token')
 try {
-  axios.post(`${process.env.baseUrl}/khelmela/changepassword`,{oldPassword,newPassword},{
+  axios.post(`${BASE_URL}/khelmela/changepassword`,{oldPassword,newPassword},{
     headers:{
       Authorization:`${token}`,
       "Content-Type":'application/json'
@@ -51,7 +52,7 @@ useEffect(()=>{
   const getProfile =async()=>{
   const token =await AsyncStorage.getItem('token')
     try {
-       axios.get(`${process.env.baseUrl}/khelmela/getprofile`,{
+       axios.get(`${BASE_URL}/khelmela/getprofile`,{
         headers:{
           Authorization:`${token}`
         }
@@ -71,7 +72,7 @@ useEffect(()=>{
       
       {/* User Info Section with Icons */}
       <View style={styles.userSection}>
-        <Image source={require('../../assets/player.png')} style={styles.profileImage} />
+        <Image source={{uri:data.image}} style={styles.profileImage} />
         <View style={styles.userInfo}>
           <View style={styles.userRow}>
             <Ionicons name="person-circle-outline" size={24} color="#555" />
@@ -218,7 +219,7 @@ const styles = StyleSheet.create({
     marginLeft: 10,
   },
   email: {
-    fontSize: 18,
+    fontSize: 14,
    
     fontWeight:"500",
     marginLeft: 10,

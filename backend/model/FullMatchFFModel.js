@@ -38,6 +38,12 @@ const schema = mongoose.Schema(
       type: Number,
     },
     userid: [String],
+    customId:{
+      type:Number || null
+    },
+    customPassword:{
+      type:Number || null
+    },
   },
   {
     timestamps: true,

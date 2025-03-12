@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, { useEffect, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,43 +9,26 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 import ModalNotify from '../../components/ModalNotify';
-import { launchImageLibrary } from 'react-native-image-picker';
-
+import {launchImageLibrary} from 'react-native-image-picker';
+import { CheckAdminContext } from '../ContextApi/ContextApi';
+import{BASE_URL} from '../../env'
 const Profile = () => {
   const [username, setUsername] = useState('');
   const [freefireName, setFreefireName] = useState('');
   const [freefireUid, setFreefireUid] = useState('');
   const [pubgName, setPubgName] = useState('');
   const [pubgUid, setPubgUid] = useState('');
-  const [data, setData] = useState({});
+  // const [data, setData] = useState({});
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-
-  // Fetch profile data on mount
-  useEffect(() => {
-    const getProfile = async () => {
-      const token = await AsyncStorage.getItem('token');
-      try {
-        const response = await axios.get(`${process.env.baseUrl}/khelmela/getprofile`, {
-          headers: { Authorization: `${token}` },
-        });
-        const profileData = response.data.data || {};
-        setData(profileData);
-        setUsername(profileData.username || '');
-        setFreefireName(profileData.gameName?.[0]?.freefire || '');
-        setFreefireUid(profileData.uid?.[0]?.freefire || '');
-        setPubgName(profileData.gameName?.[0]?.pubg || '');
-        setPubgUid(profileData.uid?.[0]?.pubg || '');
-      } catch (error) {
-        console.log('Profile fetch error:', error);
-      }
-    };
-    getProfile();
-  }, []);
-
+  const[image,setImage]=useState(null)
+  const[loading,setLoading]=useState(false)
+  const{trigger,setTrigger,getProfile,data}=useContext(CheckAdminContext)
   // Popup notification handler
   const popup = () => {
     setVisible(true);
@@ -61,48 +44,63 @@ const Profile = () => {
     }
     setError('');
     setMessage('');
+    setLoading(true)
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.baseUrl}/khelmela/updateprofile`,
-        { username }, // Ensure the payload matches API expectations
-        { 
-          headers: { 
+        `${BASE_URL}/khelmela/updateprofile`,
+        {username}, // Ensure the payload matches API expectations
+        {
+          headers: {
             Authorization: `${token}`,
-            'Content-Type': 'application/json' // Explicitly set content type
-          } 
-        }
+            'Content-Type': 'application/json', // Explicitly set content type
+          },
+        },
       );
       setMessage(response.data.message || 'Username updated successfully');
-      setData((prev) => ({ ...prev, username })); // Update local state
+      // setData(prev => ({...prev, username})); // Update local state
     } catch (error) {
-      console.log('Update profile error:', error.response?.data || error.message);
+      console.log(
+        'Update profile error:',
+        error.response?.data || error.message,
+      );
       setError(error.response?.data?.message || 'Failed to update username');
     } finally {
+      setLoading(false)
       popup();
     }
   };
 
+  useEffect(()=>{
+    getProfile()
+    setFreefireName(data?.gameName?.[0]?.freefire)
+    setFreefireUid(data?.uid?.[0]?.freefire)
+    setUsername(data?.username)
+    setPubgName(data?.gameName?.[0]?.pubg)
+    setPubgUid(data?.uid?.[0]?.pubg)
+  },[trigger])
   // Update PUBG name and UID
   const pubgNameUpdate = async () => {
     setError('');
     setMessage('');
+    setLoading(true)
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.baseUrl}/khelmela/pubgname`,
-        { pubgName, pubgUid },
-        { headers: { Authorization: `${token}` } }
+        `${BASE_URL}/khelmela/pubgname`,
+        {pubgName, pubgUid},
+        {headers: {Authorization: `${token}`}},
       );
       setMessage(response.data.message || 'PUBG details updated');
-      setData((prev) => ({
-        ...prev,
-        gameName: [{ ...prev.gameName?.[0], pubg: pubgName }],
-        uid: [{ ...prev.uid?.[0], pubg: pubgUid }],
-      }));
+      // setData(prev => ({
+      //   ...prev,
+      //   gameName: [{...prev.gameName?.[0], pubg: pubgName}],
+      //   uid: [{...prev.uid?.[0], pubg: pubgUid}],
+      // }));
     } catch (error) {
       setError(error.response?.data?.message || 'PUBG update failed');
     } finally {
+      setLoading(false)
       popup();
     }
   };
@@ -111,81 +109,122 @@ const Profile = () => {
   const freefireNameUpdate = async () => {
     setError('');
     setMessage('');
+    setLoading(true)
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        `${process.env.baseUrl}/khelmela/freefirename`,
-        { freefireName, freefireUid },
-        { headers: { Authorization: `${token}` } }
+        `${BASE_URL}/khelmela/freefirename`,
+        {freefireName, freefireUid},
+        {headers: {Authorization: `${token}`}},
       );
       setMessage(response.data.message || 'Freefire details updated');
-      setData((prev) => ({
-        ...prev,
-        gameName: [{ ...prev.gameName?.[0], freefire: freefireName }],
-        uid: [{ ...prev.uid?.[0], freefire: freefireUid }],
-      }));
+      // setData(prev => ({
+      //   ...prev,
+      //   gameName: [{...prev.gameName?.[0], freefire: freefireName}],
+      //   uid: [{...prev.uid?.[0], freefire: freefireUid}],
+      // }));
     } catch (error) {
       setError(error.response?.data?.message || 'Freefire update failed');
     } finally {
+      setLoading(false)
       popup();
     }
   };
+  const isUsernameChanged =
+  username?.trim() !== '' && username.trim() !== (data.username || '').trim();
 
-  // Check if inputs have changed
-  const isUsernameChanged = username !== (data.username || '') && username.trim() !== '';
-  const isFreefireChanged =
-    freefireName !== (data.gameName?.[0]?.freefire || '') ||
-    freefireUid !== (data.uid?.[0]?.freefire || '');
-  const isPubgChanged =
-    pubgName !== (data.gameName?.[0]?.pubg || '') || pubgUid !== (data.uid?.[0]?.pubg || '');
-const pickImage = () => {
-  const options = {
-    mediaType: 'photo',
-    maxWidth: 800, // Set max width to reduce size
-    maxHeight: 800, // Set max height to reduce size
-    quality: 0.3, // Adjust compression quality (0.1 - 1)
-    includeBase64: true, // Convert image to base64
+const isFreefireChanged =
+  (freefireName?.trim() !== '' || freefireUid.trim() !== '') && // ✅ Ensures at least one input has a value
+  (freefireName?.trim() !== (data?.gameName?.[0]?.freefire || '').trim() ||
+   freefireUid?.trim() !== (data?.uid?.[0]?.freefire || '').trim());
+
+const isPubgChanged =
+  (pubgName?.trim() !== '' || pubgUid.trim() !== '') && // ✅ Ensures at least one input has a value
+  (pubgName?.trim() !== (data?.gameName?.[0]?.pubg || '').trim() ||
+   pubgUid?.trim() !== (data?.uid?.[0]?.pubg || '').trim());
+
+
+
+
+
+  const pickImage = () => {
+    const options = {
+      mediaType: 'photo',
+      maxWidth: 800, // Set max width to reduce size
+      maxHeight: 800, // Set max height to reduce size
+      quality: 0.3, // Adjust compression quality (0.1 - 1)
+      includeBase64: true, // Convert image to base64
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        uploadImage(response?.assets?.[0]?.base64);
+        // setImage(response?.assets?.[0]?.uri)
+      }
+    });
+  };
+  const uploadImage = async (image) => {
+    try {
+      setLoading(true)
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: image,
+          folderName: 'users',
+          filename: '.jpg',
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
+      );
+      console.log(response)
+      if(response.status == 200){
+        imageset(response.data.url)
+      }
+    } catch (error) {
+      console.error('Upload Error:', error);
+    }
   };
 
-  launchImageLibrary(options, (response) => {
-    if (response.didCancel) {
-      console.log('User cancelled image picker');
-    } else if (response.errorMessage) {
-      console.log('ImagePicker Error: ', response.errorMessage);
-    } else {
-      uploadImage(response?.assets?.[0]?.base64);
-    // setImage(response?.assets?.[0]?.uri)
+  const imageset =async(image)=>{
+    try {
+      setTrigger('')
+      const token = await AsyncStorage.getItem('token')
+      console.log(token)
+     const response = await axios.post(`${BASE_URL}/khelmela/imageset`,{image},{
+        headers:{
+       Authorization:`${token}`
+        }
+      })
+      setMessage(response.data.message)
+      setTrigger('done')
+    } catch (error) {
+      setError(error.response.data.message)
+    }finally{
+      setLoading(false)
+      popup()
     }
-  });
-};
-const uploadImage = async (image) => {
-  
- 
-  try {
-    console.log(image)
-    const token =await AsyncStorage.getItem('token')
-    const response = await axios.post(`${process.env.baseUrl}/khelmela/upload/upload`,{
-      image:image,
-      folderName:'users',
-      filename:'.jpg'
-    },{
-     headers:{
-      Authorization:`${token}`
-     }
-    } )
-    console.log('Upload Success:', response.data);
-  } catch (error) {
-    console.error('Upload Error:', error);
   }
-};
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Profile</Text>
 
       {/* Profile Section */}
       <View style={styles.card}>
-        <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
-          <Image source={require('../../assets/player.png')} style={styles.profileImage} />
+        <TouchableOpacity
+          style={styles.profileImageContainer}
+          onPress={pickImage}>
+          <Image
+            source={{uri:data?.image}}
+            style={styles.profileImage}
+          />
           <Text style={styles.plusIcon}>+</Text>
         </TouchableOpacity>
         <Text style={styles.emailText}>Email: {data?.email || 'N/A'}</Text>
@@ -198,10 +237,9 @@ const uploadImage = async (image) => {
           onChangeText={setUsername}
         />
         <TouchableOpacity
-          style={[styles.saveButton, { opacity: isUsernameChanged ? 1 : 0.5 }]}
-          onPress={isUsernameChanged ? updateProfile : null}
-          disabled={!isUsernameChanged}
-        >
+          style={[styles.saveButton, {opacity: isUsernameChanged ? 1 : 0.5}]}
+          onPress={ updateProfile}
+          disabled={!isUsernameChanged}>
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
@@ -213,9 +251,14 @@ const uploadImage = async (image) => {
 
       {/* Freefire Section */}
       <View style={styles.card}>
-        <Image source={require('../../assets/freefire.jpeg')} style={styles.gameIcon} />
+        <Image
+          source={require('../../assets/freefire.jpeg')}
+          style={styles.gameIcon}
+        />
         <Text style={styles.gameTitle}>Freefire</Text>
-        <Text style={styles.label}>Ingame Name: {data?.gameName?.[0]?.freefire }</Text>
+        <Text style={styles.label}>
+          Ingame Name: {data?.gameName?.[0]?.freefire}
+        </Text>
         <TextInput
           style={styles.input}
           placeholder="example: raiden"
@@ -233,19 +276,23 @@ const uploadImage = async (image) => {
           keyboardType="numeric"
         />
         <TouchableOpacity
-          style={[styles.saveButton, { opacity: isFreefireChanged ? 1 : 0.5 }]}
-          onPress={isFreefireChanged ? freefireNameUpdate : null}
-          disabled={!isFreefireChanged}
-        >
+          style={[styles.saveButton, {opacity: isFreefireChanged? 1 : 0.5}]}
+          onPress={freefireNameUpdate}
+          disabled={!isFreefireChanged}>
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
 
       {/* PUBG Section */}
       <View style={styles.card}>
-        <Image source={require('../../assets/image.png')} style={styles.gameIcon} />
+        <Image
+          source={require('../../assets/image.png')}
+          style={styles.gameIcon}
+        />
         <Text style={styles.gameTitle}>PUBG</Text>
-        <Text style={styles.label}>Ingame Name: {data?.gameName?.[0]?.pubg}</Text>
+        <Text style={styles.label}>
+          Ingame Name: {data?.gameName?.[0]?.pubg}
+        </Text>
         <TextInput
           style={styles.input}
           placeholder="example: raiden"
@@ -253,7 +300,7 @@ const uploadImage = async (image) => {
           value={pubgName}
           onChangeText={setPubgName}
         />
-        <Text style={styles.label}>UID: {data?.uid?.[0]?.pubg }</Text>
+        <Text style={styles.label}>UID: {data?.uid?.[0]?.pubg}</Text>
         <TextInput
           style={styles.input}
           placeholder="example: 2654841556"
@@ -263,13 +310,15 @@ const uploadImage = async (image) => {
           keyboardType="numeric"
         />
         <TouchableOpacity
-          style={[styles.saveButton, { opacity: isPubgChanged ? 1 : 0.5 }]}
-          onPress={isPubgChanged ? pubgNameUpdate : null}
-          disabled={!isPubgChanged}
-        >
+          style={[styles.saveButton, {opacity: isPubgChanged? 1 : 0.5}]}
+          onPress={pubgNameUpdate}
+          disabled={!isPubgChanged}>
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
+      <Modal visible={loading} transparent>
+      <ActivityIndicator size={30} style={{marginTop:380}}/>
+      </Modal>
     </ScrollView>
   );
 };
@@ -292,11 +341,13 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 10,
     marginBottom: 20,
-    alignItems: 'center',elevation: 6
+    alignItems: 'center',
+    elevation: 6,
   },
   profileImageContainer: {
     position: 'relative',
-    marginBottom: 15,elevation: 4
+    marginBottom: 15,
+    elevation: 4,
   },
   profileImage: {
     width: 80,
@@ -380,12 +431,3 @@ const styles = StyleSheet.create({
 });
 
 export default Profile;
-
-
-
-
-
-
-
-
-

@@ -7,9 +7,6 @@ const mongoose = require("mongoose");
   TotalPlayer: {
     type: Number,
   },
-  Time: {
-    type: String,
-  },
   entryFee: {
     type: String,
   },
@@ -39,7 +36,13 @@ const mongoose = require("mongoose");
       default: "pending",
     },
     userid: [String],
-createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) }
+createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
+customId:{
+  type:Number || null
+},
+customPassword:{
+  type:Number || null
+},
 });
 const tdm =mongoose.model('tdm',schema)
 module.exports = tdm

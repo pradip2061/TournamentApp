@@ -11,7 +11,7 @@ import User from 'react-native-vector-icons/FontAwesome'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import axios from 'axios'
 import {jwtDecode} from 'jwt-decode'
-
+import{BASE_URL} from '../../env'
 const Tab = createBottomTabNavigator()
 
 const ChatTabButton = props => {
@@ -28,7 +28,7 @@ const ChatTabButton = props => {
       const decoded = jwtDecode(token)
       const userId = decoded.id
 
-      const response = await axios.get(`${process.env.baseUrl}/khelmela/friends/${token}`)
+      const response = await axios.get(`${BASE_URL}/khelmela/friends/${token}`)
 
       navigation.navigate('Chat', {friends: response.data})
     } catch (error) {

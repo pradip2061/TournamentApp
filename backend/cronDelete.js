@@ -1,6 +1,6 @@
 const cron = require("node-cron");
 const ClashSquad = require("./model/ClashSquadModel");
-const User = require("./model/schema");
+const {User} = require("./model/schema");
 const tdm = require("./model/TdmModel");
 
 // Function to delete match cards older than 6 minutes

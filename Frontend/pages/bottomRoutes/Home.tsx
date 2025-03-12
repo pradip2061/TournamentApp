@@ -19,8 +19,13 @@ const tdm = require('../../assets/tdm.jpg');
 
 const Home = ({ navigation }) => {
   const [toggle, setToggle] = useState('freefire');
-  const {checkadmin, data} = useContext(CheckAdminContext)
+  const {checkadmin, data,getProfile} = useContext(CheckAdminContext)
 
+  useFocusEffect(
+    useCallback(() => {
+      getProfile();
+    }, [])
+  );
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {
@@ -45,10 +50,10 @@ const Home = ({ navigation }) => {
     >
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity>
-            <Doller name="circle-dollar-to-slot" size={32} color="#fff" onPress={() => navigation.navigate('Transcation')} />
-          </TouchableOpacity>
-          <Text>{data?.balance}</Text>
+          <TouchableOpacity style={{flexDirection:'row',gap:10,alignItems:'center'}} onPress={() => navigation.navigate('Transcation')} >
+            <Doller name="circle-dollar-to-slot" size={32} color="#fff" />
+            <Text style={{color:'gold'}}>{data?.balance}</Text>
+         </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity onPress={() => navigation.navigate('EnrollMatch')}>
               <Gamepad name="game-controller" size={32} color="#fff" />
@@ -119,10 +124,10 @@ const styles = StyleSheet.create({
   header: {
     width: '100%',
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 15,
+    gap:160
   },
   headerIcons: {
     flexDirection: 'row',

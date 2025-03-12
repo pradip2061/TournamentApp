@@ -124,10 +124,10 @@ const createPubgMatch = async (req, res) => {
 
 const addName = async(req, res) => {
   try {
-    const { player1, player2, player3, matchId } = req.body;
+    const { player1, player2, player3,player4, matchId } = req.body;
   const userid = req.user;
   // Validate input
-  if (!player1 || !player2 || !player3) {
+  if (!player2 || !player3 || !player4 ||!player1) {
     return res.status(400).json({ message: 'All fields are mandatory' });
   }
   // Check if match exists
@@ -153,9 +153,10 @@ const addName = async(req, res) => {
     lastRequest: Date.now()
   });
   const teamIndex = matchinfo.gameName.findIndex((team) => team.userid === userid);
-  matchinfo.gameName[teamIndex].player2 =player1
-  matchinfo.gameName[teamIndex].player3 =player2
-  matchinfo.gameName[teamIndex].player4 =player3
+  matchinfo.gameName[teamIndex].player1 =player1
+  matchinfo.gameName[teamIndex].player2 =player2
+  matchinfo.gameName[teamIndex].player3 =player3
+  matchinfo.gameName[teamIndex].player4 =player4
   const totalStrings = matchinfo.gameName.reduce((acc, obj) => acc + Object.keys(obj).length, 0);
   matchinfo.TotalPlayer = totalStrings
   await matchinfo.save()
@@ -177,7 +178,6 @@ const createtdm =async(req,res)=>{
   const newMatch = new tdm({
    playermode:matchDetails.match,
   TotalPlayer:1,
-  Time:matchDetails.Time,
   entryFee:matchDetails.betAmount,
       });
 

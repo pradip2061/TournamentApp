@@ -37,6 +37,11 @@ const checkuserJoinFF =async(req,res)=>{
     const userid = req.user;
     const userinfo = await User.findOne({ _id: userid });
     const gameNameArray = userinfo.matchId.FreefireFullId
+    if(!gameNameArray){
+        return res.status(400).json({
+            message:'no matches right now'
+        })
+    }
     const index = gameNameArray.findIndex(arr => arr.includes(matchId));
     if (index !== -1) {
       res.status(200).json({
@@ -115,21 +120,48 @@ const checkrole =async(req,res)=>{
     })
 }
 
-const getchampions = async(req,res)=>{
-    const userid = req.user
-    const userinfo = await User.findOne({_id:userid}).select('username trophy').lean()
-    const userdata = await User.find().select('username trophy image').sort({ trophy: -1 }).lean()
-    if(!userinfo || !userdata){
-        return res.status(404).json({
-            message:'data not found'
-        })
-    }
+const getchampions = async (req, res) => {
+    try {
+        const userid = req.user;
+        if (!userid) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
 
-    res.status(200).json({
-        message:'data sent!',
-        userinfo,
-        userdata
-    })
-}
+        // Fetch user info
+        const userinfo = await User.findOne({ _id: userid })
+            .select("username trophy image")
+            .lean();
+
+        if (!userinfo) {
+            return res.status(404).json({ message: "User info not found" });
+        }
+
+        // Fetch all users sorted by trophies
+        const userdata = await User.find()
+            .select("username trophy image _id")
+            .sort({ trophy: -1 })
+            .lean();
+
+        if (userdata.length === 0) {
+            return res.status(404).json({ message: "No champions found" });
+        }
+
+        // Find the index using .equals()
+        const index = userdata.findIndex(item => item._id.equals(userid));
+
+        return res.status(200).json({
+            message: "Data sent!",
+            userinfo,
+            userdata,
+            index,
+        });
+    } catch (error) {
+        console.error("Error fetching champions:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+};
+
+
+
 
 module.exports = {checkResult,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions};

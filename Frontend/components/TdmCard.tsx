@@ -15,6 +15,7 @@ import ModalNotify from './ModalNotify';
 import Clipboard from '@react-native-clipboard/clipboard';
 const img = require('../assets/image.png');
 const tdm =require('../assets/tdm.jpg')
+import {BASE_URL} from '../env'
 const TdmCard = ({matches}) => {
   const [modal, setModal] = useState(false);
   const matchId =matches._id
@@ -38,7 +39,7 @@ const TdmCard = ({matches}) => {
     setError('')
   try {
     const token = await AsyncStorage.getItem('token')
-   const response = await axios.post(`${process.env.baseUrl}/khelmela/joinuserPubgtdm`,{matchId},{
+   const response = await axios.post(`${BASE_URL}/khelmela/joinuserPubgtdm`,{matchId},{
       headers:{
         Authorization:`${token}`
       }
@@ -55,7 +56,7 @@ const TdmCard = ({matches}) => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
-          `${process.env.baseUrl}/khelmela/checkuserPubgtdm`,
+          `${BASE_URL}/khelmela/checkuserPubgtdm`,
           { matchId },
           {
             headers: {
@@ -85,7 +86,7 @@ const TdmCard = ({matches}) => {
       const checkmatchType = () => {
         axios
          .post(
-           `${process.env.baseUrl}/khelmela/checkmatchType`,
+           `${BASE_URL}/khelmela/checkmatchType`,
            { matchId },
          )
          .then((response) => {

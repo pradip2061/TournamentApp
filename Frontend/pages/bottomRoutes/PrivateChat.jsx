@@ -9,7 +9,7 @@ import {
 } from 'react-native';
 import io from 'socket.io-client';
 import axios from 'axios';
-
+import{BASE_URL} from '../../env'
 const socket = io(process.env.baseUrl);
 
 console.log('baseUrl', process.env.baseUrl);
@@ -33,11 +33,11 @@ const PrivateChat = ({route}) => {
   }, [roomId]);
 
   useEffect(() => {
-    console.log(`${process.env.baseUrl}/khelmela/chat/${roomId}`);
+    console.log(`${BASE_URL}/khelmela/chat/${roomId}`);
     const fetchMessages = async () => {
       try {
         const response = await axios.get(
-          `http://192.168.162.225:3000/khelmela/chat/${roomId}`,
+          `${BASE_URL}/khelmela/chat/${roomId}`,
         );
         setMessages(response.data);
       } catch (error) {

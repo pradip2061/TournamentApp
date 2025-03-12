@@ -6,6 +6,7 @@ import InfoBox from '../../components/InfoBox'
 import {launchImageLibrary} from 'react-native-image-picker'
 import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
+import{BASE_URL} from '../../env'
 const DepositMoney = () => {
   const [selectedMethod, setSelectedMethod] = useState('eSewa')
   const [selectedImage, setSelectedImage] = useState(null)
@@ -76,7 +77,7 @@ const DepositMoney = () => {
     console.log(token)
     console.log('http://192.168.162.225:3000/khelmela/money')
     try {
-      const response = await axios.post(`${process.env.baseUrl}/khelmela/Addmoney`, {
+      const response = await axios.post(`${BASE_URL}/khelmela/Addmoney`, {
         amount: amount,
         token: token,
         esewaNumber: esewaNumber,

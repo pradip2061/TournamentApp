@@ -9,7 +9,7 @@ import { FlatList, TouchableWithoutFeedback } from 'react-native-gesture-handler
 import ShimmerBox from '../../components/ShimmerBox'
 import LinearGradient from 'react-native-linear-gradient'
 import { CheckAdminContext } from '../ContextApi/ContextApi'
-
+import{BASE_URL} from '../../env'
 
 
 
@@ -23,7 +23,7 @@ const FreeFire = ({navigation}) => {
   useEffect(()=>{
     try {
      const getmatch=async()=>{
-     const match =  await axios.get(`${process.env.baseUrl}/khelmela/getff`)
+     const match =  await axios.get(`${BASE_URL}/khelmela/getff`)
        setCard(match.data.card)
    }
          getmatch()
@@ -33,14 +33,8 @@ const FreeFire = ({navigation}) => {
    },[])
   return(
     <ScrollView style={styles.container}>
-       <LinearGradient
-            colors={["#0f0c29", "#302b63", "#24243e"]}
-            style={styles.gradient}
-          ></LinearGradient>
-        <View style={styles.header}>
-         <AntDesign name="arrowleft" size={30} color="white"   onPress={()=>navigation.navigate('Homes')} /> 
-         <Text style={styles.headerTitle}> Full Map Matches</Text>
-       </View>
+       
+        
        {/* Search Bar */}
        <View style={styles.searchContainer}>
          <Ionicons name="menu-outline" size={24} color="black" />
@@ -67,10 +61,10 @@ const FreeFire = ({navigation}) => {
   <View style={{ flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)"}} >
+    }} >
       <TouchableWithoutFeedback onPress={()=>{}}>
     <Text>
-      hello guys
+      
     </Text>
     </TouchableWithoutFeedback>
   </View>
@@ -85,49 +79,36 @@ const styles = StyleSheet.create({
       width:"100%",
       height:'100%',
       paddingRight:15,
-      backgroundColor:'white'
+      backgroundColor:'F2F2F2'
     },
-    linearColor:{
-flex:1,
-    },
-    header: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 20,  
-      marginRight: 100,
-      marginLeft:60
-    },
-    headerTitle: {
-      fontSize: 24,
-      fontWeight: "bold",
-      marginLeft: 40,
-      color:'white',
-      
-      width:250,
-    },
+   
     searchContainer: {
       flexDirection: "row",
       alignItems: "center",
-      backgroundColor: "#F5F5F5",
+      backgroundColor: "white",
       borderRadius: 24,
-      paddingHorizontal: 20,
+      paddingHorizontal: 15,
       height: 48,
-      width: 310,
-      marginBottom: 12,
-      marginTop: 30,
-     marginLeft:25
+      width: 350,
+      marginBottom: 30,
+      marginTop: 28,
+     marginLeft:25,
+     borderWidth:1
       
     },
     searchInput: {
       flex: 1,
       marginHorizontal: 12,
       fontSize: 16,
+      color:"black",
     },
     note: {
-      color: "#FF4444",
-      fontSize: 13,
+      color: "#555",
+      fontSize: 15,
       marginBottom: 16,
-      marginLeft:30
+      marginLeft:30,
+      paddingBottom:20,
+      marginTop:-15
     }
   });
 

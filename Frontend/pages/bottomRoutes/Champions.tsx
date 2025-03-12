@@ -2,18 +2,18 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from "react-native";
-
+import{BASE_URL} from '../../env'
 
 const Champions = () => {
     const [filter, setFilter] = useState("week");
     const[data,setData]=useState({})
     const[userData,setUserData]=useState([])
-
+    const[index,setIndex]=useState(0)
     useEffect(()=>{
         try {
           const getMatches = async()=>{
                  const token = await AsyncStorage.getItem('token')
-            await axios.get(`${process.env.baseUrl}/khelmela/getchampions`,{
+            await axios.get(`${BASE_URL}/khelmela/getchampions`,{
                 headers:{
                     Authorization:`${token}`
                 }
@@ -21,6 +21,7 @@ const Champions = () => {
             .then((response)=>{
               setData(response.data.userinfo)
               setUserData(response.data.userdata)
+              setIndex(response.data.index)
             })
           }
           getMatches()
@@ -29,7 +30,6 @@ const Champions = () => {
         }
       },[])
     return (
-        
         <View style={styles.container}>
             <Text style={styles.title}>Leaderboard</Text>
             
@@ -52,7 +52,9 @@ const Champions = () => {
                     </Text>
                 </TouchableOpacity>
             </View>
-            
+            {
+                filter === 'month' ?<>
+                
             {/* Top 3 Players */}
             <View style={styles.topThreeContainer}>
                 {/* Second Place */}
@@ -89,7 +91,6 @@ const Champions = () => {
                     <Text style={[styles.score, { color: "#CD7F32" }]}>{userData?.[2]?.trophy} pts</Text>
                 </View>
             </View>
-
             {/* Leaderboard List */}
             <FlatList
                 data={userData.slice(3)}
@@ -98,7 +99,7 @@ const Champions = () => {
                     <View style={styles.listItem}>
                         <Text style={styles.rank}>{index+4}</Text>
                         <Image
-                            source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+                            source={{ uri:item?.image}}
                             style={styles.avatarSmall}
                         />
                         <View style={styles.listTextContainer}>
@@ -107,18 +108,19 @@ const Champions = () => {
                         </View>
                     </View>
                 )}
-            />
-            <View style={styles.listItem}>
-                        <Text style={styles.rank}>{1}</Text>
+            style={{marginTop:-10}}/>
+              <View style={styles.listItems}>
+                        <Text style={styles.rank}>{index+1}</Text>
                         <Image
-                            source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+                            source={{uri:data?.image}}
                             style={styles.avatarSmall}
                         />
                         <View style={styles.listTextContainer}>
                             <Text style={styles.playerName}>{data.username}</Text>
                             <Text style={styles.score}>{data.trophy} pts</Text>
                         </View>
-                    </View>
+                    </View></>:<Text style={{marginLeft:110,marginTop:250,fontWeight:900,fontSize:18}}>Comming soon...</Text>
+            }
         </View>
     );
 };
@@ -127,6 +129,7 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 20,
+        paddingBottom:0,
         backgroundColor: "#F5F5F5", // Light gray background for contrast
     },
     title: {
@@ -139,7 +142,6 @@ const styles = StyleSheet.create({
     filterContainer: {
         flexDirection: "row",
         justifyContent: "center",
-        marginVertical: 15,
         gap: 20,
     },
     filterButton: {
@@ -167,7 +169,7 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "flex-end",
-        marginVertical: 45,
+        marginVertical: 53,
     },
     topPlayerContainer: {
         alignItems: "center",
@@ -191,7 +193,6 @@ const styles = StyleSheet.create({
     },
     avatar: {
         borderRadius: 50,
-        backgroundColor: "#FFB400",
     },
     firstAvatar: {
         width: 100,
@@ -239,6 +240,20 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 1 },
         shadowRadius: 2,
         elevation: 2,
+         // For Android shadow
+    },
+    listItems: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFF",
+        padding: 15,
+        marginVertical: 6,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowRadius: 2,
+        elevation: 2,
+        borderColor:'green',
+        borderWidth:1
          // For Android shadow
     },
     rank: {

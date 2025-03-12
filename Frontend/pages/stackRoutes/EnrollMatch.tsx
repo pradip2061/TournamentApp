@@ -7,7 +7,7 @@ import Freefirefullmatchcard from '../../components/Freefirefullmatchcard'
 import PubgFullMatchCard from '../../components/PubgFullMatchCard'
 import TdmCard from '../../components/TdmCard'
 import { ScrollView } from 'react-native-gesture-handler'
-
+import{BASE_URL} from '../../env'
 const EnrollMatch =()=> {
   const[matchesff,setMatchesFF]=useState([])
 const[matchespubg,setMatchesPubg]=useState([])
@@ -17,7 +17,7 @@ const[matchestdm,setMatchesTdm]=useState([])
         try {
          const getmatch=async()=>{
            const token = await AsyncStorage.getItem('token')
-         const response =  await axios.get(`${process.env.baseUrl}/khelmela/enrollmatch`,{
+         const response =  await axios.get(`${BASE_URL}/khelmela/enrollmatch`,{
             headers:{
                 Authorization:`${token}`
             }
@@ -33,7 +33,7 @@ const[matchestdm,setMatchesTdm]=useState([])
         }
        },[])
     return (
-        <ScrollView>
+        <ScrollView style={{marginLeft:5}}>
        <FlatList data={matchesclash} keyExtractor={(item)=>item._id} renderItem={({item})=>(
         <MatchCard match={item} />
        )}  scrollEnabled={false} contentContainerStyle={{ gap: 20 }}  />
@@ -52,7 +52,6 @@ const[matchestdm,setMatchesTdm]=useState([])
 
 
 export default EnrollMatch
-
 
 
 
