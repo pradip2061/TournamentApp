@@ -167,7 +167,7 @@ const styles = StyleSheet.create({
     borderColor: '#ddd',
     alignItems: 'center',
     justifyContent: 'center',
-    opacity: 0.7, // Reduced opacity for unselected
+    opacity: 0.78, // Reduced opacity for unselected
   },
   tabButtonActive: {
     width: 70, // Increased size when selected
