@@ -3,13 +3,15 @@ import axios from "axios";
 import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet, FlatList, TouchableOpacity } from "react-native";
 import{BASE_URL} from '../../env'
+import { useFocusEffect } from "@react-navigation/native";
 
 const Champions = () => {
-    const [filter, setFilter] = useState("week");
+    const [filter, setFilter] = useState("month");
     const[data,setData]=useState({})
     const[userData,setUserData]=useState([])
+    console.log(userData)
     const[index,setIndex]=useState(0)
-    useEffect(()=>{
+    useFocusEffect(()=>{
         try {
           const getMatches = async()=>{
                  const token = await AsyncStorage.getItem('token')
@@ -28,7 +30,7 @@ const Champions = () => {
         } catch (error) {
         console.log(error)
         }
-      },[])
+      })
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Leaderboard</Text>
@@ -60,7 +62,7 @@ const Champions = () => {
                 {/* Second Place */}
                 <View style={[styles.topPlayerContainer, styles.secondPlace]}>
                     <Image
-                        source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+                        source={{ uri:userData?.[1]?.image|| "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
                         style={[styles.avatar, styles.secondAvatar]}
                     />
                     <Text style={styles.playerName}>{userData?.[1]?.username}</Text>
@@ -74,7 +76,7 @@ const Champions = () => {
                         style={styles.crown}
                     />
                     <Image
-                        source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+                        source={{ uri:userData?.[0]?.image|| "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
                         style={[styles.avatar, styles.firstAvatar]}
                     />
                     <Text style={styles.playerName}>{userData?.[0]?.username}</Text>
@@ -84,7 +86,7 @@ const Champions = () => {
                 {/* Third Place */}
                 <View style={[styles.topPlayerContainer, styles.thirdPlace]}>
                     <Image
-                        source={{ uri: "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
+                        source={{ uri:userData?.[2]?.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png" }}
                         style={[styles.avatar, styles.thirdAvatar]}
                     />
                     <Text style={styles.playerName}>{userData?.[2]?.username}</Text>
@@ -99,7 +101,7 @@ const Champions = () => {
                     <View style={styles.listItem}>
                         <Text style={styles.rank}>{index+4}</Text>
                         <Image
-                            source={{ uri:item?.image}}
+                            source={{ uri:item?.image ||"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
                             style={styles.avatarSmall}
                         />
                         <View style={styles.listTextContainer}>
@@ -112,7 +114,7 @@ const Champions = () => {
               <View style={styles.listItems}>
                         <Text style={styles.rank}>{index+1}</Text>
                         <Image
-                            source={{uri:data?.image}}
+                            source={{uri:data?.image||"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
                             style={styles.avatarSmall}
                         />
                         <View style={styles.listTextContainer}>

@@ -116,6 +116,7 @@ const DepositMoney = () => {
       }
 
       const photoUrl = imageResponse.data.url;
+      console.log(photoUrl);
 
       // after uploading Image , send Deposite Request
 
@@ -188,19 +189,22 @@ const DepositMoney = () => {
               ? 'Enter your eSewa number'
               : 'Enter your Khalti number'
           }
-          keyboardType="default"
+          
+          keyboardType="numeric"
+          placeholderTextColor={'grey'}
           onChangeText={setEsewaNumber}
         />
         <TextInput
           style={styles.input}
           placeholder="Enter Amount"
           keyboardType="numeric"
+          placeholderTextColor={"grey"}
           onChangeText={setAmount}
         />
 
         <TouchableOpacity style={styles.uploadButton} onPress={openGallery}>
           <AntDesign name="cloudupload" size={24} color="white" />
-          <Text style={styles.uploadText}>Click here to upload</Text>
+          <Text style={styles.uploadText}>Click here to upload Screenshot</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.depositButton} onPress={handleDeposite}>
           <Text style={styles.depositText}>Deposit</Text>
@@ -218,7 +222,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'rgb(0,18,64)',
+    backgroundColor: '#F2F2F2)',
   },
   loadingBar: {
     position: 'absolute',
@@ -227,7 +231,7 @@ const styles = StyleSheet.create({
     height: 5,
     backgroundColor: 'blue',
   },
-  heading: {fontSize: 26, fontWeight: 'bold', marginTop: 15, color: 'white'},
+  heading: {fontSize: 26, fontWeight: 'bold', marginTop: 15, color: 'Black'},
   methodContainer: {
     flexDirection: 'row',
     justifyContent: 'center',
@@ -236,7 +240,7 @@ const styles = StyleSheet.create({
   },
   icon: {width: 90, height: 40, opacity: 0.8},
   selectedIcon: {width: 110, height: 50, opacity: 1},
-  subHeading: {fontSize: 18, fontWeight: 'bold', marginTop: 25, color: 'white'},
+  subHeading: {fontSize: 18, fontWeight: 'bold', marginTop: 25, color: 'black'},
   qrImage: {width: 150, height: 250, marginBottom: 40},
   input: {
     borderWidth: 1,
@@ -245,12 +249,13 @@ const styles = StyleSheet.create({
     width: '80%',
     padding: 10,
     marginBottom: 20,
-    borderRadius: 5,
+    borderRadius: 10,
+    color:'black'
   },
   uploadButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'blue',
+    backgroundColor: 'lightblue',
     padding: 10,
     borderRadius: 5,
   },
@@ -258,10 +263,11 @@ const styles = StyleSheet.create({
   depositButton: {
     width: 190,
     height: 40,
-    backgroundColor: 'rgb(96,187,70)',
+    backgroundColor: 'blue',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
+    borderRadius:25
   },
   depositText: {fontSize: 21, color: 'white'},
   uploadedImage: {width: 200, height: 200, marginTop: 20, borderRadius: 10},

@@ -1,5 +1,5 @@
 import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, BackHandler, Alert } from 'react-native';
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 import Doller from 'react-native-vector-icons/FontAwesome6';
 import Gamepad from 'react-native-vector-icons/Entypo';
 import TabButton from '../../components/TabButton';
@@ -21,11 +21,9 @@ const Home = ({ navigation }) => {
   const [toggle, setToggle] = useState('freefire');
   const {checkadmin, data,getProfile} = useContext(CheckAdminContext)
 
-  useFocusEffect(
-    useCallback(() => {
-      getProfile();
-    }, [])
-  );
+  useEffect(()=>{
+getProfile()
+  },[])
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {

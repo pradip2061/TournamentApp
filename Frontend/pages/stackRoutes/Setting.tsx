@@ -69,10 +69,9 @@ useEffect(()=>{
   return (
     
     <ScrollView style={styles.container}>
-      
       {/* User Info Section with Icons */}
       <View style={styles.userSection}>
-        <Image source={{uri:data.image}} style={styles.profileImage} />
+        <Image source={{uri:data?.image||"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}} style={styles.profileImage} />
         <View style={styles.userInfo}>
           <View style={styles.userRow}>
             <Ionicons name="person-circle-outline" size={24} color="#555" />

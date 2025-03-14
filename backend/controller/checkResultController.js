@@ -6,30 +6,68 @@ const tdm = require("../model/TdmModel");
 
 const checkResult = async (req, res) => {
     const { matchId } = req.body;
-    const match = await ClashSquad.findOne({ _id:matchId });
-    if (!match || !match.teamHost[0] || !match.teamopponent[0]) {
+    const userid = req.user;
+console.log(matchId)
+    // Check if match exists
+    const match = await ClashSquad.findOne({ _id: matchId });
+    if (!match) {
         return res.status(400).json({ message: "Invalid match data" });
     }
-    const hostStatus = match.teamHost[0].teamHostStatus;
-    const opponentStatus = match.teamopponent[0].team2Status;
 
-    if (typeof hostStatus === "boolean" && typeof opponentStatus === "boolean") {
-        if (hostStatus  ===  true||false  || opponentStatus === true||false) {
-            return res.status(200).json({ message: "booleanMatch" });
-        } else {
-            return res.status(200).json({ message: "booleanNotMatch" });
-        }
+    // Get opponent and host details
+    const result = await ClashSquad.findOne(
+        { 'teamopponent.userid': userid },
+        { 'teamopponent.$': 1 }
+    );
+    const resulthost = await ClashSquad.findOne(
+        { 'teamHost.userid': userid },
+        { 'teamHost.$': 1 }
+    );
+
+    // Determine result based on team2Status or teamHostStatus
+    if (result?.teamopponent?.[0]?.team2Status) {
+        return res.status(200).json({ message: "resultsubmit" });
     }
 
-    if (hostStatus === null || opponentStatus === null) {
-        return res.status(200).json({ message: "noresponse" });
+    if (resulthost?.teamHost?.[0]?.teamHostStatus) {
+        return res.status(200).json({ message: "resultsubmit" });
     }
-    if(hostStatus === true||false || opponentStatus === null){
-        return res.status(200).json({ message: "oneresponse" });
+
+    // If both checks fail, return a single response
+    return res.status(200).json({ message: "noresponse" });
+};
+
+const checkResulttdm = async (req, res) => {
+    const { matchId } = req.body;
+    const userid = req.user;
+console.log(matchId)
+    // Check if match exists
+    const match = await tdm.findOne({ _id: matchId });
+    if (!match) {
+        return res.status(400).json({ message: "Invalid match data" });
     }
-    if(hostStatus === null || opponentStatus === true||false){
-        return res.status(200).json({ message: "oneresponse" });
+
+    // Get opponent and host details
+    const result = await tdm.findOne(
+        { 'teamopponent.userid': userid },
+        { 'teamopponent.$': 1 }
+    );
+    const resulthost = await tdm.findOne(
+        { 'teamHost.userid': userid },
+        { 'teamHost.$': 1 }
+    );
+
+    // Determine result based on team2Status or teamHostStatus
+    if (result?.teamopponent?.[0]?.team2Status) {
+        return res.status(200).json({ message: "resultsubmit" });
     }
+
+    if (resulthost?.teamHost?.[0]?.teamHostStatus) {
+        return res.status(200).json({ message: "resultsubmit" });
+    }
+
+    // If both checks fail, return a single response
+    return res.status(200).json({ message: "noresponse" });
 };
 
 const checkuserJoinFF =async(req,res)=>{
@@ -164,4 +202,4 @@ const getchampions = async (req, res) => {
 
 
 
-module.exports = {checkResult,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions};
+module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions};

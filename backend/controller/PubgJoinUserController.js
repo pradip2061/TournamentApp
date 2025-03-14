@@ -175,10 +175,20 @@ const createtdm =async(req,res)=>{
       message:'you dont have enough balance'
     })
   }
+  if(!userinfo.gameName[0].pubg){
+    return res.status(400).json({
+      message:'add pubgGameName in your profile'
+    })
+  }
   const newMatch = new tdm({
    playermode:matchDetails.match,
-  TotalPlayer:1,
   entryFee:matchDetails.betAmount,
+  gameName:matchDetails.gameName,
+  teamHost: [{ userid: userid }],
+  teamopponent: [{ userid: "" }],
+      userProof:"",
+      hostProof:"",
+    TotalPlayers:1
       });
 
       await newMatch.save()
@@ -221,10 +231,8 @@ const joinuserPubgtdm = async (req, res) => {
       message:'add pubgGameName in your profile'
     })
   }
-  const objectcount = match.gameName.reduce((count,obj)=>count +Object.keys(obj),0)
-  const slot = objectcount+1
-  match.gameName.push({userid:userid,player1:userinfo.gameName[0].pubg ,player2:'',player3:'',player4:'',slot:slot})
-  match.TotalPlayer +=1
+  match.teamopponent[0].userid=userid
+  match.TotalPlayers +=1
   await match.save();
   await userinfo.save();
   res.status(200).json({

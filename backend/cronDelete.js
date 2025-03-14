@@ -23,9 +23,12 @@ const deleteOldMatchCards = async () => {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
         const userinfo = await User.findOne({ _id: userId });
+        const findindex = userinfo.matchId.FreefireClashId.findIndex((item)=>item === matchCards._id)
+        if (findindex !== -1) {
+            userinfo.matchId.FreefireClashId.splice(findindex); // Removes 1 item at the found index
+          }
         if (userinfo) {
           userinfo.isplaying = false;
-          userinfo.matchId = "";
           userinfo.balance += Number(match.matchDetails[0]?.betAmount || 0); // Convert betAmount to Number safely
           await userinfo.save();
         }
@@ -62,9 +65,12 @@ const deleteOldMatchCard = async () => {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
         const userinfo = await User.findOne({ _id: userId });
+        const findindex = userinfo.matchId.pubgTdmId.findIndex((item)=>item === matchCards._id)
+        if (findindex !== -1) {
+            userinfo.matchId.pubgTdmId.splice(findindex); // Removes 1 item at the found index
+          }
         if (userinfo) {
           userinfo.isplaying = false;
-          userinfo.matchId = "";
           userinfo.balance += Number(match.matchDetails[0]?.betAmount || 0); // Convert betAmount to Number safely
           await userinfo.save();
         }

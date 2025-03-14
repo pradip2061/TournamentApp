@@ -1,10 +1,11 @@
-const ClashSquad = require("../model/ClashSquadModel");
-const {User} = require("../model/schema");
 
-const verifyDidYouWinMatch = async (req, res, next) => {
+const {User} = require("../model/schema");
+const tdm = require("../model/TdmModel");
+
+const verifyDidYouWinMatchTdm = async (req, res, next) => {
     try {
         const { matchId } = req.body;
-        const match = await ClashSquad.findOne({ _id: matchId });
+        const match = await tdm.findOne({ _id: matchId });
 
         if (!match) {
             return res.status(404).json({ message: "Match not found" });
@@ -26,23 +27,23 @@ const verifyDidYouWinMatch = async (req, res, next) => {
                 const user = await User.findOne({_id:userid})
                 if(match.teamHost[0].teamHostStatus === true){
                     host.balance +=25
-                    host.victory.Freefire.push(matchId)
+                    host.victory.pubg.push(matchId)
                 }else{
-                    host.Loss.Freefire.push(matchId)
+                    host.Loss.pubg.push(matchId)
                 }
                 if(match.teamopponent[0].team2Status === true){
                     user.balance +=25
-                    user.victory.Freefire.push(matchId)
+                    user.victory.pubg.push(matchId)
                 }else{
-                    user.Loss.Freefire.push(matchId)
+                    user.Loss.pubg.push(matchId)
                 }
-                const findindex = user.matchId.FreefireClashId.findIndex((item)=>item === matchId)
-                const findindexhost = host.matchId.FreefireClashId.findIndex((item)=>item === matchId)
+                const findindex = user.matchId.pubgTdmId.findIndex((item)=>item === matchId)
+                const findindexhost = host.matchId.PubgTdmId.findIndex((item)=>item === matchId)
                 if (findindex !== -1) {
-                    user.matchId.FreefireClashId.splice(findindex); // Removes 1 item at the found index
+                    user.matchId.pubgTdmId.splice(findindex); // Removes 1 item at the found index
                   }
                   if (findindexhost !== -1) {
-                    host.matchId.FreefireClashId.splice(findindexhost); // Removes 1 item at the found index
+                    host.matchId.pubgTdmId.splice(findindexhost); // Removes 1 item at the found index
                   }
                host.isplaying=false
                user.isplaying=false
@@ -61,4 +62,4 @@ const verifyDidYouWinMatch = async (req, res, next) => {
     }
 };
 
-module.exports = verifyDidYouWinMatch;
+module.exports = verifyDidYouWinMatchTdm

@@ -1,6 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const cors = require("cors");
+const os = require("os"); // Import the os module
 require("./cronDelete");
 const connectToDatabase = require("./database/db");
 const AuthenticateRouter = require("./router/user/AuthenticateRouter");
@@ -9,6 +10,7 @@ const CreateRouter = require("./router/user/CreateRouter");
 const CheckResultRouter = require("./router/user/CheckResultRouter");
 const PubgRouter = require("./router/user/PubgRouter");
 const getter = require("./router/user/getter");
+
 const {
   router: ChatRouter,
   setupChatSocket,
@@ -19,7 +21,6 @@ const upload = require("./utility/imageUpload");
 dotenv.config();
 
 const app = express();
-
 const server = require("http").createServer(app);
 const { Server } = require("socket.io");
 const Authverify = require("./middleware/AuthVerify");
@@ -42,7 +43,6 @@ app.use(
 );
 
 app.use("/khelmela/admin", Admin);
-
 app.use("/khelmela/upload", upload);
 
 const io = new Server(server, {
@@ -52,10 +52,25 @@ const io = new Server(server, {
     allowedHeaders: ["Content-Type"],
   },
 });
+
 setupChatSocket(io);
 
+function getPrivateIP() {
+  const interfaces = os.networkInterfaces();
+  for (const interfaceName in interfaces) {
+    for (const iface of interfaces[interfaceName]) {
+      if (iface.family === "IPv4" && !iface.internal) {
+        return iface.address; // Return the private IP address
+      }
+    }
+  }
+  return "127.0.0.1"; // Fallback to localhost if no private IP is found
+}
+
 // Start the server
-const PORT = process.env.SERVER_PORT || 3000;
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(process.env.baseUrl);
+const PORT = process.env.SERVER_PORT || 9000;
+server.listen(PORT, () => {
+  const privateIP = getPrivateIP();
+  console.log(`Server running at : http://${privateIP}:${PORT}`);
+  console.log(`baseUrl from dotenv: ${process.env.baseUrl}`);
 });

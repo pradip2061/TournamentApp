@@ -1,3 +1,4 @@
+
 const ClashSquad = require("../model/ClashSquadModel");
 const FFfreefire = require("../model/FullMatchFFModel");
 const PubgFull = require("../model/PubgFullMatchModel");
@@ -21,6 +22,11 @@ const createCs = async (req, res) => {
     if (userinfo.balance < matchDetails.betAmount) { // Fixed logic
       return res.status(400).json({ message: "You don’t have enough balance" });
     }
+    if(!userinfo.gameName[0].freefire){
+      return res.status(400).json({
+        message:'add pubgGameName in your profile'
+      })
+    }
     const newMatch = new ClashSquad({
       matchDetails: matchDetails,
       teamHost: [{ userid: userId }],
@@ -29,13 +35,8 @@ const createCs = async (req, res) => {
       customId: null,
       customPassword: null,
       TotalPlayers:1,
-      matchId:{
-        pubgFullId:[],
-      pubgTdmId: [],
-      FreefireFullId: [],
-      FreefireClashId: [],
-      codId: [],
-      }
+      userProof:"",
+      hostProof:""
     });
 
     await newMatch.save();
@@ -91,6 +92,11 @@ const match = await ClashSquad.findOne(
 if(userinfo.balance < match.matchDetails[0].betAmount){
   return res.status(200).json({
     message:'you haven`t enough balance'
+  })
+}
+if(!userinfo.gameName[0].freefire){
+  return res.status(400).json({
+    message:'add pubgGameName in your profile'
   })
 }
 user.matchId.FreefireClashId.push(matchId)
@@ -167,7 +173,35 @@ if( matchCard){
   }
 }
 }
-
+ 
+const checkUserOrAdmintdm =async(req,res)=>{
+  const userId = req.user
+  const{matchId}=req.body
+  if(!matchId){
+   return res.status(400).json({
+     message:'something error'
+   })
+  }
+  const matchCard = await tdm.findOne({_id:matchId, teamHost: { $elemMatch: { userid: userId } },})
+ if( matchCard){
+    return res.status(200).json({
+     message:'host'
+   })
+ }
+  if(!matchCard){
+   const userjoined = await tdm.findOne({_id:matchId,teamopponent: { $elemMatch: { userid: userId } },})
+   if(userjoined){
+     return res.status(200).json({
+       message:'userjoined'
+     })
+   }else{
+     return res.status(200).json({
+       message:'user'
+     })
+   }
+ }
+ }
+ 
 const checkisplaying =async(req,res)=>{
   try {
     const userId = req.user; 
@@ -332,7 +366,7 @@ const EnrollMatch = async (req, res) => {
     }
 
     const matchIdsclash = userinfo.matchId.FreefireClashId;
-    const matchesclash = await ClashSquad.find({
+    const matchesclash = await tdm.find({
       _id: { $in: matchIdsclash },
       status: { $in: ["pending", "running"] },
     });
@@ -367,4 +401,4 @@ const EnrollMatch = async (req, res) => {
 };
 
 
-module.exports = {EnrollMatch,createCs,addName,trackusermodeltdm,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,joinuserff,checkisplaying,getFFmatch,createFF};
+module.exports = {EnrollMatch,createCs,addName,trackusermodeltdm,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,checkUserOrAdmintdm,joinuserff,checkisplaying,getFFmatch,createFF};

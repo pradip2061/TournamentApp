@@ -1,5 +1,7 @@
+const ClashSquad = require("../model/ClashSquadModel")
 const RateLimit = require("../model/RateLimitModel")
 const {User} = require("../model/schema")
+const tdm = require("../model/TdmModel")
 const timelimit = require("../model/TimeLimitModel")
 const mongoose =require('mongoose')
 const updateProfile =async(req,res)=>{
@@ -125,4 +127,59 @@ const uploadImage =async(req, res) => {
     message:'profile updated!!'
    })
   }
-module.exports = {updateProfile,pubgprofile,freefireprofile,uploadImage,uploadimage}
+  const uploadproofclash =async(req,res)=>{
+    const{proof,matchId}=req.body
+    const userid =req.user
+    const match = await ClashSquad.findOne({_id:matchId})
+    const result = await ClashSquad.findOne(
+        { 'teamopponent.userid': userid },
+        { 'teamopponent.$': 1 }
+    );
+    const resulthost = await ClashSquad.findOne(
+        { 'teamHost.userid': userid },
+        { 'teamHost.$': 1 }
+    );
+    if(!result ||!resulthost){
+        return res.status(404).json({
+            message:'user not found'
+        })
+    }
+   if(result){
+    match.userProof=proof
+   }
+   if(resulthost){
+    match.hostProof=proof
+   }
+   res.status(200).json({
+    message:'profile updated!!'
+   })
+  }
+
+  const uploadprooftdm =async(req,res)=>{
+    const{proof,matchId}=req.body
+    const userid =req.user
+    const match = await tdm.findOne({_id:matchId})
+    const result = await tdm.findOne(
+        { 'teamopponent.userid': userid },
+        { 'teamopponent.$': 1 }
+    );
+    const resulthost = await tdm.findOne(
+        { 'teamHost.userid': userid },
+        { 'teamHost.$': 1 }
+    );
+    if(!result ||!resulthost){
+        return res.status(404).json({
+            message:'user not found'
+        })
+    }
+   if(result){
+    match.userProof=proof
+   }
+   if(resulthost){
+    match.hostProof=proof
+   }
+   res.status(200).json({
+    message:'profile updated!!'
+   })
+  }
+module.exports = {updateProfile,pubgprofile,freefireprofile,uploadImage,uploadimage,uploadproofclash,uploadprooftdm}

@@ -9,6 +9,7 @@ const router = express.Router();
 const { getFormattedDate } = require("../utility/dateformat");
 
 const { jwtDecode } = require("jwt-decode");
+const Authverify = require("../middleware/AuthVerify");
 
 const serviceAccount = fireBase_key;
 
@@ -36,19 +37,15 @@ router.get("/", (req, res) => {
   console.log("Upload Route Active >>>>>>>>>>>>>>>>>>>>>>>");
   res.send("Hello World!");
 });
-router.post("/upload/:token", async (req, res) => {
+router.post("/upload",Authverify,async (req, res) => {
   console.log("upload route ----------------->......");
-
   try {
-    const token = req.params.token;
-    const user_id = await jwtDecode(token).id;
+const user_id = req.user
     if (!user_id) {
       return res.status(401).send({ message: "Invalid Token" });
     }
-
     const { image, folderName } = req.body;
     let { filename } = req.body;
-
     if (!image || !filename || !folderName) {
       return res
         .status(400)

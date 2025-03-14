@@ -22,9 +22,14 @@ const MatchCard = ({ match }) => {
   const [notifyModel, setNotifyModel] = useState(false);
   const [result, setResult] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
+  const[boolean,setBoolean]=useState<boolean | null>(null)
+  const[loading,setLoading]=useState(false)
+  const[image,setImage]=useState<string|undefined|null>(null)
+  const[proof,setProof]=useState('')
   const matchId = match._id;
   const { setTrigger,trigger } = useContext(CheckAdminContext);
-
+console.log(match)
+console.log(check)
   useEffect(() => {
     const checkUserOrAdmin = async () => {
       const token = await AsyncStorage.getItem('token');
@@ -143,50 +148,17 @@ const MatchCard = ({ match }) => {
       notify();
     }
   };
-
-  const submitresultIfYes = async () => {
-    try {
-      const boolean = true; // Assuming "Yes" means true
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/checkBoolean`,
-          { matchId, boolean },
-          { headers: { Authorization: `${token}` } }
-        )
-        .then((response) => setMessage(response.data.message));
-    } catch (error) {
-      setError(error.response?.data.message);
-    } finally {
-      setModalDidYouWin(false);
-      notify();
-    }
-  };
-
-  const submitresultIfNo = async () => {
-    try {
-      const boolean = false;
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/checkBoolean`,
-          { matchId, boolean },
-          { headers: { Authorization: `${token}` } }
-        )
-        .then((response) => setMessage(response.data.message));
-    } catch (error) {
-      setError(error.response?.data.message);
-    } finally {
-      setModalDidYouWin(false);
-      notify();
-    }
-  };
-
   useEffect(() => {
     const checkresult = async () => {
       try {
+        console.log(matchId)
+        const token = await AsyncStorage.getItem('token');
         await axios
-          .post(`${BASE_URL}/khelmela/checkresult`,{ matchId })
+          .post(`${BASE_URL}/khelmela/checkresult`,{ matchId },{
+            headers:{
+              Authorization:`${token}`
+            }
+          })
           .then((response) => setResult(response.data.message));
       } catch (error) {
         setError(error.response.data.message);
@@ -194,36 +166,94 @@ const MatchCard = ({ match }) => {
       }
     };
     checkresult();
-  }, [trigger]);
+  }, []);
 
-  const openGallery = () => {
-    const options = { mediaType: 'photo', quality: 0.5 };
-    launchImageLibrary(options, (response) => {
+  
+
+  const pickImage = () => {
+    const options = {
+      mediaType: 'photo',
+      maxWidth: 800, // Set max width to reduce size
+      maxHeight: 800, // Set max height to reduce size
+      quality: 0.3, // Adjust compression quality (0.1 - 1)
+      includeBase64: true, // Convert image to base64
+    };
+
+    launchImageLibrary(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else {
-        const uri = response.assets[0].uri;
-        setSelectedImage(uri);
-        const filename = uri.split('/').pop();
-        uploadPhoto(filename);
+       setImage(response?.assets?.[0]?.base64)
+        // setImage(response?.assets?.[0]?.uri)
       }
     });
   };
-
-  const uploadPhoto = async (filename) => {
+  const uploadImage = async () => {
     try {
-      await axios.post(
-        `${BASE_URL}/khelmela/upload`,
-        { selectedImage: filename },
-        { headers: { 'Content-Type': 'multipart/form-data' } }
+      setLoading(true)
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: image,
+          folderName: 'report',
+          filename: '.jpg',
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
       );
+      console.log(response)
+      if(response.status == 200){
+        // imageset(response.data.url)
+        setProof(response.data.url)
+      }
     } catch (error) {
-      console.log('Upload Error:', error);
+      console.error('Upload Error:', error);
     }
   };
 
+  const submitResult = async()=>{
+    if(boolean === true){
+      if(!image||typeof boolean !== 'boolean'){
+        setError("plz fill all field!")
+        notify()
+        return
+      }
+      uploadImage()
+    }
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios
+        .post(
+          `${BASE_URL}/khelmela/uploadproof`,
+          {proof,matchId},
+          { headers: { Authorization: `${token}` } }
+        )
+        .then((response) => setMessage(response.data.message));
+    } catch (error) {
+      setError(error.response?.data.message);
+    } 
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios
+        .post(
+          `${BASE_URL}/khelmela/checkBoolean`,
+          { matchId, boolean },
+          { headers: { Authorization: `${token}` } }
+        )
+        .then((response) => setMessage(response.data.message));
+    } catch (error) {
+      setError(error.response?.data.message);
+    } finally {
+      setModalDidYouWin(false);
+      notify();
+    }
+  }
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
@@ -280,13 +310,15 @@ const MatchCard = ({ match }) => {
                           <View style={styles.publishRow}>
                             <View style={styles.leftContainer}>
                               <TouchableOpacity onPress={copyToClipboardId}>
+                              <Text style={{color:'white'}}> customId:</Text>
                                 <View style={styles.inputs}>
-                                  <Text>customId: {match.customId}</Text>
+                                  <Text>{match.customId}</Text>
                                 </View>
                               </TouchableOpacity>
                               <TouchableOpacity onPress={copyToClipboardPass}>
+                              <Text style={{color:'white'}}> customPass:</Text>
                                 <View style={styles.inputs}>
-                                  <Text>customPass: {match.customPassword}</Text>
+                                  <Text> {match.customPassword}</Text>
                                 </View>
                               </TouchableOpacity>
                             </View>
@@ -300,20 +332,14 @@ const MatchCard = ({ match }) => {
                             </View>
                           </View>
                           <View>
-                            {result === 'booleanMatch' ? (
-                              <Text style={styles.centerText}>Result submitted</Text>
-                            ) : result === 'booleanNotMatch' ? (
-                              <TouchableOpacity onPress={openGallery}>
-                                <Text style={styles.centerText}>Upload your match photo</Text>
-                              </TouchableOpacity>
-                            ) : result === 'noresponse' ? (
-                              <TouchableOpacity
-                                onPress={() => setModalDidYouWin(true)}
-                                style={styles.footerText}
-                              >
-                                <Text style={styles.submitText}>Submit Your Result</Text>
-                              </TouchableOpacity>
-                            ) : <Text>result submited</Text>}
+                          {result === 'resultsubmit' ? (
+                          <Text style={styles.centerText}>Result submitted</Text>
+                        ) : <TouchableOpacity
+                        onPress={() => setModalDidYouWin(true)}
+                        style={styles.footerText}
+                      >
+                        <Text style={styles.submitTextRed}>Submit Your Result</Text>
+                      </TouchableOpacity> }
                           </View>
                         </>
                       ) : (
@@ -349,32 +375,28 @@ const MatchCard = ({ match }) => {
                       <View style={styles.publishRow}>
                         <View style={styles.leftContainer}>
                           <TouchableOpacity onPress={copyToClipboardId}>
+                            <Text style={{color:'white'}}> customId:</Text>
                             <View style={styles.inputs}>
-                              <Text>customId: {match.customId}</Text>
+                              <Text> {match.customId}</Text>
                             </View>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={copyToClipboardPass}>
+                         <Text style={{color:'white'}}> customPass:</Text> 
                             <View style={styles.inputs}>
-                              <Text>customPass: {match.customPassword}</Text>
+                              <Text>{match.customPassword}</Text>
                             </View>
                           </TouchableOpacity>
                         </View>
                       </View>
                       <View>
-                        {result === 'booleanMatch' ? (
+                        {result === 'resultsubmit' ? (
                           <Text style={styles.centerText}>Result submitted</Text>
-                        ) : result === 'booleanNotMatch' ? (
-                          <TouchableOpacity onPress={openGallery}>
-                            <Text style={styles.centerText}>Upload your match photo</Text>
-                          </TouchableOpacity>
-                        ) : result === 'noresponse' ? (
-                          <TouchableOpacity
-                            onPress={() => setModalDidYouWin(true)}
-                            style={styles.footerText}
-                          >
-                            <Text style={styles.submitTextRed}>Submit Your Result</Text>
-                          </TouchableOpacity>
-                        ) : <Text>result submited</Text>}
+                        ) : <TouchableOpacity
+                        onPress={() => setModalDidYouWin(true)}
+                        style={styles.footerText}
+                      >
+                        <Text style={styles.submitTextRed}>Submit Your Result</Text>
+                      </TouchableOpacity> }
                       </View>
                     </View>
                   ) : null}
@@ -384,7 +406,6 @@ const MatchCard = ({ match }) => {
           />
         </LinearGradient>
       </View>
-
       <Modal transparent animationType="slide" visible={modalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -412,13 +433,21 @@ const MatchCard = ({ match }) => {
             <Text style={{fontWeight:900,fontSize:20}}>X</Text>
             </TouchableOpacity>
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={[styles.button, styles.noButton]} onPress={submitresultIfNo}>
+              <TouchableOpacity style={[styles.button, styles.noButton]} onPress={()=>setBoolean(false)}>
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.yesButton]} onPress={submitresultIfYes}>
+              <TouchableOpacity style={[styles.button, styles.yesButton]} onPress={()=>setBoolean(true)}>
                 <Text style={styles.buttonText}>Yes</Text>
               </TouchableOpacity>
             </View>
+            {
+              boolean === true ? <TouchableOpacity onPress={pickImage}>
+              <Text>upload</Text>
+            </TouchableOpacity>:null
+            }
+        <TouchableOpacity style={{width:60,height:40,backgroundColor:'green', justifyContent:'center',alignItems:'center'}} onPress={submitResult}>
+        <Text style={{color:'white'}}>submit</Text>
+        </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -569,12 +598,12 @@ const styles = StyleSheet.create({
     marginBottom: 10,
   },
   inputs: {
-    width: 180,
+   alignSelf: 'flex-start',
     height: 40,
     borderWidth: 1,
     borderColor: 'white',
     borderRadius: 5,
-    paddingLeft: 5,
+    paddingInline:20,
     justifyContent: 'center',
     marginTop: 10,
     backgroundColor:'white'

@@ -13,22 +13,20 @@ import { CheckAdminContext } from '../ContextApi/ContextApi'
 import TdmCard from '../../components/TdmCard'
 import{BASE_URL} from '../../env'
 const TDM = ({ navigation }) => {
-  const [page, setPage] = useState(1)
-  const [data, setData] = useState([])
+  const [datas, setDatas] = useState([])
   const [trigger, setTrigger] = useState('')
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
-  const { getdata } = useContext(CheckAdminContext)
+  const { getdata,data,getProfile } = useContext(CheckAdminContext)
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
     match: '1v1',
-    gameName: '',
+    gameName: data.gameName[0].pubg,
     betAmount: '',
   });
 
   console.log(matchDetails.match)
-  
   const modal = (messages) => {
     setVisible(true)
     setMessage(String(messages))
@@ -37,6 +35,8 @@ const TDM = ({ navigation }) => {
       setMessage('')
     }, 1000)
   }
+
+
 
   const handleOutsidePress = () => {
     Keyboard.dismiss();
@@ -89,7 +89,7 @@ const TDM = ({ navigation }) => {
       const getMatches = async () => {
         await axios.get(`${BASE_URL}/khelmela/gettdm`)
           .then((response) => {
-            setData(response.data.data)
+            setDatas(response.data.data)
           })
       }
       getMatches()
@@ -128,16 +128,17 @@ const TDM = ({ navigation }) => {
 
         <View style={{ paddingBottom: 300 }}>
           <View>
-            {data?.length ? (
+            {datas?.length ? (
               <FlatList
-                data={data}
+                data={datas}
                 scrollEnabled={false}
                 keyExtractor={(item, id) => id.toString()}
                 renderItem={({ item }) => <TdmCard matches={item} />}
                 ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
               />
             ) : (
-              <ShimmerBox />
+              data === null ||[]?<Text>No Matches Right now.</Text>:
+              <ShimmerBox/>
             )}
           </View>
         </View>
@@ -162,7 +163,6 @@ const TDM = ({ navigation }) => {
                     </TouchableOpacity>
                   ))}
                 </View>
-
                 <View style={styles.inputSection}>
                   <Text style={styles.sectionTitle}>Game Name</Text>
                   <TextInput

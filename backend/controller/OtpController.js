@@ -66,9 +66,9 @@ const verifyOtpanduser = async (req, res) => {
       if (otpRecord.expiresAt < new Date()) {
         return res.status(400).json({ message: "OTP has expired" });
       }
-  
+      const userName = username.toLowerCase()
       await User.create({
-        username,
+        username:userName,
         email,
         image:"",
     uid:[{

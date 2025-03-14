@@ -131,17 +131,18 @@ const Profile = () => {
     }
   };
   const isUsernameChanged =
-  username?.trim() !== '' && username.trim() !== (data.username || '').trim();
+  (username ?? '').trim() !== '' &&
+  (username ?? '').trim() !== (data?.username ?? '').trim();
 
 const isFreefireChanged =
-  (freefireName?.trim() !== '' || freefireUid.trim() !== '') && // ✅ Ensures at least one input has a value
-  (freefireName?.trim() !== (data?.gameName?.[0]?.freefire || '').trim() ||
-   freefireUid?.trim() !== (data?.uid?.[0]?.freefire || '').trim());
+  ((freefireName ?? '').trim() !== '' || (freefireUid ?? '').trim() !== '') && // ✅ Ensures at least one input has a value
+  ((freefireName ?? '').trim() !== (data?.gameName?.[0]?.freefire ?? '').trim() ||
+   (freefireUid ?? '').trim() !== (data?.uid?.[0]?.freefire ?? '').trim());
 
 const isPubgChanged =
-  (pubgName?.trim() !== '' || pubgUid.trim() !== '') && // ✅ Ensures at least one input has a value
-  (pubgName?.trim() !== (data?.gameName?.[0]?.pubg || '').trim() ||
-   pubgUid?.trim() !== (data?.uid?.[0]?.pubg || '').trim());
+  ((pubgName ?? '').trim() !== '' || (pubgUid ?? '').trim() !== '') && // ✅ Ensures at least one input has a value
+  ((pubgName ?? '').trim() !== (data?.gameName?.[0]?.pubg ?? '').trim() ||
+   (pubgUid ?? '').trim() !== (data?.uid?.[0]?.pubg ?? '').trim());
 
 
 
@@ -222,7 +223,7 @@ const isPubgChanged =
           style={styles.profileImageContainer}
           onPress={pickImage}>
           <Image
-            source={{uri:data?.image}}
+            source={{uri:data?.image ||"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
             style={styles.profileImage}
           />
           <Text style={styles.plusIcon}>+</Text>

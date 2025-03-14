@@ -4,45 +4,58 @@ const mongoose = require("mongoose");
   playermode: {
     type: String,
   },
-  TotalPlayer: {
-    type: Number,
-  },
   entryFee: {
     type: String,
   },
-  gameName:[{
-    userid:{
-      type:String
+gameName:{
+    type:String
+   },
+    teamHost: [
+      {
+        userid: { type: String },
+        teamHostStatus: {
+          type: Boolean,
+          default: null,
+        },
+      },
+    ],
+    teamopponent: [
+      {
+       userid: { type: String },
+      team2Status: {
+         type: Boolean,
+         default:null,
+       }}
+    ],
+    customId:{
+      type:Number || null
     },
-    player1:{
-      type:String
+    customPassword:{
+      type:Number || null
     },
-    player2:{
-      type:String
-    },
-    player3:{
-      type:String
-    },
-    player4:{
-      type:String
-    },
-    slot:{
-      type:String
-    }
-  }],
-  status: {
-      type: String,
-      enum: ["running", "pending", "completed"],
+    status:{
+      type: String ,
+      enum: ["running", "pending","completed"],
       default: "pending",
     },
-    userid: [String],
-createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
-customId:{
-  type:Number || null
-},
-customPassword:{
-  type:Number || null
-},
+   createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
+   hostProof:{
+    type:String
+   },
+userProof:{
+    type:String
+   },
+   TotalPlayers:{
+      type:Number,
+      default:0
+    }
 });
 const tdm =mongoose.model('tdm',schema)
 module.exports = tdm
+
+
+
+
+
+
+

@@ -165,11 +165,9 @@ const ClashSquad = ({ navigation }) => {
                 contentContainerStyle={{ gap: 20 }}
               />
             ) : (
-              <Text>No Matches Right now.</Text>
+              data === null ||[]?<Text>No Matches Right now.</Text>:
+              <ShimmerBox/>
             )}
-            {
-              data === null?<ShimmerBox/>:null
-            }
           </View>
         </View>
 

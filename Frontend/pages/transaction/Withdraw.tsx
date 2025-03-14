@@ -30,6 +30,15 @@ const Withdraw = () => {
 
     if (!token) {
       Alert.alert('Please login first');
+      return;
+    }
+    if (number.length != 10) {
+      Alert.alert('Invalid number');
+      return;
+    }
+    if (parseInt(amount) <= 99) {
+      Alert.alert('Minimum withdraw amount is 100');
+      return;
     }
 
     const data = {
@@ -38,16 +47,12 @@ const Withdraw = () => {
       number: number,
     };
 
-    console.log(`${baseUrl}/khelmela/withDrawl/${token}`);
+    console.log(`${baseUrl}/khelmela/withdraw/${token}`);
 
-    const res = await axios.post(
-      `${baseUrl}/khelmela/withDrawl/${token}`,
-      data,
-    );
+    const res = await axios.post(`${baseUrl}/khelmela/withdraw/${token}`, data);
 
-    Alert.alert(res.body.message);
-    console.log(selectedMethod);
-    console.log(data);
+    console.log(res.data);
+    Alert.alert(res.data.message);
   };
 
   return (
@@ -110,7 +115,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: 20,
-    backgroundColor: 'grey',
+    backgroundColor: '#F2F2F2',
   },
   heading: {
     fontSize: 25,

@@ -73,8 +73,13 @@ const schema = new mongoose.Schema(
       type:Number,
       default:0
     },
-   createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) }
-
+   createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
+   hostProof:{
+    type:String
+   },
+userProof:{
+    type:String
+   }
   },
 );
 
