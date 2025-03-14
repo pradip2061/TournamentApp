@@ -10,14 +10,15 @@ import axios from 'axios'
 import AsyncStorage from '@react-native-async-storage/async-storage'
 import ShimmerBox from '../../components/ShimmerBox'
 import { CheckAdminContext } from '../ContextApi/ContextApi'
-import{BASE_URL} from '../../env'
+import { BASE_URL } from '../../env'
+
 const ClashSquad = ({ navigation }) => {
   const [page, setPage] = useState(1)
   const [data, setData] = useState([])
   const [trigger, setTrigger] = useState('')
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
-  const[loading,setLoading]=useState(false)
+  const [loading, setLoading] = useState(false)
   const { getdata } = useContext(CheckAdminContext)
   const [matchDetails, setMatchDetails] = useState({
     show: false,
@@ -121,21 +122,20 @@ const ClashSquad = ({ navigation }) => {
       getMatches()
     } catch (error) {
       setMessage(error.response.data.message)
-    }finally{
-      setLoading(true)
+    } finally {
+      setLoading(false)
     }
   }, [getdata, trigger])
 
   return (
     <ScrollView>
       <View style={styles.container}>
-        
         <View style={styles.searchContainer}>
           <Ionicons name="menu-outline" size={24} color="#333" />
           <TextInput
             style={styles.searchInput}
             placeholder="Search your match"
-            placeholderTextColor="#666"
+            placeholderTextColor="#808080"
           />
           <FontAwesome5 name="search" size={20} color="#333" />
         </View>
@@ -165,264 +165,292 @@ const ClashSquad = ({ navigation }) => {
                 contentContainerStyle={{ gap: 20 }}
               />
             ) : (
-              data === null ||[]?<Text>No Matches Right now.</Text>:
-              <ShimmerBox/>
+              data === null || [] ? <Text>No Matches Right now.</Text> :
+                <ShimmerBox />
             )}
           </View>
         </View>
 
-        <Modal visible={matchDetails.show} transparent animationType='fade' onRequestClose={handleOutsidePress}>
-          <View style={styles.modal}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Create Your Match</Text>
-            <ScrollView>
-              <View style={{ marginHorizontal: 20 }}>
-                <Text style={styles.sectionTitle}>Room Mode</Text>
-                <View style={styles.toggleContainer}>
-                  <TouchableOpacity
-                    onPress={() => setMatchDetails((prev) => ({ ...prev, showDetail: true, match: 'clashsquad' }))}
-                    style={matchDetails.showDetail ? styles.toggleActive : styles.toggle}
-                  >
-                    <Text style={matchDetails.showDetail ? styles.toggleTextActive : styles.toggleText}>Clash Squad</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    onPress={() => setMatchDetails((prev) => ({ ...prev, showDetail: false, coin: '', match: 'loneWolf' }))}
-                    style={!matchDetails.showDetail ? styles.toggleActive : styles.toggle}
-                  >
-                    <Text style={!matchDetails.showDetail ? styles.toggleTextActive : styles.toggleText}>Lone Wolf</Text>
-                  </TouchableOpacity>
+        <Modal
+          visible={matchDetails.show}
+          transparent
+          animationType='fade'
+          onRequestClose={handleOutsidePress}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={handleOutsidePress}
+          >
+            <TouchableOpacity 
+              style={styles.modal}
+              activeOpacity={1}
+            >
+              <ScrollView 
+                contentContainerStyle={styles.modalContentContainer}
+                nestedScrollEnabled={true}
+              >
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={handleOutsidePress}
+                >
+                  <AntDesign name="close" size={24} color="#333" />
+                </TouchableOpacity>
+                
+                <View style={styles.modalHandle} />
+                <Text style={styles.modalTitle}>Create Your Match</Text>
+                <View style={{ marginHorizontal: 20 }}>
+                  <Text style={styles.sectionTitle}>Room Mode</Text>
+                  <View style={styles.toggleContainer}>
+                    <TouchableOpacity
+                      onPress={() => setMatchDetails((prev) => ({ ...prev, showDetail: true, match: 'clashsquad' }))}
+                      style={matchDetails.showDetail ? styles.toggleActive : styles.toggle}
+                    >
+                      <Text style={matchDetails.showDetail ? styles.toggleTextActive : styles.toggleText}>Clash Squad</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      onPress={() => setMatchDetails((prev) => ({ ...prev, showDetail: false, coin: '', match: 'loneWolf' }))}
+                      style={!matchDetails.showDetail ? styles.toggleActive : styles.toggle}
+                    >
+                      <Text style={!matchDetails.showDetail ? styles.toggleTextActive : styles.toggleText}>Lone Wolf</Text>
+                    </TouchableOpacity>
+                  </View>
+
+                  {matchDetails.showDetail ? (
+                    <View style={styles.inputSection}>
+                      <Text style={styles.sectionTitle}>Player</Text>
+                      <FlatList
+                        data={playerOptions}
+                        horizontal
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, player: item.label }))}
+                            style={matchDetails.player === item.label ? styles.optionActive : styles.option}
+                          >
+                            <Text style={matchDetails.player === item.label ? styles.optionTextActive : styles.optionText}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        contentContainerStyle={styles.optionContainer}
+                      />
+
+                      <Text style={styles.sectionTitle}>Limited Ammo</Text>
+                      <View style={styles.toggleContainer}>
+                        {['yes', 'No'].map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, ammo: value }))}
+                            style={matchDetails.ammo === value ? styles.toggleActive : styles.toggle}
+                          >
+                            <Text style={matchDetails.ammo === value ? styles.toggleTextActive : styles.toggleText}>
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={styles.sectionTitle}>Headshot</Text>
+                      <View style={styles.toggleContainer}>
+                        {['yes', 'No'].map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, headshot: value }))}
+                            style={matchDetails.headshot === value ? styles.toggleActive : styles.toggle}
+                          >
+                            <Text style={matchDetails.headshot === value ? styles.toggleTextActive : styles.toggleText}>
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={styles.sectionTitle}>Character Skill</Text>
+                      <View style={styles.toggleContainer}>
+                        {['yes', 'No'].map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, skill: value }))}
+                            style={matchDetails.skill === value ? styles.toggleActive : styles.toggle}
+                          >
+                            <Text style={matchDetails.skill === value ? styles.toggleTextActive : styles.toggleText}>
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={styles.sectionTitle}>Rounds</Text>
+                      <FlatList
+                        data={roundOptions}
+                        horizontal
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, round: item.label }))}
+                            style={matchDetails.round === item.label ? styles.optionActive : styles.option}
+                          >
+                            <Text style={matchDetails.round === item.label ? styles.optionTextActive : styles.optionText}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        contentContainerStyle={styles.optionContainer}
+                      />
+
+                      <Text style={styles.sectionTitle}>Coin</Text>
+                      <FlatList
+                        data={coinOptions}
+                        horizontal
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, coin: item.label }))}
+                            style={matchDetails.coin === item.label ? styles.optionActive : styles.option}
+                          >
+                            <Text style={matchDetails.coin === item.label ? styles.optionTextActive : styles.optionText}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        contentContainerStyle={styles.optionContainer}
+                      />
+
+                      <Text style={styles.sectionTitle}>Game Name</Text>
+                      <TextInput
+                        placeholder='Give your name'
+                        style={styles.textInput}
+                        value={matchDetails.gameName}
+                        onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
+                        placeholderTextColor="#808080"
+                      />
+
+                      <Text style={styles.sectionTitle}>Bet Amount</Text>
+                      <TextInput
+                        placeholder='Enter the amount'
+                        keyboardType="numeric"
+                        style={styles.textInput}
+                        value={matchDetails.betAmount}
+                        onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
+                        placeholderTextColor="#808080"
+                      />
+
+                      <TouchableOpacity style={styles.publishButton} onPress={sendData}>
+                        <Text style={styles.publishButtonText}>Publish</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ) : (
+                    <View style={styles.inputSection}>
+                      <Text style={styles.sectionTitle}>Player</Text>
+                      <FlatList
+                        data={playerOption}
+                        horizontal
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, player: item.label }))}
+                            style={matchDetails.player === item.label ? styles.optionActive : styles.option}
+                          >
+                            <Text style={matchDetails.player === item.label ? styles.optionTextActive : styles.optionText}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        contentContainerStyle={styles.optionContainer}
+                      />
+
+                      <Text style={styles.sectionTitle}>Limited Ammo</Text>
+                      <View style={styles.toggleContainer}>
+                        {['yes', 'No'].map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, ammo: value }))}
+                            style={matchDetails.ammo === value ? styles.toggleActive : styles.toggle}
+                          >
+                            <Text style={matchDetails.ammo === value ? styles.toggleTextActive : styles.toggleText}>
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={styles.sectionTitle}>Headshot</Text>
+                      <View style={styles.toggleContainer}>
+                        {['yes', 'No'].map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, headshot: value }))}
+                            style={matchDetails.headshot === value ? styles.toggleActive : styles.toggle}
+                          >
+                            <Text style={matchDetails.headshot === value ? styles.toggleTextActive : styles.toggleText}>
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={styles.sectionTitle}>Character Skill</Text>
+                      <View style={styles.toggleContainer}>
+                        {['yes', 'No'].map((value) => (
+                          <TouchableOpacity
+                            key={value}
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, skill: value }))}
+                            style={matchDetails.skill === value ? styles.toggleActive : styles.toggle}
+                          >
+                            <Text style={matchDetails.skill === value ? styles.toggleTextActive : styles.toggleText}>
+                              {value}
+                            </Text>
+                          </TouchableOpacity>
+                        ))}
+                      </View>
+
+                      <Text style={styles.sectionTitle}>Rounds</Text>
+                      <FlatList
+                        data={roundOptions}
+                        horizontal
+                        keyExtractor={(item) => item.id.toString()}
+                        renderItem={({ item }) => (
+                          <TouchableOpacity
+                            onPress={() => setMatchDetails((prev) => ({ ...prev, round: item.label }))}
+                            style={matchDetails.round === item.label ? styles.optionActive : styles.option}
+                          >
+                            <Text style={matchDetails.round === item.label ? styles.optionTextActive : styles.optionText}>
+                              {item.label}
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                        contentContainerStyle={styles.optionContainer}
+                      />
+
+                      <Text style={styles.sectionTitle}>Game Name</Text>
+                      <TextInput
+                        placeholder='Give your name'
+                        style={styles.textInput}
+                        value={matchDetails.gameName}
+                        onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
+                        placeholderTextColor="#808080"
+                      />
+
+                      <Text style={styles.sectionTitle}>Bet Amount</Text>
+                      <TextInput
+                        placeholder='Enter the amount'
+                        keyboardType="numeric"
+                        style={styles.textInput}
+                        value={matchDetails.betAmount}
+                        onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
+                        placeholderTextColor="#808080"
+                      />
+
+                      <TouchableOpacity style={styles.publishButton} onPress={sendData}>
+                        <Text style={styles.publishButtonText}>Publish</Text>
+                      </TouchableOpacity>
+                    </View>
+                  )}
                 </View>
-
-                {matchDetails.showDetail ? (
-                  <View style={styles.inputSection}>
-                    <Text style={styles.sectionTitle}>Player</Text>
-                    <FlatList
-                      data={playerOptions}
-                      horizontal
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, player: item.label }))}
-                          style={matchDetails.player === item.label ? styles.optionActive : styles.option}
-                        >
-                          <Text style={matchDetails.player === item.label ? styles.optionTextActive : styles.optionText}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      contentContainerStyle={styles.optionContainer}
-                    />
-
-                    <Text style={styles.sectionTitle}>Limited Ammo</Text>
-                    <View style={styles.toggleContainer}>
-                      {['yes', 'No'].map((value) => (
-                        <TouchableOpacity
-                          key={value}
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, ammo: value }))}
-                          style={matchDetails.ammo === value ? styles.toggleActive : styles.toggle}
-                        >
-                          <Text style={matchDetails.ammo === value ? styles.toggleTextActive : styles.toggleText}>
-                            {value}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <Text style={styles.sectionTitle}>Headshot</Text>
-                    <View style={styles.toggleContainer}>
-                      {['yes', 'No'].map((value) => (
-                        <TouchableOpacity
-                          key={value}
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, headshot: value }))}
-                          style={matchDetails.headshot === value ? styles.toggleActive : styles.toggle}
-                        >
-                          <Text style={matchDetails.headshot === value ? styles.toggleTextActive : styles.toggleText}>
-                            {value}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <Text style={styles.sectionTitle}>Character Skill</Text>
-                    <View style={styles.toggleContainer}>
-                      {['yes', 'No'].map((value) => (
-                        <TouchableOpacity
-                          key={value}
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, skill: value }))}
-                          style={matchDetails.skill === value ? styles.toggleActive : styles.toggle}
-                        >
-                          <Text style={matchDetails.skill === value ? styles.toggleTextActive : styles.toggleText}>
-                            {value}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <Text style={styles.sectionTitle}>Rounds</Text>
-                    <FlatList
-                      data={roundOptions}
-                      horizontal
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, round: item.label }))}
-                          style={matchDetails.round === item.label ? styles.optionActive : styles.option}
-                        >
-                          <Text style={matchDetails.round === item.label ? styles.optionTextActive : styles.optionText}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      contentContainerStyle={styles.optionContainer}
-                    />
-
-                    <Text style={styles.sectionTitle}>Coin</Text>
-                    <FlatList
-                      data={coinOptions}
-                      horizontal
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, coin: item.label }))}
-                          style={matchDetails.coin === item.label ? styles.optionActive : styles.option}
-                        >
-                          <Text style={matchDetails.coin === item.label ? styles.optionTextActive : styles.optionText}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      contentContainerStyle={styles.optionContainer}
-                    />
-
-                    <Text style={styles.sectionTitle}>Game Name</Text>
-                    <TextInput
-                      placeholder='Give your name'
-                      style={styles.textInput}
-                      value={matchDetails.gameName}
-                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
-                    />
-                    
-                    <Text style={styles.sectionTitle}>Bet Amount</Text>
-                    <TextInput
-                      placeholder='Enter the amount'
-                      keyboardType="numeric"
-                      style={styles.textInput}
-                      value={matchDetails.betAmount}
-                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
-                    />
-
-                    <TouchableOpacity style={styles.publishButton} onPress={sendData}>
-                      <Text style={styles.publishButtonText}>Publish</Text>
-                    </TouchableOpacity>
-                  </View>
-                ) : (
-                  <View style={styles.inputSection}>
-                    <Text style={styles.sectionTitle}>Player</Text>
-                    <FlatList
-                      data={playerOption}
-                      horizontal
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, player: item.label }))}
-                          style={matchDetails.player === item.label ? styles.optionActive : styles.option}
-                        >
-                          <Text style={matchDetails.player === item.label ? styles.optionTextActive : styles.optionText}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      contentContainerStyle={styles.optionContainer}
-                    />
-
-                    <Text style={styles.sectionTitle}>Limited Ammo</Text>
-                    <View style={styles.toggleContainer}>
-                      {['yes', 'No'].map((value) => (
-                        <TouchableOpacity
-                          key={value}
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, ammo: value }))}
-                          style={matchDetails.ammo === value ? styles.toggleActive : styles.toggle}
-                        >
-                          <Text style={matchDetails.ammo === value ? styles.toggleTextActive : styles.toggleText}>
-                            {value}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <Text style={styles.sectionTitle}>Headshot</Text>
-                    <View style={styles.toggleContainer}>
-                      {['yes', 'No'].map((value) => (
-                        <TouchableOpacity
-                          key={value}
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, headshot: value }))}
-                          style={matchDetails.headshot === value ? styles.toggleActive : styles.toggle}
-                        >
-                          <Text style={matchDetails.headshot === value ? styles.toggleTextActive : styles.toggleText}>
-                            {value}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <Text style={styles.sectionTitle}>Character Skill</Text>
-                    <View style={styles.toggleContainer}>
-                      {['yes', 'No'].map((value) => (
-                        <TouchableOpacity
-                          key={value}
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, skill: value }))}
-                          style={matchDetails.skill === value ? styles.toggleActive : styles.toggle}
-                        >
-                          <Text style={matchDetails.skill === value ? styles.toggleTextActive : styles.toggleText}>
-                            {value}
-                          </Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-
-                    <Text style={styles.sectionTitle}>Rounds</Text>
-                    <FlatList
-                      data={roundOptions}
-                      horizontal
-                      keyExtractor={(item) => item.id.toString()}
-                      renderItem={({ item }) => (
-                        <TouchableOpacity
-                          onPress={() => setMatchDetails((prev) => ({ ...prev, round: item.label }))}
-                          style={matchDetails.round === item.label ? styles.optionActive : styles.option}
-                        >
-                          <Text style={matchDetails.round === item.label ? styles.optionTextActive : styles.optionText}>
-                            {item.label}
-                          </Text>
-                        </TouchableOpacity>
-                      )}
-                      contentContainerStyle={styles.optionContainer}
-                    />
-
-                    <Text style={styles.sectionTitle}>Game Name</Text>
-                    <TextInput
-                      placeholder='Give your name'
-                      style={styles.textInput}
-                      value={matchDetails.gameName}
-                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
-                    />
-
-                    <Text style={styles.sectionTitle}>Bet Amount</Text>
-                    <TextInput
-                      placeholder='Enter the amount'
-                      keyboardType="numeric"
-                      style={styles.textInput}
-                      value={matchDetails.betAmount}
-                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
-                    />
-
-                    <TouchableOpacity style={styles.publishButton} onPress={sendData}>
-                      <Text style={styles.publishButtonText}>Publish</Text>
-                    </TouchableOpacity>
-                  </View>
-                )}
-              </View>
-            </ScrollView>
-          </View>
+              </ScrollView>
+            </TouchableOpacity>
+          </TouchableOpacity>
         </Modal>
 
         <Modal animationType="fade" transparent={true} visible={visible}>
@@ -444,8 +472,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
-  
-  
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -454,7 +480,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 15,
     height: 50,
     marginBottom: 15,
-    borderWidth:1,
+    borderWidth: 1,
     shadowColor: '#000',
   },
   searchInput: {
@@ -508,12 +534,22 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    
+  },
   modal: {
     width: '100%',
-    height: '100%',
+    maxHeight: '80%',
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
+    marginTop:280, // Added to create space from bottom
+  },
+  modalContentContainer: {
+    paddingBottom: 20,
     paddingTop: 10,
   },
   modalHandle: {
@@ -530,6 +566,16 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     marginVertical: 20,
     color: '#333',
+  },
+  closeButton: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
   },
   sectionTitle: {
     fontSize: 18,
@@ -616,6 +662,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 30,
+    marginBottom: 20,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

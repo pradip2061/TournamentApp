@@ -11,22 +11,24 @@ import AsyncStorage from '@react-native-async-storage/async-storage'
 import ShimmerBox from '../../components/ShimmerBox'
 import { CheckAdminContext } from '../ContextApi/ContextApi'
 import TdmCard from '../../components/TdmCard'
-import{BASE_URL} from '../../env'
+import { BASE_URL } from '../../env'
+
 const TDM = ({ navigation }) => {
   const [datas, setDatas] = useState([])
   const [trigger, setTrigger] = useState('')
   const [visible, setVisible] = useState(false)
   const [message, setMessage] = useState('')
-  const { getdata,data,getProfile } = useContext(CheckAdminContext)
+  const { getdata, data, getProfile } = useContext(CheckAdminContext)
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
     match: '1v1',
-    gameName: data.gameName[0].pubg,
+    gameName: data?.gameName?.[0]?.pubg || '',
     betAmount: '',
   });
 
   console.log(matchDetails.match)
+  
   const modal = (messages) => {
     setVisible(true)
     setMessage(String(messages))
@@ -36,11 +38,13 @@ const TDM = ({ navigation }) => {
     }, 1000)
   }
 
-
-
   const handleOutsidePress = () => {
     Keyboard.dismiss();
     setMatchDetails((prev) => ({ ...prev, show: false }));
+  }
+
+  const handleModalContentPress = (e) => {
+    e.stopPropagation();
   }
 
   const sendData = async (e) => {
@@ -64,7 +68,7 @@ const TDM = ({ navigation }) => {
         matchidSend(response.data.newMatch._id)
       })
     } catch (error) {
-      const errorMessage = error.response.data.message || "Exceed the limit";
+      const errorMessage = error.response?.data?.message || "Exceed the limit";
       modal(errorMessage)
     }
   }
@@ -94,14 +98,13 @@ const TDM = ({ navigation }) => {
       }
       getMatches()
     } catch (error) {
-      setMessage(error.response.data.message)
+      setMessage(error.response?.data?.message || 'Error fetching matches')
     }
   }, [getdata, trigger])
 
   return (
     <ScrollView>
       <View style={styles.container}>
-        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Ionicons name="menu-outline" size={24} color="#333" />
           <TextInput
@@ -137,57 +140,84 @@ const TDM = ({ navigation }) => {
                 ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
               />
             ) : (
-              data === null ||[]?<Text>No Matches Right now.</Text>:
+              data === null || data?.length === 0 ? <Text>No Matches Right now.</Text> :
               <ShimmerBox/>
             )}
           </View>
         </View>
 
-        <Modal visible={matchDetails.show} transparent animationType='fade' onRequestClose={handleOutsidePress}>
-          <View style={styles.modal}>
-            <View style={styles.modalHandle} />
-            <Text style={styles.modalTitle}>Create Your Match</Text>
-            <ScrollView>
-              <View style={{ marginHorizontal: 20 }}>
-                <Text style={styles.sectionTitle}>Room Mode</Text>
-                <View style={styles.toggleContainer}>
-                  {['1v1', '2v2', '3v3', '4v4'].map((mode) => (
-                    <TouchableOpacity
-                      key={mode}
-                      onPress={() => setMatchDetails((prev) => ({ ...prev, match: mode }))}
-                      style={[styles.toggle, matchDetails.match === mode && styles.toggleActive]}
-                    >
-                      <Text style={[styles.toggleText, matchDetails.match === mode && styles.toggleTextActive]}>
-                        {mode}
-                      </Text>
+        <Modal
+          visible={matchDetails.show}
+          transparent
+          animationType='fade'
+          onRequestClose={handleOutsidePress}
+        >
+          <TouchableOpacity
+            style={styles.modalOverlay}
+            activeOpacity={1}
+            onPress={handleOutsidePress}
+          >
+            <View 
+              style={styles.modal}
+              onStartShouldSetResponder={() => true}
+              onResponderGrant={handleModalContentPress}
+            >
+              <ScrollView 
+                style={styles.modalScroll}
+                contentContainerStyle={styles.modalContentContainer}
+                showsVerticalScrollIndicator={true}
+              >
+                <TouchableOpacity 
+                  style={styles.closeButton}
+                  onPress={handleOutsidePress}
+                >
+                  <AntDesign name="close" size={24} color="#333" />
+                </TouchableOpacity>
+                
+                <View style={styles.modalHandle} />
+                <Text style={styles.modalTitle}>Create Your Match</Text>
+                <View style={{ marginHorizontal: 15 }}>
+                  <Text style={styles.sectionTitle}>Room Mode</Text>
+                  <View style={styles.toggleContainer}>
+                    {['1v1', '2v2', '3v3', '4v4'].map((mode) => (
+                      <TouchableOpacity
+                        key={mode}
+                        onPress={() => setMatchDetails((prev) => ({ ...prev, match: mode }))}
+                        style={matchDetails.match === mode ? styles.toggleActive : styles.toggle}
+                      >
+                        <Text style={matchDetails.match === mode ? styles.toggleTextActive : styles.toggleText}>
+                          {mode}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+
+                  <View style={styles.inputSection}>
+                    <Text style={styles.sectionTitle}>Game Name</Text>
+                    <TextInput
+                      placeholder='Enter game name'
+                      style={styles.textInput}
+                      value={matchDetails.gameName}
+                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
+                    />
+
+                    <Text style={styles.sectionTitle}>Entry Fee</Text>
+                    <TextInput
+                      placeholder='Enter amount'
+                      keyboardType="numeric"
+                      style={styles.textInput}
+                      value={matchDetails.betAmount}
+                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
+                    />
+
+                    <TouchableOpacity style={styles.publishButton} onPress={sendData}>
+                      <Text style={styles.publishButtonText}>Publish</Text>
                     </TouchableOpacity>
-                  ))}
+                  </View>
                 </View>
-                <View style={styles.inputSection}>
-                  <Text style={styles.sectionTitle}>Game Name</Text>
-                  <TextInput
-                    placeholder='Enter game name'
-                    style={styles.textInput}
-                    value={matchDetails.gameName}
-                    onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
-                  />
-
-                  <Text style={styles.sectionTitle}>Entry Fee</Text>
-                  <TextInput
-                    placeholder='Enter amount'
-                    keyboardType="numeric"
-                    style={styles.textInput}
-                    value={matchDetails.betAmount}
-                    onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
-                  />
-
-                  <TouchableOpacity style={styles.publishButton} onPress={sendData}>
-                    <Text style={styles.publishButtonText}>Publish</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            </ScrollView>
-          </View>
+              </ScrollView>
+            </View>
+          </TouchableOpacity>
         </Modal>
 
         <Modal animationType="fade" transparent={true} visible={visible}>
@@ -213,16 +243,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#FFFFFF',
-    borderRadius: 19,
+    borderRadius: 12,
     paddingHorizontal: 15,
     height: 50,
     marginBottom: 15,
+    borderWidth: 1,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    borderWidth:1
-
   },
   searchInput: {
     flex: 1,
@@ -231,7 +257,7 @@ const styles = StyleSheet.create({
     color: '#333',
   },
   note: {
-    color: '555',
+    color: '#555',
     fontSize: 14,
     marginBottom: 20,
     marginLeft: 15,
@@ -245,7 +271,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 25,
     alignSelf: 'flex-end',
-    elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
@@ -265,7 +290,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     width: 150,
     marginVertical: 15,
-    elevation: 2,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
@@ -277,12 +301,25 @@ const styles = StyleSheet.create({
     color: '#333',
     fontSize: 16,
   },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingBottom: 50,
+  },
   modal: {
     width: '100%',
-    height: '100%',
+    maxHeight: '80%',
     backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
+    borderRadius: 20,
+    marginBottom: -70,
+  },
+  modalScroll: {
+    width: '100%',
+  },
+  modalContentContainer: {
+    paddingBottom: 20,
     paddingTop: 10,
   },
   modalHandle: {
@@ -300,25 +337,38 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     color: '#333',
   },
+  closeButton: {
+    position: 'absolute',
+    right: 15,
+    top: 15,
+    width: 30,
+    height: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
   sectionTitle: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    marginBottom: 10,
-    marginTop: 20,
+    marginBottom: 5,
+    marginTop: 10,
   },
   toggleContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginVertical: 10,
+    justifyContent: 'space-around',
+    
   },
   toggle: {
     paddingVertical: 8,
-    paddingHorizontal: 20,
+    paddingHorizontal: 15,
     borderRadius: 20,
     backgroundColor: '#F0F0F0',
   },
   toggleActive: {
+    paddingVertical: 8,
+    paddingHorizontal: 20,
+    borderRadius: 20,
     backgroundColor: '#FF6B00',
   },
   toggleText: {
@@ -326,11 +376,12 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   toggleTextActive: {
+    fontSize: 16,
     color: '#FFFFFF',
     fontWeight: '600',
   },
   inputSection: {
-    marginTop: 20,
+    marginTop: 1,
   },
   textInput: {
     width: '100%',
@@ -348,10 +399,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: 50,
     borderRadius: 25,
-    backgroundColor: '#FF6B00',
+    backgroundColor: 'blue',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 30,
+    marginTop: 20,
+    marginBottom: 30,
     elevation: 4,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },

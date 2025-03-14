@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,15 @@ import {
 } from 'react-native';
 import io from 'socket.io-client';
 import axios from 'axios';
-import { BASE_URL } from '../../env';
-
+import {BASE_URL} from '../../env';
 
 const socket = io(process.env.baseUrl);
 
-const PrivateChat = ({ route, navigation }) => {
-  const { userId, FriendId, name, friendPhoto } = route.params || { name: 'Unknown', friendPhoto: 'https://via.placeholder.com/40' };
+const PrivateChat = ({route, navigation}) => {
+  const {userId, FriendId, name, friendPhoto} = route.params || {
+    name: 'Unknown',
+    friendPhoto: 'https://via.placeholder.com/40',
+  };
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [inputHeight, setInputHeight] = useState(40);
@@ -38,7 +40,9 @@ const PrivateChat = ({ route, navigation }) => {
         setMessages(prev => {
           // Merge fetched messages with existing state to avoid overwriting
           const existingIds = new Set(prev.map(msg => msg.time));
-          const newMessages = response.data.filter(msg => !existingIds.has(msg.time));
+          const newMessages = response.data.filter(
+            msg => !existingIds.has(msg.time),
+          );
           return [...prev, ...newMessages];
         });
       } catch (error) {
@@ -66,7 +70,7 @@ const PrivateChat = ({ route, navigation }) => {
     };
 
     // Emit message to server
-    socket.emit('message', { room: roomId, message: messageData });
+    socket.emit('message', {room: roomId, message: messageData});
 
     // Update local state immediately
     setMessages(prev => [...prev, messageData]);
@@ -75,7 +79,8 @@ const PrivateChat = ({ route, navigation }) => {
   };
 
   const sendPhotoMessage = async () => {
-    const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    const permissionResult =
+      await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permissionResult.granted) {
       alert('Permission to access camera roll is required!');
       return;
@@ -98,32 +103,34 @@ const PrivateChat = ({ route, navigation }) => {
       };
 
       // Emit message to server
-      socket.emit('message', { room: roomId, message: messageData });
+      socket.emit('message', {room: roomId, message: messageData});
 
       // Update local state immediately
       setMessages(prev => [...prev, messageData]);
     }
   };
 
-  const formatTimestamp = (isoString) => {
+  const formatTimestamp = isoString => {
     const date = new Date(isoString);
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
-    
+
     if (isToday) {
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
     } else {
-      return date.toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-        hour: '2-digit', 
-        minute: '2-digit', 
-        hour12: true 
-      }).toUpperCase();
+      return date
+        .toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true,
+        })
+        .toUpperCase();
     }
   };
 
-  const formatDateSeparator = (isoString) => {
+  const formatDateSeparator = isoString => {
     const date = new Date(isoString);
     const now = new Date();
     const isToday = date.toDateString() === now.toDateString();
@@ -131,61 +138,68 @@ const PrivateChat = ({ route, navigation }) => {
     if (isToday) {
       return 'TODAY';
     } else {
-      return date.toLocaleString('en-US', { 
-        month: 'short', 
-        day: 'numeric', 
-      }).toUpperCase();
+      return date
+        .toLocaleString('en-US', {
+          month: 'short',
+          day: 'numeric',
+        })
+        .toUpperCase();
     }
   };
 
-  const renderItem = ({ item, index }) => {
+  const renderItem = ({item, index}) => {
     const isSent = item.senderID === userId;
     const currentDate = new Date(item.time);
     const previousMessage = index > 0 ? messages[index - 1] : null;
-    const showDateSeparator = !previousMessage || 
-      new Date(previousMessage.time).toDateString() !== currentDate.toDateString();
-    const showName = !isSent && 
+    const showDateSeparator =
+      !previousMessage ||
+      new Date(previousMessage.time).toDateString() !==
+        currentDate.toDateString();
+    const showName =
+      !isSent &&
       (!previousMessage || previousMessage.senderID !== item.senderID);
 
     return (
       <>
         {showDateSeparator && (
           <View style={styles.dateSeparator}>
-            <Text style={styles.dateText}>{formatDateSeparator(item.time)}</Text>
+            <Text style={styles.dateText}>
+              {formatDateSeparator(item.time)}
+            </Text>
           </View>
         )}
-        <View style={[
-          styles.messageContainer,
-          isSent ? styles.sentContainer : styles.receivedContainer
-        ]}>
+        <View
+          style={[
+            styles.messageContainer,
+            isSent ? styles.sentContainer : styles.receivedContainer,
+          ]}>
           {!isSent && (
-            <Image 
-              source={{ uri: friendPhoto }} 
-              style={styles.avatar}
-            />
+            <Image source={{uri: friendPhoto}} style={styles.avatar} />
           )}
           <View style={styles.messageContent}>
             {!isSent && showName && (
               <Text style={styles.senderName}>{name}</Text>
             )}
-            <View style={[
-              styles.messageBubble,
-              isSent ? styles.sentBubble : styles.receivedBubble,
-              item.type === 'photo' && styles.photoBubble
-            ]}>
+            <View
+              style={[
+                styles.messageBubble,
+                isSent ? styles.sentBubble : styles.receivedBubble,
+                item.type === 'photo' && styles.photoBubble,
+              ]}>
               {item.type === 'photo' ? (
-                <Image 
-                  source={{ uri: item.message }} 
+                <Image
+                  source={{uri: item.message}}
                   style={styles.photo}
                   resizeMode="contain"
                 />
               ) : (
                 <Text style={styles.messageText}>{item.message}</Text>
               )}
-              <Text style={[
-                styles.timestamp,
-                isSent ? styles.sentTimestamp : styles.receivedTimestamp
-              ]}>
+              <Text
+                style={[
+                  styles.timestamp,
+                  isSent ? styles.sentTimestamp : styles.receivedTimestamp,
+                ]}>
                 {formatTimestamp(item.time)}
               </Text>
             </View>
@@ -201,14 +215,12 @@ const PrivateChat = ({ route, navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
-        <Image source={{ uri: friendPhoto }} style={styles.headerAvatar} />
+        <Image source={{uri: friendPhoto}} style={styles.headerAvatar} />
         <View>
           <Text style={styles.headerName}>{name}</Text>
-         
         </View>
-      
       </View>
-      
+
       <FlatList
         data={messages}
         renderItem={renderItem}
@@ -221,19 +233,20 @@ const PrivateChat = ({ route, navigation }) => {
           <Text style={styles.photoButtonText}>📷</Text>
         </TouchableOpacity>
         <TextInput
-          style={[styles.input, { height: Math.min(inputHeight, 100) }]}
+          style={[styles.input, {height: Math.min(inputHeight, 100)}]}
           placeholder="Type a message..."
           value={newMessage}
           placeholderTextColor={'#8E8E92'}
           onChangeText={setNewMessage}
           multiline
-          onContentSizeChange={(e) => setInputHeight(e.nativeEvent.contentSize.height)}
+          onContentSizeChange={e =>
+            setInputHeight(e.nativeEvent.contentSize.height)
+          }
         />
-        <TouchableOpacity 
+        <TouchableOpacity
           style={styles.sendButton}
           onPress={sendTextMessage}
-          disabled={!newMessage.trim()}
-        >
+          disabled={!newMessage.trim()}>
           <Text style={styles.sendButtonText}>Send</Text>
         </TouchableOpacity>
       </View>
@@ -253,15 +266,15 @@ const styles = StyleSheet.create({
     backgroundColor: '#F4F4F5',
     borderBottomWidth: 1,
     borderBottomColor: '#333',
-    borderColor:'grey',
-    elevation:10
+    borderColor: 'grey',
+    elevation: 10,
   },
   backButton: {
     fontSize: 40,
     color: 'black',
     marginRight: 10,
-    fontWeight:'900',
-    height:50
+    fontWeight: '900',
+    height: 50,
   },
   headerAvatar: {
     width: 40,
@@ -274,7 +287,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
   },
- 
+
   headerIcons: {
     flexDirection: 'row',
     marginLeft: 'auto',
@@ -307,19 +320,13 @@ const styles = StyleSheet.create({
     maxWidth: '70%',
     flexDirection: 'row',
     alignItems: 'flex-end',
-    minWidth:'auto'
+    minWidth: 'auto',
   },
   sentContainer: {
     alignSelf: 'flex-end',
     flexDirection: 'row-reverse',
   },
-  receivedContainer: {
-    
-   
-   
-    
-
-  },
+  receivedContainer: {},
   avatar: {
     width: 30,
     height: 30,
@@ -345,9 +352,8 @@ const styles = StyleSheet.create({
   },
   receivedBubble: {
     backgroundColor: 'grey',
-    borderRadius:15,
-    
-      },
+    borderRadius: 15,
+  },
   photoBubble: {
     padding: 5,
     backgroundColor: 'transparent',
@@ -374,11 +380,12 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     flexDirection: 'row',
-    padding: 10,backgroundColor: '#F4F4F5',
-    elevation:5,
+    padding: 10,
+    backgroundColor: '#F4F4F5',
+    elevation: 5,
     borderBottomColor: '#333',
-    borderColor:'grey',
-  
+    borderColor: 'grey',
+
     alignItems: 'center',
   },
   photoButton: {

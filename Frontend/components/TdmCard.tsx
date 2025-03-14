@@ -6,9 +6,12 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
+const img = require('../assets/image.png');
+const tdm = require('../assets/tdm.jpg');
 import { launchImageLibrary } from 'react-native-image-picker';
 import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
-import{BASE_URL} from '../env'
+import { BASE_URL } from '../env';
+
 const MatchCard = ({ matches }) => {
   const [check, setCheck] = useState('');
   const [customId, setCustomId] = useState(0);
@@ -22,13 +25,14 @@ const MatchCard = ({ matches }) => {
   const [notifyModel, setNotifyModel] = useState(false);
   const [result, setResult] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
-  const[boolean,setBoolean]=useState<boolean | null>(null)
-  const[loading,setLoading]=useState(false)
-  const[image,setImage]=useState<string|undefined|null>(null)
-  const[proof,setProof]=useState('')
+  const [boolean, setBoolean] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [image, setImage] = useState(null);
+  const [proof, setProof] = useState('');
   const matchId = matches?._id;
-  console.log(matches)
-  const { setTrigger,trigger } = useContext(CheckAdminContext);
+  console.log(matches);
+  const { setTrigger, trigger } = useContext(CheckAdminContext);
+
   useEffect(() => {
     const checkUserOrAdmin = async () => {
       const token = await AsyncStorage.getItem('token');
@@ -41,8 +45,7 @@ const MatchCard = ({ matches }) => {
         });
     };
     checkUserOrAdmin();
-  }, [check, message,trigger]);
-
+  }, [check, message, trigger]);
 
   const notify = () => {
     setNotifyModel(true);
@@ -97,27 +100,24 @@ const MatchCard = ({ matches }) => {
       }
     };
     checkpublish();
-  }, [message,trigger]);
+  }, [message, trigger]);
 
   const copyToClipboardId = () => Clipboard.setString(matches.customId.toString());
   const copyToClipboardPass = () => Clipboard.setString(matches.customPassword.toString());
 
   const reset = async () => {
     try {
-     const token= await AsyncStorage.getItem('token')
+      const token = await AsyncStorage.getItem('token');
       setError('');
       setMessage('');
-      console.log(customId)
-      console.log(customPassword)
+      console.log(customId);
+      console.log(customPassword);
       await axios
-        .post(`${BASE_URL}/khelmela/changecustomtdm`, { matchId, customId, customPassword },{
-          headers:{
-            Authorization:`${token}`
-          }
+        .post(`${BASE_URL}/khelmela/changecustomtdm`, { matchId, customId, customPassword }, {
+          headers: { Authorization: `${token}` },
         })
         .then((response) => {
           if (response.status === 200) {
-            // setPublish(response.data.message);
             setModalReset(false);
             setTrigger('done');
           }
@@ -128,16 +128,15 @@ const MatchCard = ({ matches }) => {
       notify();
     }
   };
+
   useEffect(() => {
     const checkresult = async () => {
       try {
-        console.log(matchId)
+        console.log(matchId);
         const token = await AsyncStorage.getItem('token');
         await axios
-          .post(`${BASE_URL}/khelmela/checkresulttdm`,{ matchId },{
-            headers:{
-              Authorization:`${token}`
-            }
+          .post(`${BASE_URL}/khelmela/checkresulttdm`, { matchId }, {
+            headers: { Authorization: `${token}` },
           })
           .then((response) => setResult(response.data.message));
       } catch (error) {
@@ -148,76 +147,64 @@ const MatchCard = ({ matches }) => {
     checkresult();
   }, []);
 
-  
-
   const pickImage = () => {
     const options = {
       mediaType: 'photo',
-      maxWidth: 800, // Set max width to reduce size
-      maxHeight: 800, // Set max height to reduce size
-      quality: 0.3, // Adjust compression quality (0.1 - 1)
-      includeBase64: true, // Convert image to base64
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.3,
+      includeBase64: true,
     };
-
     launchImageLibrary(options, response => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else {
-       setImage(response?.assets?.[0]?.base64)
-        // setImage(response?.assets?.[0]?.uri)
+        setImage(response?.assets?.[0]?.base64);
       }
     });
   };
+
   const uploadImage = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'reporttdm',
-          filename: '.jpg',
-        },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
+        { image: image, folderName: 'reporttdm', filename: '.jpg' },
+        { headers: { Authorization: `${token}` } }
       );
-      console.log(response)
-      if(response.status == 200){
-        // imageset(response.data.url)
-        setProof(response.data.url)
+      console.log(response);
+      if (response.status === 200) {
+        setProof(response.data.url);
       }
     } catch (error) {
       console.error('Upload Error:', error);
     }
   };
 
-  const submitResult = async()=>{
-    if(boolean === true){
-      if(!image||typeof boolean !== 'boolean'){
-        setError("plz fill all field!")
-        notify()
-        return
+  const submitResult = async () => {
+    if (boolean === true) {
+      if (!image || typeof boolean !== 'boolean') {
+        setError("plz fill all field!");
+        notify();
+        return;
       }
-      uploadImage()
+      uploadImage();
     }
     try {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
           `${BASE_URL}/khelmela/uploadprooftdm`,
-          {proof,matchId},
+          { proof, matchId },
           { headers: { Authorization: `${token}` } }
         )
         .then((response) => setMessage(response.data.message));
     } catch (error) {
       setError(error.response?.data.message);
-    } 
+    }
     try {
       const token = await AsyncStorage.getItem('token');
       await axios
@@ -233,144 +220,152 @@ const MatchCard = ({ matches }) => {
       setModalDidYouWin(false);
       notify();
     }
-  }
+  };
+
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
-        <LinearGradient colors={['#0f0c29', '#302b63', '#24243e']} style={styles.gradient}>
-              <TouchableOpacity activeOpacity={1}>
-                <View style={styles.cardContent}>
-                  <View style={styles.headerRow}>
-                    <Image source={require('../assets/freefire.jpeg')} style={styles.gameIcon} />
-                    <Text style={styles.title}>TDM</Text>
-                  </View>
-                  <View style={styles.row}>
-                    <View style={styles.column}>
-                      <Text style={styles.text}>🎮 Mode:{matches.playermode} </Text>
-                    </View>
-                  </View>
-                  <View style={styles.divider} />
-                  <View style={styles.footer}>
-                    <Text style={styles.text}>👾 Opponent:hello</Text>
-                    <View style={styles.footerRow}>
-                      <Text style={styles.prizeText}>🏆 Prize: {matches.entryFee * 1.5}</Text>
-                      {check === 'user' ? (
-                        <TouchableOpacity
-                          activeOpacity={1}
-                          style={styles.entryButton}
-                          onPress={()=>setModalVisible(true)}
-                        >
-                          <Text style={styles.entryText}>Entry: {matches.entryFee}</Text>
-                        </TouchableOpacity>
-                      ) : check === 'userjoined' ? (
-                        <TouchableOpacity style={styles.joinedButton}>
-                          <Text style={styles.entryText}>Joined</Text>
-                        </TouchableOpacity>
-                      ) : null}
-                    </View>
-                  </View>
-
-                  {check === 'host' ? (
-                    <View style={styles.container}>
-                      {publish === 'publish' ? (
-                        <>
-                          <View style={styles.publishRow}>
-                            <View style={styles.leftContainer}>
-                              <TouchableOpacity onPress={copyToClipboardId}>
-                              <Text style={{color:'white'}}> customId:</Text>
-                                <View style={styles.inputs}>
-                                  <Text>{matches.customId}</Text>
-                                </View>
-                              </TouchableOpacity>
-                              <TouchableOpacity onPress={copyToClipboardPass}>
-                              <Text style={{color:'white'}}> customPass:</Text>
-                                <View style={styles.inputs}>
-                                  <Text> {matches.customPassword}</Text>
-                                </View>
-                              </TouchableOpacity>
-                            </View>
-                            <View style={styles.rightContainer}>
-                              <TouchableOpacity
-                                style={styles.button}
-                                onPress={() => setModalReset(true)}
-                              >
-                                <Text style={styles.buttonText}>Reset</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                          <View>
-                          {result === 'resultsubmit' ? (
-                          <Text style={styles.centerText}>Result submitted</Text>
-                        ) : <TouchableOpacity
-                        onPress={() => setModalDidYouWin(true)}
-                        style={styles.footerText}
-                      >
-                        <Text style={styles.submitTextRed}>Submit Your Result</Text>
-                      </TouchableOpacity> }
-                          </View>
-                        </>
-                      ) : (
-                        <>
-                        <View style={{flexDirection:'row',alignItems:'center'}}>
-                          <View style={styles.leftContainer}>
-                            <TextInput
-                              style={styles.input}
-                              placeholder="Custom ID"
-                              keyboardType="numeric"
-                              value={customId}
-                              onChangeText={(text)=>setCustomId(text)}
-                              placeholderTextColor="white"
-                            />
-                            <TextInput
-                              style={styles.input}
-                              placeholder="Custom Password"
-                              keyboardType="numeric"
-                              value={customPassword}
-                              onChangeText={(text)=>setCustomPassword(text)}
-                            />
-                          </View>
-                          <View style={styles.rightContainer}>
-                            <TouchableOpacity style={styles.button} onPress={customIdAndPassword}>
-                              <Text style={styles.buttonText}>Publish</Text>
-                            </TouchableOpacity>
-                          </View></View>
-                        </>
-                      )}
-                    </View>
+        <LinearGradient colors={['#1e1b4b', '#3b3477', '#2a2957']} style={styles.gradient}>
+          <TouchableOpacity activeOpacity={1}>
+            <View style={styles.cardContent}>
+              <View style={styles.titleContainer}>
+                <Image source={img} style={styles.gameIcon} />
+                <Text style={styles.titleText}>PUBG Team DeathMatch</Text>
+              </View>
+              <View style={styles.infoContainer}>
+                <Text style={styles.mapText}>MAP: Warehouse</Text>
+                <Text style={styles.modeText}>Mode: {matches.playermode}</Text>
+              </View>
+              <View style={styles.imageContainer}>
+                <Image source={tdm} style={styles.matchImage} />
+              </View>
+              <View style={styles.divider} />
+              <View style={styles.footer}>
+                <Text style={styles.text}>👾 Opponent: Hello</Text>
+                <View style={styles.footerRow}>
+                  <Text style={styles.prizeText}>🏆 Prize: {matches.entryFee * 1.5}</Text>
+                  {check === 'user' ? (
+                    <TouchableOpacity
+                      activeOpacity={1}
+                      style={styles.entryButton}
+                      onPress={() => setModalVisible(true)}
+                    >
+                      <Text style={styles.entryText}>Entry: {matches.entryFee}</Text>
+                    </TouchableOpacity>
                   ) : check === 'userjoined' ? (
-                    <View>
+                    <TouchableOpacity style={styles.joinedButton}>
+                      <Text style={styles.entryText}>Joined</Text>
+                    </TouchableOpacity>
+                  ) : null}
+                </View>
+              </View>
+
+              {check === 'host' ? (
+                <View style={styles.container}>
+                  {publish === 'publish' ? (
+                    <>
                       <View style={styles.publishRow}>
                         <View style={styles.leftContainer}>
                           <TouchableOpacity onPress={copyToClipboardId}>
-                            <Text style={{color:'white'}}> customId:</Text>
+                            <Text style={styles.label}>Custom ID:</Text>
                             <View style={styles.inputs}>
-                              <Text> {matches.customId}</Text>
+                              <Text>{matches.customId}</Text>
                             </View>
                           </TouchableOpacity>
                           <TouchableOpacity onPress={copyToClipboardPass}>
-                         <Text style={{color:'white'}}> customPass:</Text> 
+                            <Text style={styles.label}>Custom Pass:</Text>
                             <View style={styles.inputs}>
                               <Text>{matches.customPassword}</Text>
                             </View>
                           </TouchableOpacity>
                         </View>
+                        <View style={styles.rightContainer}>
+                          <TouchableOpacity
+                            style={styles.button}
+                            onPress={() => setModalReset(true)}
+                          >
+                            <Text style={styles.buttonText}>Reset</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
                       <View>
                         {result === 'resultsubmit' ? (
-                          <Text style={styles.centerText}>Result submitted</Text>
-                        ) : <TouchableOpacity
+                          <Text style={styles.centerText}>Result Submitted</Text>
+                        ) : (
+                          <TouchableOpacity
+                            onPress={() => setModalDidYouWin(true)}
+                            style={styles.footerText}
+                          >
+                            <Text style={styles.submitTextRed}>Submit Your Result</Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
+                    </>
+                  ) : (
+                    <View style={styles.publishInputRow}>
+                      <View style={styles.leftContainer}>
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Custom ID"
+                          keyboardType="numeric"
+                          value={customId}
+                          onChangeText={(text) => setCustomId(text)}
+                          placeholderTextColor="#aaa"
+                        />
+                        <TextInput
+                          style={styles.input}
+                          placeholder="Custom Password"
+                          keyboardType="numeric"
+                          value={customPassword}
+                          onChangeText={(text) => setCustomPassword(text)}
+                          placeholderTextColor="#aaa"
+                        />
+                      </View>
+                      <View style={styles.rightContainer}>
+                        <TouchableOpacity style={styles.button} onPress={customIdAndPassword}>
+                          <Text style={styles.buttonText}>Publish</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  )}
+                </View>
+              ) : check === 'userjoined' ? (
+                <View>
+                  <View style={styles.publishRow}>
+                    <View style={styles.leftContainer}>
+                      <TouchableOpacity onPress={copyToClipboardId}>
+                        <Text style={styles.label}>Custom ID:</Text>
+                        <View style={styles.inputs}>
+                          <Text>{matches.customId}</Text>
+                        </View>
+                      </TouchableOpacity>
+                      <TouchableOpacity onPress={copyToClipboardPass}>
+                        <Text style={styles.label}>Custom Pass:</Text>
+                        <View style={styles.inputs}>
+                          <Text>{matches.customPassword}</Text>
+                        </View>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                  <View>
+                    {result === 'resultsubmit' ? (
+                      <Text style={styles.centerText}>Result Submitted</Text>
+                    ) : (
+                      <TouchableOpacity
                         onPress={() => setModalDidYouWin(true)}
                         style={styles.footerText}
                       >
                         <Text style={styles.submitTextRed}>Submit Your Result</Text>
-                      </TouchableOpacity> }
-                      </View>
-                    </View>
-                  ) : null}
+                      </TouchableOpacity>
+                    )}
+                  </View>
                 </View>
-              </TouchableOpacity>
+              ) : null}
+            </View>
+          </TouchableOpacity>
         </LinearGradient>
       </View>
+
       <Modal transparent animationType="slide" visible={modalVisible}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
@@ -394,37 +389,48 @@ const MatchCard = ({ matches }) => {
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>Did you Win Match?</Text>
-            <TouchableOpacity onPress={()=>setModalDidYouWin(false)} style={{position:'absolute',marginLeft:240,marginTop:10}}>
-            <Text style={{fontWeight:900,fontSize:20}}>X</Text>
+            <TouchableOpacity
+              onPress={() => setModalDidYouWin(false)}
+              style={styles.closeButton}
+            >
+              <Text style={styles.closeText}>X</Text>
             </TouchableOpacity>
             <View style={styles.buttonContainer}>
-              <TouchableOpacity style={[styles.button, styles.noButton]} onPress={()=>setBoolean(false)}>
+              <TouchableOpacity
+                style={[styles.button, styles.noButton]}
+                onPress={() => setBoolean(false)}
+              >
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.yesButton]} onPress={()=>setBoolean(true)}>
+              <TouchableOpacity
+                style={[styles.button, styles.yesButton]}
+                onPress={() => setBoolean(true)}
+              >
                 <Text style={styles.buttonText}>Yes</Text>
               </TouchableOpacity>
             </View>
-            {
-              boolean === true ? <TouchableOpacity onPress={pickImage}>
-              <Text>upload</Text>
-            </TouchableOpacity>:null
-            }
-        <TouchableOpacity style={{width:60,height:40,backgroundColor:'green', justifyContent:'center',alignItems:'center'}} onPress={submitResult}>
-        <Text style={{color:'white'}}>submit</Text>
-        </TouchableOpacity>
+            {boolean === true ? (
+              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
+                <Text style={styles.uploadText}>Click here to upload proof</Text>
+              </TouchableOpacity>
+            ) : null}
+            <TouchableOpacity style={styles.submitButton} onPress={submitResult}>
+              <Text style={styles.buttonText}>Submit</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
 
       <Modal visible={modalReset} transparent animationType="slide">
-        <View style={styles.modalResetContainer}>
-          <View style={styles.modalResetContent}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
             <TextInput
               placeholder="Custom ID"
               value={customId}
               onChangeText={setCustomId}
               style={styles.inputModal}
+              keyboardType="numeric"
+              placeholderTextColor="#aaa"
             />
             <TextInput
               placeholder="Custom Password"
@@ -432,6 +438,8 @@ const MatchCard = ({ matches }) => {
               secureTextEntry
               onChangeText={setCustomPassword}
               style={styles.inputModal}
+              keyboardType="numeric"
+              placeholderTextColor="#aaa"
             />
             <View style={styles.buttonContainer}>
               <TouchableOpacity onPress={reset} style={styles.yesButton}>
@@ -455,198 +463,263 @@ const MatchCard = ({ matches }) => {
 
 const styles = StyleSheet.create({
   cardContainer: {
-    marginVertical: 8,
-    borderRadius: 15,
-    borderWidth: 2,
-    borderColor: 'black',
-    overflow: 'hidden', // Clips the gradient to the border
+    marginVertical: 12,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#1a1a1a',
+    overflow: 'hidden',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 5,
   },
   card: {
-    
-    backgroundColor: 'transparent', // Let gradient handle the background
+    backgroundColor: 'transparent',
   },
   gradient: {
     flex: 1,
-    borderRadius: 13, // Slightly less than container to fit inside border
-    padding: 2, // Adds space so gradient doesn’t touch border
+    borderRadius: 19,
+    padding: 4,
   },
   cardContent: {
-    padding: 10,
+    padding: 12,
   },
-  headerRow: {
+  titleContainer: {
     flexDirection: 'row',
-    gap:20
-    
+    alignItems: 'center',
+    gap: 12,
+    marginBottom: 8,
+  },
+  titleText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#fff',
+    letterSpacing: 0.5,
   },
   gameIcon: {
-    width: 43,
-    height: 43,
-    borderRadius: 100,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
-  row: {
+  infoContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop: 9,
+    marginBottom: 12,
   },
-  column: {
-    flex: 1,
-    padding: 5,
+  mapText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ddd',
   },
-  title: {
-    fontWeight: 'bold',
-    fontSize: 18,
-    color: 'white',
+  modeText: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#ddd',
   },
-  text: {
-    fontSize: 14,
-    color: 'white',
-    marginBottom: 5,
+  imageContainer: {
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  matchImage: {
+    width: 140,
+    height: 100,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#fff',
   },
   divider: {
     height: 1,
-    backgroundColor: 'white',
-    marginVertical: 10,
-    width: '100%',
+    backgroundColor: '#fff',
+    marginVertical: 12,
+    opacity: 0.7,
   },
   footer: {
-    marginTop: 10,
+    marginTop: 8,
   },
   footerRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
+  text: {
+    fontSize: 15,
+    color: '#fff',
+    marginBottom: 8,
+  },
   prizeText: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
     color: '#FFD700',
   },
   entryButton: {
     backgroundColor: 'green',
-    padding: 5,
-    borderRadius: 25,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   joinedButton: {
     backgroundColor: 'green',
-    padding: 5,
-    borderRadius: 25,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 20,
   },
   entryText: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: 'white',
+    fontSize: 15,
+    fontWeight: '600',
+    color: '#fff',
   },
   container: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 20,
+    padding: 12,
   },
   publishRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingBottom: 50,
-    gap: 30,
+    justifyContent: 'space-between',
+    marginBottom: 12,
+  },
+  publishInputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   leftContainer: {
     flex: 1,
+    gap: 8,
   },
   rightContainer: {
-    marginLeft: 20,
+    marginLeft: 12,
+  },
+  label: {
+    fontSize: 14,
+    color: '#fff',
+    marginBottom: 4,
   },
   input: {
-    width: 136,
-    height: 50,
-    borderWidth: 1,
-    borderColor: 'white',
-    borderRadius: 5,
+    backgroundColor: '#fff',
+    color: 'black',
+    borderRadius: 8,
+    padding: 10,
     marginBottom: 10,
+    fontSize: 14,
   },
   inputs: {
-   alignSelf: 'flex-start',
-    height: 40,
-    borderWidth: 1,
-    borderColor: 'white',
-    borderRadius: 5,
-    paddingInline:20,
+    backgroundColor: '#fff',
+    borderRadius: 8,
+    padding: 10,
     justifyContent: 'center',
-    marginTop: 10,
-    backgroundColor:'white'
+    minWidth: 120,
   },
   button: {
     backgroundColor: '#007bff',
-    paddingVertical: 12,
+    paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 8,
   },
   buttonText: {
     color: '#fff',
-    fontWeight: 'bold',
+    fontWeight: '600',
+    fontSize: 14,
+    textAlign: 'center',
   },
   centerText: {
-    color: 'white',
-  },
-  submitText: {
-    marginLeft: 25,
-    textDecorationLine: 'underline',
-    color: 'white',
+    color: '#fff',
+    textAlign: 'center',
+    fontSize: 15,
+    fontWeight: '500',
   },
   submitTextRed: {
-    marginLeft: 25,
+    color: '#ff4444',
     textDecorationLine: 'underline',
-    color: 'red',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  footerText: {
+    alignItems: 'center',
   },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: 'rgba(0,0,0,0.6)',
   },
   modalContent: {
     backgroundColor: '#fff',
     padding: 20,
-    borderRadius: 10,
-    width: 300,
+    borderRadius: 12,
+    width: '80%',
     alignItems: 'center',
+    elevation: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
   },
   modalText: {
     fontSize: 18,
-    marginBottom: 20,
+    fontWeight: '600',
+    marginBottom: 16,
+    color: '#333',
   },
   buttonContainer: {
     flexDirection: 'row',
+    gap: 100,
     width: '100%',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    paddingBottom:5
   },
   noButton: {
     backgroundColor: '#dc3545',
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
   yesButton: {
     backgroundColor: '#28a745',
-    padding: 10,
-    borderRadius: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
   },
-  modalResetContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: 'rgba(0,0,0,0.5)',
+  closeButton: {
+    position: 'absolute',
+    top: 10,
+    right: 10,
   },
-  modalResetContent: {
-    width: '80%',
-    padding: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    alignItems: 'center',
+  closeText: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+  },
+  uploadButton: {
+    backgroundColor: 'lightblue',
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginTop: 12,
+  },
+  uploadText: {
+    color: 'black',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  submitButton: {
+    backgroundColor: 'blue',
+    paddingVertical: 10,
+    paddingHorizontal: 29,
+    borderRadius: 25,
+    marginTop: 12,
   },
   inputModal: {
     width: '100%',
-    borderWidth: 1,
-    marginBottom: 10,
-    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 8,
+    padding: 12,
+    marginBottom: 12,
+    fontSize: 14,
+    color: '#333',
   },
-}); 
+});
 
 export default MatchCard;

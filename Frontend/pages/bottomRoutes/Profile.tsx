@@ -223,7 +223,7 @@ const isPubgChanged =
           style={styles.profileImageContainer}
           onPress={pickImage}>
           <Image
-            source={{uri:data?.image ||"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
+            source={{uri:data?.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
             style={styles.profileImage}
           />
           <Text style={styles.plusIcon}>+</Text>

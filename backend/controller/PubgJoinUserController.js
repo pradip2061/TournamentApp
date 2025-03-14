@@ -225,7 +225,7 @@ const joinuserPubgtdm = async (req, res) => {
   if (userinfo.balance >= match.entryFee) {
     userinfo.balance -= match.entryFee;
   userinfo.matchId.pubgTdmId.push(matchId)
-  match.userid.push(userid);
+  
   if(!userinfo.gameName[0].pubg){
     return res.status(400).json({
       message:'add pubgGameName in your profile'
