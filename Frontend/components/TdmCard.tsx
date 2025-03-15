@@ -102,8 +102,8 @@ const MatchCard = ({ matches }) => {
     checkpublish();
   }, [message, trigger]);
 
-  const copyToClipboardId = () => Clipboard.setString(matches.customId.toString());
-  const copyToClipboardPass = () => Clipboard.setString(matches.customPassword.toString());
+  const copyToClipboardId = () => Clipboard.setString(matches?.customId?.toString());
+  const copyToClipboardPass = () => Clipboard.setString(matches?.customPassword?.toString());
 
   const reset = async () => {
     try {
