@@ -16,11 +16,11 @@ const Withdraw = () => {
   const [selectedMethod, setSelectedMethod] = useState('eSewa');
   const [amount, setAmount] = useState('');
   const [number, setNumber] = useState('');
+  const [name, setName] = useState('');
 
   const handleWithdraw = async () => {
-    console.log('withDraw ----------------->>>>>> ');
     if (!amount || !number) {
-      Alert.alert('All fields are required ');
+      Alert.alert(`Enter your ${selectedMethod} Number and Amount`);
       return;
     }
 
@@ -42,14 +42,17 @@ const Withdraw = () => {
     }
 
     const data = {
-      method: selectedMethod,
+      selectedMethod: selectedMethod,
       amount: amount,
       number: number,
+      name: name,
     };
 
-    console.log(`${baseUrl}/khelmela/withdraw/${token}`);
+    console.log(`${baseUrl}/khelmela/withdraw`);
 
-    const res = await axios.post(`${baseUrl}/khelmela/withdraw/${token}`, data);
+    const res = await axios.post(`${baseUrl}/khelmela/withdraw`, data, {
+      headers: {Authorization: `${token}`},
+    });
 
     console.log(res.data);
     Alert.alert(res.data.message);
@@ -98,6 +101,19 @@ const Withdraw = () => {
         keyboardType="numeric"
         onChangeText={text => {
           setAmount(text);
+        }}
+      />
+      <View style={{flexDirection: 'row'}}>
+        <Text style={styles.text}> Account name in your</Text>
+        <Text style={styles.text_method}> {selectedMethod} </Text>
+      </View>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter your name"
+        placeholderTextColor="black" // Placeholder text set to black
+        keyboardType="numeric"
+        onChangeText={text => {
+          setName(text);
         }}
       />
 
@@ -158,6 +174,24 @@ const styles = StyleSheet.create({
     height: 50,
     width: 100,
   },
+  text: {
+    color: 'black',
+    textAlign: 'center',
+    marginTop: 20,
+    marginLeft: -80,
+    marginBottom: -30,
+    fontWeight: 'bold',
+  },
+  text_method: {
+    color: 'red',
+    textAlign: 'center',
+    marginTop: 20,
+    marginBottom: -30,
+    marginRight: 10,
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+
   saveButtonText: {
     color: '#fff',
     fontWeight: 'bold',

@@ -7,14 +7,39 @@ import {
   Modal,
   TouchableOpacity,
   Linking,
+  Image,
   Animated,
   Easing,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {baseUrl} from '../../env';
+import {BASE_URL} from '../../env';
 import axios from 'axios';
+import {launchImageLibrary} from 'react-native-image-picker';
 
-// Notification Modal Component
+// Confirmation popup component remains the same
+const ConfirmationPopup = ({visible, onConfirm, onCancel, message}) => (
+  <Modal
+    transparent
+    visible={visible}
+    animationType="slide"
+    onRequestClose={onCancel}>
+    <View style={styles.popupContainer}>
+      <View style={styles.popupContent}>
+        <Text style={styles.popupMessage}>{message}</Text>
+        <View style={styles.popupButtons}>
+          <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
+            <Text style={styles.buttonText}>Confirm</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
+            <Text style={styles.buttonText}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
+  </Modal>
+);
+
+// New animated notification modal component
 const NotificationModal = ({visible, onClose, message, type}) => {
   const slideAnim = useRef(new Animated.Value(-100)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
@@ -97,30 +122,7 @@ const NotificationModal = ({visible, onClose, message, type}) => {
   );
 };
 
-// Confirmation Popup Component
-const ConfirmationPopup = ({visible, onConfirm, onCancel, message}) => (
-  <Modal
-    transparent
-    visible={visible}
-    animationType="slide"
-    onRequestClose={onCancel}>
-    <View style={styles.popupContainer}>
-      <View style={styles.popupContent}>
-        <Text style={styles.popupMessage}>{message}</Text>
-        <View style={styles.popupButtons}>
-          <TouchableOpacity style={styles.confirmButton} onPress={onConfirm}>
-            <Text style={styles.buttonText}>Confirm</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={onCancel}>
-            <Text style={styles.buttonText}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    </View>
-  </Modal>
-);
-
-const MoneyRequestCard = ({
+const WithdrawRequestCard = ({
   id,
   amount,
   selectedMethod,
@@ -132,12 +134,13 @@ const MoneyRequestCard = ({
   senderId,
   statusmessage,
   handleRefresh,
-  onRequestUpdate,
 }) => {
   const [isDropPopupVisible, setDropPopupVisible] = useState(false);
   const [isReleasePopupVisible, setReleasePopupVisible] = useState(false);
-  const [message, setMessage] = useState('');
+  const [message, setMessage] = useState('Request Successful');
   const [authToken, setAuthToken] = useState('');
+  const [proofImage, setProofImage] = useState(null);
+  const [base64Image, setBase64Image] = useState('');
 
   // New state for notification modal
   const [notificationVisible, setNotificationVisible] = useState(false);
@@ -178,27 +181,53 @@ const MoneyRequestCard = ({
     return '';
   };
 
+  const handleSelectImage = () => {
+    const options = {
+      mediaType: 'photo',
+      includeBase64: true,
+      quality: 0.5,
+    };
+
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorCode) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+        showNotification(
+          'Error selecting image: ' + response.errorMessage,
+          'error',
+        );
+      } else {
+        const source = {uri: response.assets[0].uri};
+        setProofImage(source);
+        setBase64Image(response.assets[0].base64);
+        showNotification('Image successfully selected', 'success');
+      }
+    });
+  };
+
   const handleDropConfirm = async () => {
     setDropPopupVisible(false);
 
     try {
-      console.log(`${baseUrl}/khelmela/admin/money/drop/${authToken}`);
       const withdrawResponse = await axios.post(
-        `${baseUrl}/khelmela/admin/money/drop/${authToken}`,
+        `${BASE_URL}/khelmela/admin/money/withdraw/drop`,
         {
-          message: message || 'Request Dropped',
-          id: id,
-          senderId: senderId,
+          requestId: id,
+          message: message,
+        },
+        {
+          headers: {
+            Authorization: `${authToken}`,
+          },
         },
       );
 
+      console.log('Success', withdrawResponse.data.message);
       showNotification(withdrawResponse.data.message, 'success');
-
       setTimeout(() => {
-        onRequestUpdate();
-      }, 1900);
-
-      //
+        handleRefresh();
+      }, 2500);
     } catch (error) {
       console.error('Error dropping request:', error);
       showNotification(
@@ -211,26 +240,58 @@ const MoneyRequestCard = ({
   const handleReleaseConfirm = async () => {
     setReleasePopupVisible(false);
 
-    try {
-      console.log(`${baseUrl}/khelmela/admin/money/release/${authToken}`);
-      const withdrawResponse = await axios.post(
-        `${baseUrl}/khelmela/admin/money/release/${authToken}`,
-        {
-          message: message || 'Request Approved',
-          id: id,
-          senderId: senderId,
-        },
-      );
-      showNotification(withdrawResponse.data.message, 'success');
-      setTimeout(() => {
-        onRequestUpdate();
-      }, 1900);
-    } catch (error) {
-      console.error('Error releasing request:', error);
+    if (!base64Image && !isCompleted) {
       showNotification(
-        error.response?.data?.message || 'Failed to release request',
+        'Please upload a proof image before releasing the request',
         'error',
       );
+      return;
+    }
+
+    try {
+      const imageResponse = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: base64Image,
+          folderName: 'withdraw',
+          filename: `${username}_${Number}.jpg`,
+        },
+        {
+          headers: {
+            Authorization: `${authToken}`,
+          },
+        },
+      );
+
+      if (imageResponse.data.uri) {
+        showNotification('Upload Failed', 'error');
+        return;
+      }
+
+      const withdrawResponse = await axios.post(
+        `${BASE_URL}/khelmela/admin/money/withdraw/release`,
+        {
+          requestId: id,
+          image: imageResponse.data.uri,
+          message: message,
+        },
+        {
+          headers: {
+            Authorization: `${authToken}`,
+          },
+        },
+      );
+
+      console.log('Success', withdrawResponse.data);
+
+      showNotification(withdrawResponse.data.message, 'success');
+      setTimeout(() => {
+        handleRefresh();
+      }, 2100);
+    } catch (error) {
+      console.error('Error releasing request:', error);
+      showNotification('Error releasing request', 'error');
+      console.log(error);
     }
   };
 
@@ -260,16 +321,16 @@ const MoneyRequestCard = ({
       {Number && <Text style={styles.detailText}>Esewa Number: {Number}</Text>}
       <Text style={styles.detailText}>Date: {date}</Text>
       <View style={styles.photoLinkContainer}>
-        <Text style={styles.detailText}>Image: </Text>
+        <Text style={styles.detailText}>Withdrawal Request Image: </Text>
         <TouchableOpacity onPress={handleOpenImage}>
           <Text style={styles.photoLink}>Photo URL</Text>
         </TouchableOpacity>
       </View>
       <Text style={styles.detailText}>Sender ID: {senderId}</Text>
-      <Text style={styles.detailText}>Username : {username}</Text>
+      <Text style={styles.detailText}>Username: {username}</Text>
 
       {!isCompleted ? (
-        // Show input and buttons only for pending requests
+        // Show input, image upload and buttons only for pending requests
         <>
           <TextInput
             style={styles.messageInput}
@@ -277,6 +338,23 @@ const MoneyRequestCard = ({
             value={message}
             onChangeText={setMessage}
           />
+
+          <Text style={styles.uploadText}>Upload Proof of Payment:</Text>
+
+          <TouchableOpacity
+            style={styles.uploadButton}
+            onPress={handleSelectImage}>
+            <Text style={styles.buttonText}>
+              {proofImage ? 'Change Image' : 'Select Image'}
+            </Text>
+          </TouchableOpacity>
+
+          {proofImage && (
+            <View style={styles.imagePreviewContainer}>
+              <Image source={proofImage} style={styles.imagePreview} />
+              <Text style={styles.imageConfirmText}>✓ Image Selected</Text>
+            </View>
+          )}
 
           <View style={styles.buttonContainer}>
             <TouchableOpacity
@@ -305,14 +383,18 @@ const MoneyRequestCard = ({
         visible={isDropPopupVisible}
         onConfirm={handleDropConfirm}
         onCancel={() => setDropPopupVisible(false)}
-        message="Are you sure you want to Drop this request?"
+        message="Are you sure you want to Drop this withdrawal request?"
       />
 
       <ConfirmationPopup
         visible={isReleasePopupVisible}
         onConfirm={handleReleaseConfirm}
         onCancel={() => setReleasePopupVisible(false)}
-        message="Are you sure you want to Release this request?"
+        message={
+          base64Image || isCompleted
+            ? 'Are you sure you want to Release this withdrawal request?'
+            : 'Please upload a proof image before releasing the request'
+        }
       />
 
       {/* Notification Modal */}
@@ -369,7 +451,35 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
-    marginBottom: 20,
+    marginBottom: 15,
+  },
+  uploadText: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  uploadButton: {
+    backgroundColor: '#0066CC',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 5,
+    alignSelf: 'flex-start',
+    marginBottom: 10,
+  },
+  imagePreviewContainer: {
+    marginBottom: 15,
+    alignItems: 'center',
+  },
+  imagePreview: {
+    width: 200,
+    height: 120,
+    resizeMode: 'cover',
+    borderRadius: 5,
+    marginBottom: 5,
+  },
+  imageConfirmText: {
+    color: 'green',
+    fontWeight: 'bold',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -488,4 +598,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MoneyRequestCard;
+export default WithdrawRequestCard;

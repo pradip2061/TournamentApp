@@ -1,65 +1,300 @@
-import React, {useEffect, useState} from 'react';
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useReducer,
+  useMemo,
+} from 'react';
 import {
   View,
   Text,
   TextInput,
   TouchableOpacity,
   FlatList,
-  StyleSheet,
   Image,
+  ActivityIndicator,
+  Alert,
+  StyleSheet,
+  Modal,
+  Dimensions,
+  SafeAreaView,
 } from 'react-native';
 import io from 'socket.io-client';
 import axios from 'axios';
 import {BASE_URL} from '../../env';
+import {launchImageLibrary} from 'react-native-image-picker';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {BaseRouter} from '@react-navigation/native';
+import InputBar from '../../components/PrivateChatComponent/InputBar';
+import {
+  formatDateSeparator,
+  formatTimestamp,
+  isImageMessage,
+} from '../../components/PrivateChatComponent/Dateformat';
 
-const socket = io(process.env.baseUrl);
+// Message item component
+const MessageItem = ({
+  item,
+  index,
+  messages,
+  userId,
+  name,
+  photoUrl,
+  onImagePress,
+}) => {
+  const isSent = item.senderID === userId;
+  const currentDate = new Date(item.time);
+  const previousMessage = index > 0 ? messages[index - 1] : null;
+  const showDateSeparator =
+    !previousMessage ||
+    new Date(previousMessage.time).toDateString() !==
+      currentDate.toDateString();
+  const showName =
+    !isSent && (!previousMessage || previousMessage.senderID !== item.senderID);
+  const isImage = isImageMessage(item);
+
+  return (
+    <>
+      {showDateSeparator && (
+        <View style={styles.dateSeparator}>
+          <Text style={styles.dateText}>{formatDateSeparator(item.time)}</Text>
+        </View>
+      )}
+      <View
+        style={[
+          styles.messageContainer,
+          isSent ? styles.sentContainer : styles.receivedContainer,
+        ]}>
+        {!isSent && <Image source={{uri: photoUrl}} style={styles.avatar} />}
+        <View style={styles.messageContent}>
+          {!isSent && showName && <Text style={styles.senderName}>{name}</Text>}
+          <View
+            style={[
+              styles.messageBubble,
+              isSent ? styles.sentBubble : styles.receivedBubble,
+              isImage && styles.photoBubble,
+            ]}>
+            {isImage ? (
+              <TouchableOpacity
+                style={styles.imageContainer}
+                onPress={() => onImagePress(getImageSource(item.message))}>
+                <Image
+                  source={{uri: getImageSource(item.message)}}
+                  style={styles.photo}
+                  resizeMode="contain"
+                  onError={e => {
+                    console.log('Error loading image:', e.nativeEvent.error);
+                    console.log('Failed URL:', getImageSource(item.message));
+                  }}
+                />
+              </TouchableOpacity>
+            ) : (
+              <Text style={styles.messageText}>{item.message}</Text>
+            )}
+            <Text
+              style={[
+                styles.timestamp,
+                isSent ? styles.sentTimestamp : styles.receivedTimestamp,
+              ]}>
+              {item.time ? formatTimestamp(item.time) : ''}
+            </Text>
+          </View>
+        </View>
+      </View>
+    </>
+  );
+};
+
+const ImageViewerModal = ({visible, imageUri, onClose}) => {
+  const screenWidth = Dimensions.get('window').width;
+  const screenHeight = Dimensions.get('window').height;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent={true}
+      animationType="fade"
+      onRequestClose={onClose}>
+      <SafeAreaView style={styles.modalContainer}>
+        <TouchableOpacity style={styles.closeButton} onPress={onClose}>
+          <Text style={styles.closeButtonText}>×</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.modalImageContainer}
+          activeOpacity={1}
+          onPress={onClose}>
+          <Image
+            source={{uri: imageUri}}
+            style={styles.modalImage}
+            resizeMode="contain"
+          />
+        </TouchableOpacity>
+      </SafeAreaView>
+    </Modal>
+  );
+};
+
+<InputBar />;
+
+const getImageSource = url => {
+  if (!url) return '';
+  if (!url.startsWith('http://') && !url.startsWith('https://')) {
+    return `${BASE_URL}${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+  return url;
+};
+
+// Message reducer for better state management
+const messagesReducer = (state, action) => {
+  switch (action.type) {
+    case 'ADD_MESSAGE':
+      return [...state, action.payload];
+    case 'ADD_MESSAGES':
+      const existingIds = new Set(state.map(msg => msg.time));
+      const newMessages = action.payload.filter(
+        msg => !existingIds.has(msg.time),
+      );
+      return [...state, ...newMessages];
+    case 'RESET':
+      return [];
+    default:
+      return state;
+  }
+};
 
 const PrivateChat = ({route, navigation}) => {
-  const {userId, FriendId, name, friendPhoto} = route.params || {
+  const {userId, FriendId, name, photoUrl} = route.params || {
     name: 'Unknown',
-    friendPhoto: 'https://via.placeholder.com/40',
+    photoUrl: 'https://via.placeholder.com/40',
   };
-  const [messages, setMessages] = useState([]);
+
+  // Use reducer for messages instead of simple state
+  const [messages, dispatchMessages] = useReducer(messagesReducer, []);
   const [newMessage, setNewMessage] = useState('');
   const [inputHeight, setInputHeight] = useState(40);
-  const roomId = [userId, FriendId].sort().join('<->');
+  const [selectedPhoto, setSelectedPhoto] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [socket, setSocket] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
 
+  // New state for image modal
+  const [imageModalVisible, setImageModalVisible] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState('');
+
+  const roomId = useMemo(
+    () => [userId, FriendId].sort().join('<->'),
+    [userId, FriendId],
+  );
+
+  // Handle image press to show modal
+  const handleImagePress = useCallback(imageUri => {
+    setSelectedImageUri(imageUri);
+    setImageModalVisible(true);
+  }, []);
+
+  // Close image modal
+  const closeImageModal = useCallback(() => {
+    setImageModalVisible(false);
+  }, []);
+
+  // Setup socket connection
   useEffect(() => {
-    // Join the room
-    socket.emit('joinRoom', roomId);
+    console.log('BASE_URL', BASE_URL);
+    const newSocket = io(BASE_URL);
+    setSocket(newSocket);
 
-    // Listen for new messages
-    socket.on('message', message => {
-      setMessages(prev => [...prev, message]);
-    });
-
-    // Fetch existing messages when the component mounts
-    const fetchMessages = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/khelmela/chat/${roomId}`);
-        setMessages(prev => {
-          // Merge fetched messages with existing state to avoid overwriting
-          const existingIds = new Set(prev.map(msg => msg.time));
-          const newMessages = response.data.filter(
-            msg => !existingIds.has(msg.time),
-          );
-          return [...prev, ...newMessages];
-        });
-      } catch (error) {
-        console.error('Error fetching messages:', error);
+    // Cleanup on unmount
+    return () => {
+      if (newSocket) {
+        newSocket.disconnect();
       }
     };
-    fetchMessages();
+  }, []);
 
-    // Cleanup socket listener on unmount, but do not clear messages
+  useEffect(() => {
+    if (!socket) return;
+    socket.emit('joinRoom', roomId);
+    socket.on('message', message => {
+      dispatchMessages({type: 'ADD_MESSAGE', payload: message});
+    });
+
+    socket.on('connect_error', error => {
+      console.error('Socket connection error:', error);
+      Alert.alert(
+        'Connection Error',
+        'Unable to connect to chat server. Please try again later.',
+      );
+    });
+
+    // Cleanup listeners
     return () => {
       socket.off('message');
-      // No setMessages([]) or deletion here to ensure persistence
+      socket.off('connect_error');
     };
-  }, [roomId, navigation]);
+  }, [socket, roomId]);
 
-  const sendTextMessage = async () => {
-    if (!newMessage.trim()) return;
+  // Fetch messages with pagination
+  const fetchMessages = useCallback(
+    async (pageNumber = 1, pageSize = 30) => {
+      if (!hasMoreMessages && pageNumber > 1) return;
+
+      setIsLoading(true);
+      try {
+        const response = await axios.get(
+          `${BASE_URL}/khelmela/chat/${roomId}?page=${pageNumber}&limit=${pageSize}`,
+        );
+
+        // Process messages to ensure correct type properties
+        const processedMessages = response.data.map(msg => {
+          const processed = {...msg};
+
+          if (
+            typeof processed.message === 'string' &&
+            (processed.message.match(/\.(jpeg|jpg|gif|png)$/) !== null ||
+              processed.message.includes('/fileShare/'))
+          ) {
+            processed.type = 'file';
+          }
+
+          return processed;
+        });
+
+        dispatchMessages({
+          type: 'ADD_MESSAGES',
+          payload: processedMessages,
+        });
+
+        // Update pagination state
+        setHasMoreMessages(processedMessages.length === pageSize);
+        setPage(pageNumber);
+      } catch (error) {
+        console.error('Error fetching messages:', error);
+        Alert.alert('Error', 'Failed to load messages. Please try again.');
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [roomId, hasMoreMessages],
+  );
+
+  // Initial load
+  useEffect(() => {
+    fetchMessages(1);
+  }, [fetchMessages]);
+
+  // Load more messages when reaching top of list
+  const handleLoadMore = () => {
+    if (!isLoading && hasMoreMessages) {
+      fetchMessages(page + 1);
+    }
+  };
+
+  // Send text message
+  const sendTextMessage = useCallback(() => {
+    if (!newMessage.trim() || !socket) return;
 
     const messageData = {
       roomId,
@@ -73,141 +308,113 @@ const PrivateChat = ({route, navigation}) => {
     socket.emit('message', {room: roomId, message: messageData});
 
     // Update local state immediately
-    setMessages(prev => [...prev, messageData]);
+    dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
     setNewMessage('');
     setInputHeight(40);
-  };
+  }, [newMessage, roomId, socket, userId]);
 
-  const sendPhotoMessage = async () => {
-    const permissionResult =
-      await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permissionResult.granted) {
-      alert('Permission to access camera roll is required!');
-      return;
+  // Select photo from library
+  const selectPhoto = useCallback(async () => {
+    const options = {
+      mediaType: 'photo',
+      includeBase64: true,
+      quality: 0.6,
+    };
+
+    try {
+      const result = await launchImageLibrary(options);
+
+      if (!result.didCancel && result.assets && result.assets.length > 0) {
+        setSelectedPhoto(result.assets[0]);
+      }
+    } catch (error) {
+      console.error('Error selecting image:', error);
+      Alert.alert('Error', 'Failed to open image picker. Please try again.');
     }
+  }, []);
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 0.5,
-    });
+  // Upload and send photo
+  const uploadAndSendPhoto = useCallback(async () => {
+    if (!selectedPhoto || !socket) return;
 
-    if (!result.canceled) {
-      const photoUri = result.assets[0].uri;
+    setIsUploading(true);
+
+    try {
+      const base64Image = selectedPhoto.base64;
+
+      const token = await AsyncStorage.getItem('token');
+
+      console.log(token);
+
+      if (!token) {
+        Alert.alert('Error', 'Token not Found ');
+        return;
+      }
+      if (!base64Image) {
+        throw new Error('No base64 data available for the selected image');
+      }
+
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: base64Image,
+          folderName: 'fileShare',
+          filename: `${roomId}.jpg`,
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
+      );
+
+      const imageUrl = response.data.url;
+
+      if (!imageUrl) {
+        throw new Error('No image URL received from server');
+      }
+      console.log(imageUrl);
+
       const messageData = {
         roomId,
         senderID: userId,
-        message: photoUri,
-        type: 'photo',
+        message: imageUrl,
+        type: 'file',
         time: new Date().toISOString(),
       };
 
-      // Emit message to server
       socket.emit('message', {room: roomId, message: messageData});
-
-      // Update local state immediately
-      setMessages(prev => [...prev, messageData]);
+      dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
+      setSelectedPhoto(null);
+    } catch (error) {
+      console.error('Error uploading photo:', error);
+      Alert.alert('Upload Failed', error);
+    } finally {
+      setIsUploading(false);
     }
-  };
+  }, [selectedPhoto, socket, roomId, userId]);
 
-  const formatTimestamp = isoString => {
-    const date = new Date(isoString);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
+  // Memoize renderItem for FlatList performance
+  const renderItem = useCallback(
+    ({item, index}) => (
+      <MessageItem
+        item={item}
+        index={index}
+        messages={messages}
+        userId={userId}
+        name={name}
+        photoUrl={photoUrl}
+        onImagePress={handleImagePress}
+      />
+    ),
+    [messages, userId, name, photoUrl, handleImagePress],
+  );
 
-    if (isToday) {
-      return date.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
-    } else {
-      return date
-        .toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true,
-        })
-        .toUpperCase();
-    }
-  };
-
-  const formatDateSeparator = isoString => {
-    const date = new Date(isoString);
-    const now = new Date();
-    const isToday = date.toDateString() === now.toDateString();
-
-    if (isToday) {
-      return 'TODAY';
-    } else {
-      return date
-        .toLocaleString('en-US', {
-          month: 'short',
-          day: 'numeric',
-        })
-        .toUpperCase();
-    }
-  };
-
-  const renderItem = ({item, index}) => {
-    const isSent = item.senderID === userId;
-    const currentDate = new Date(item.time);
-    const previousMessage = index > 0 ? messages[index - 1] : null;
-    const showDateSeparator =
-      !previousMessage ||
-      new Date(previousMessage.time).toDateString() !==
-        currentDate.toDateString();
-    const showName =
-      !isSent &&
-      (!previousMessage || previousMessage.senderID !== item.senderID);
-
-    return (
-      <>
-        {showDateSeparator && (
-          <View style={styles.dateSeparator}>
-            <Text style={styles.dateText}>
-              {formatDateSeparator(item.time)}
-            </Text>
-          </View>
-        )}
-        <View
-          style={[
-            styles.messageContainer,
-            isSent ? styles.sentContainer : styles.receivedContainer,
-          ]}>
-          {!isSent && (
-            <Image source={{uri: friendPhoto}} style={styles.avatar} />
-          )}
-          <View style={styles.messageContent}>
-            {!isSent && showName && (
-              <Text style={styles.senderName}>{name}</Text>
-            )}
-            <View
-              style={[
-                styles.messageBubble,
-                isSent ? styles.sentBubble : styles.receivedBubble,
-                item.type === 'photo' && styles.photoBubble,
-              ]}>
-              {item.type === 'photo' ? (
-                <Image
-                  source={{uri: item.message}}
-                  style={styles.photo}
-                  resizeMode="contain"
-                />
-              ) : (
-                <Text style={styles.messageText}>{item.message}</Text>
-              )}
-              <Text
-                style={[
-                  styles.timestamp,
-                  isSent ? styles.sentTimestamp : styles.receivedTimestamp,
-                ]}>
-                {formatTimestamp(item.time)}
-              </Text>
-            </View>
-          </View>
-        </View>
-      </>
-    );
-  };
+  // Memoize keyExtractor
+  const keyExtractor = useCallback((item, index) => {
+    // Use a combination of time and index to ensure uniqueness
+    return `${item.time || 'undefined'}-${index}`;
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -215,7 +422,7 @@ const PrivateChat = ({route, navigation}) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
-        <Image source={{uri: friendPhoto}} style={styles.headerAvatar} />
+        <Image source={{uri: photoUrl}} style={styles.headerAvatar} />
         <View>
           <Text style={styles.headerName}>{name}</Text>
         </View>
@@ -224,32 +431,47 @@ const PrivateChat = ({route, navigation}) => {
       <FlatList
         data={messages}
         renderItem={renderItem}
-        keyExtractor={(item, index) => index.toString()}
+        keyExtractor={keyExtractor}
         contentContainerStyle={styles.messageList}
+        onEndReached={handleLoadMore}
+        onEndReachedThreshold={0.3}
+        inverted={false}
+        // Performance optimizations
+        windowSize={10}
+        maxToRenderPerBatch={10}
+        updateCellsBatchingPeriod={50}
+        removeClippedSubviews={true}
+        initialNumToRender={15}
+        ListFooterComponent={
+          isLoading && hasMoreMessages ? (
+            <ActivityIndicator
+              size="small"
+              color="#075e54"
+              style={{marginVertical: 20}}
+            />
+          ) : null
+        }
       />
 
-      <View style={styles.inputContainer}>
-        <TouchableOpacity style={styles.photoButton} onPress={sendPhotoMessage}>
-          <Text style={styles.photoButtonText}>📷</Text>
-        </TouchableOpacity>
-        <TextInput
-          style={[styles.input, {height: Math.min(inputHeight, 100)}]}
-          placeholder="Type a message..."
-          value={newMessage}
-          placeholderTextColor={'#8E8E92'}
-          onChangeText={setNewMessage}
-          multiline
-          onContentSizeChange={e =>
-            setInputHeight(e.nativeEvent.contentSize.height)
-          }
-        />
-        <TouchableOpacity
-          style={styles.sendButton}
-          onPress={sendTextMessage}
-          disabled={!newMessage.trim()}>
-          <Text style={styles.sendButtonText}>Send</Text>
-        </TouchableOpacity>
-      </View>
+      <InputBar
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        inputHeight={inputHeight}
+        setInputHeight={setInputHeight}
+        selectedPhoto={selectedPhoto}
+        setSelectedPhoto={setSelectedPhoto}
+        isUploading={isUploading}
+        selectPhoto={selectPhoto}
+        uploadAndSendPhoto={uploadAndSendPhoto}
+        sendTextMessage={sendTextMessage}
+      />
+
+      {/* Image Modal Component */}
+      <ImageViewerModal
+        visible={imageModalVisible}
+        imageUri={selectedImageUri}
+        onClose={closeImageModal}
+      />
     </View>
   );
 };
@@ -263,7 +485,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     padding: 10,
-    backgroundColor: '#F4F4F5',
+    backgroundColor: 'white',
     borderBottomWidth: 1,
     borderBottomColor: '#333',
     borderColor: 'grey',
@@ -283,11 +505,22 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   headerName: {
-    color: '#fff',
+    color: 'black',
     fontSize: 18,
     fontWeight: 'bold',
   },
-
+  imageContainer: {
+    width: 200,
+    height: 200,
+    borderRadius: 10,
+    overflow: 'hidden',
+    backgroundColor: '#eee',
+  },
+  image: {
+    height: 100,
+    width: 100,
+    borderRadius: 30,
+  },
   headerIcons: {
     flexDirection: 'row',
     marginLeft: 'auto',
@@ -338,7 +571,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   senderName: {
-    fontSize: 1,
+    fontSize: 12,
     color: '#aaa',
     marginBottom: 2,
   },
@@ -378,40 +611,38 @@ const styles = StyleSheet.create({
   receivedTimestamp: {
     color: 'white',
   },
-  inputContainer: {
-    flexDirection: 'row',
-    padding: 10,
-    backgroundColor: '#F4F4F5',
-    elevation: 5,
-    borderBottomColor: '#333',
-    borderColor: 'grey',
-
+  // Image modal styles
+  modalContainer: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.9)',
+    justifyContent: 'center',
     alignItems: 'center',
   },
-  photoButton: {
-    padding: 10,
+  modalImageContainer: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  photoButtonText: {
-    fontSize: 20,
-    color: '#fff',
+  modalImage: {
+    width: '100%',
+    height: '80%',
   },
-  input: {
-    flex: 1,
-    backgroundColor: 'white',
+  closeButton: {
+    position: 'absolute',
+    top: 30,
+    right: 20,
+    zIndex: 10,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    width: 40,
+    height: 40,
     borderRadius: 20,
-    padding: 10,
-    marginRight: 10,
-    color: 'black',
-    minHeight: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  sendButton: {
-    backgroundColor: '#075e54',
-    borderRadius: 20,
-    paddingVertical: 8,
-    paddingHorizontal: 15,
-  },
-  sendButtonText: {
-    color: '#fff',
+  closeButtonText: {
+    color: 'white',
+    fontSize: 30,
     fontWeight: 'bold',
   },
 });

@@ -23,12 +23,18 @@ dotenv.config();
 const app = express();
 const server = require("http").createServer(app);
 const { Server } = require("socket.io");
-const Authverify = require("./middleware/AuthVerify");
 
 connectToDatabase();
 
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ limit: "10mb", extended: true }));
+
 app.use(express.json());
 app.use(cors());
+
+app.get("/khelmela/", (req, res) => {
+  res.send("Welcome to khelmela");
+});
 
 app.use(
   "/khelmela",

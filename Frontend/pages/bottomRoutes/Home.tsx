@@ -1,12 +1,27 @@
-import { View, Text, StyleSheet, Image, TouchableOpacity, Modal, BackHandler, Alert } from 'react-native';
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+  BackHandler,
+  Alert,
+} from 'react-native';
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import Doller from 'react-native-vector-icons/FontAwesome6';
 import Gamepad from 'react-native-vector-icons/Entypo';
 import TabButton from '../../components/TabButton';
 import Card from '../../components/Card';
 import LinearGradient from 'react-native-linear-gradient';
-import { useFocusEffect } from '@react-navigation/native';
-import { CheckAdminContext } from '../ContextApi/ContextApi';
+import {useFocusEffect} from '@react-navigation/native';
+import {CheckAdminContext} from '../ContextApi/ContextApi';
 
 const freefire = require('../../assets/freefire.jpeg');
 const img1 = require('../../assets/ffmap.jpg');
@@ -16,48 +31,57 @@ const img4 = require('../../assets/clashsquad.webp');
 const pubgfull = require('../../assets/pubgfull.jpg');
 const tdm = require('../../assets/tdm.jpg');
 
-
-const Home = ({ navigation }) => {
+const Home = ({navigation}) => {
   const [toggle, setToggle] = useState('freefire');
-  const {checkadmin, data,getProfile} = useContext(CheckAdminContext)
+  const {checkadmin, data, getProfile} = useContext(CheckAdminContext);
 
-  useEffect(()=>{
-getProfile()
-  },[])
+  useEffect(() => {
+    getProfile();
+  }, []);
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {
-        Alert.alert("Hold on!", "Are you sure you want to exit?", [
-          { text: "Cancel", onPress: () => null, style: "cancel" },
-          { text: "YES", onPress: () => BackHandler.exitApp() },
+        Alert.alert('Hold on!', 'Are you sure you want to exit?', [
+          {text: 'Cancel', onPress: () => null, style: 'cancel'},
+          {text: 'YES', onPress: () => BackHandler.exitApp()},
         ]);
         return true;
       };
 
-      const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
       return () => backHandler.remove();
-    }, [])
+    }, []),
   );
 
   return (
     <LinearGradient
       colors={['#1e1e2f', '#3b3b5b', '#6b5b95']}
-      start={{ x: 0, y: 0 }}
-      end={{ x: 1, y: 1 }}
-      style={styles.container}
-    >
+      start={{x: 0, y: 0}}
+      end={{x: 1, y: 1}}
+      style={styles.container}>
       <View style={styles.container}>
         <View style={styles.header}>
-          <TouchableOpacity style={{flexDirection:'row',gap:10,alignItems:'center'}} onPress={() => navigation.navigate('Transcation')} >
+          <TouchableOpacity
+            style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
+            onPress={() => navigation.navigate('Transcation')}>
             <Doller name="circle-dollar-to-slot" size={32} color="#fff" />
-            <Text style={{color:'gold'}}>{data?.balance}</Text>
-         </TouchableOpacity>
+            <Text style={{color: 'gold'}}>{data?.balance}</Text>
+          </TouchableOpacity>
           <View style={styles.headerIcons}>
-            <TouchableOpacity onPress={() => navigation.navigate('EnrollMatch')}>
+            <TouchableOpacity
+              onPress={() => navigation.navigate('EnrollMatch')}>
               <Gamepad name="game-controller" size={32} color="#fff" />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Gamepad name="menu" size={32} color="#fff" onPress={() => navigation.navigate('Setting')} />
+              <Gamepad
+                name="menu"
+                size={32}
+                color="#fff"
+                onPress={() => navigation.navigate('Setting')}
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -65,22 +89,27 @@ getProfile()
         <Text style={styles.topGamesText}>TOP GAMES</Text>
         <View style={styles.box}>
           <View style={styles.tabContainer}>
-            <TouchableOpacity 
-              onPress={() => setToggle('freefire')} 
-              style={toggle === 'freefire' ? styles.tabButtonActive : styles.tabButton}
-            >
+            <TouchableOpacity
+              onPress={() => setToggle('freefire')}
+              style={
+                toggle === 'freefire'
+                  ? styles.tabButtonActive
+                  : styles.tabButton
+              }>
               <TabButton images={freefire} toggleset={toggle} />
             </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => setToggle('pubg')} 
-              style={toggle === 'pubg' ? styles.tabButtonActive : styles.tabButton}
-            >
+            <TouchableOpacity
+              onPress={() => setToggle('pubg')}
+              style={
+                toggle === 'pubg' ? styles.tabButtonActive : styles.tabButton
+              }>
               <TabButton images={img2} toggleset={toggle} />
             </TouchableOpacity>
-            <TouchableOpacity 
-              onPress={() => setToggle('cod')} 
-              style={toggle === 'cod' ? styles.tabButtonActive : styles.tabButton}
-            >
+            <TouchableOpacity
+              onPress={() => setToggle('cod')}
+              style={
+                toggle === 'cod' ? styles.tabButtonActive : styles.tabButton
+              }>
               <TabButton images={img3} toggleset={toggle} />
             </TouchableOpacity>
           </View>
@@ -88,10 +117,12 @@ getProfile()
           <View style={styles.cardContainer}>
             {toggle === 'freefire' && (
               <View>
-                <TouchableOpacity onPress={() => navigation.navigate('FreeFire')}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('FreeFire')}>
                   <Card image={img1} name="Full Map Matches" />
                 </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('ClashSquad')}>
+                <TouchableOpacity
+                  onPress={() => navigation.navigate('ClashSquad')}>
                   <Card image={img4} name="Clash Squad" />
                 </TouchableOpacity>
               </View>
@@ -106,7 +137,9 @@ getProfile()
                 </TouchableOpacity>
               </View>
             )}
-            {toggle === 'cod' && <Text style={styles.comingSoonText}>Coming Soon...</Text>}
+            {toggle === 'cod' && (
+              <Text style={styles.comingSoonText}>Coming Soon...</Text>
+            )}
           </View>
         </View>
       </View>
@@ -125,12 +158,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 15,
-    gap:160
+    gap: 160,
   },
   headerIcons: {
     flexDirection: 'row',
     gap: 40,
-    
   },
   topGamesText: {
     width: 180,
@@ -149,7 +181,7 @@ const styles = StyleSheet.create({
     width: 320,
     backgroundColor: '#f5f5f5',
     height: '70%',
-   borderRadius:55,
+    borderRadius: 55,
     paddingTop: 20,
   },
   tabContainer: {
@@ -192,10 +224,8 @@ const styles = StyleSheet.create({
   },
   cardContainer: {
     paddingHorizontal: 30,
-    marginTop:-10,
-    marginLeft:-2,
-  
-    
+    marginTop: -10,
+    marginLeft: -2,
   },
   comingSoonText: {
     fontSize: 18,
@@ -206,4 +236,3 @@ const styles = StyleSheet.create({
 });
 
 export default Home;
-

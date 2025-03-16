@@ -37,10 +37,10 @@ router.get("/", (req, res) => {
   console.log("Upload Route Active >>>>>>>>>>>>>>>>>>>>>>>");
   res.send("Hello World!");
 });
-router.post("/upload",Authverify,async (req, res) => {
+router.post("/upload", Authverify, async (req, res) => {
   console.log("upload route ----------------->......");
   try {
-const user_id = req.user
+    const user_id = req.user;
     if (!user_id) {
       return res.status(401).send({ message: "Invalid Token" });
     }

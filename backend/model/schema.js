@@ -1,12 +1,13 @@
 const express = require("express");
 const mongoose = require("mongoose");
+const { getFormattedDate } = require("../utility/dateformat");
 
 const Userschema = new mongoose.Schema(
   {
     username: {
       type: String,
       required: true,
-      unique:true
+      unique: true,
     },
     email: {
       type: String,
@@ -81,8 +82,8 @@ const Userschema = new mongoose.Schema(
       default: "user",
     },
     friends: [],
-    accountHistory:[{}],
-    notification:[],
+    accountHistory: [{}],
+    notification: [],
   },
   { timestamps: true }
 );
@@ -118,32 +119,30 @@ const money_requestSchema = new mongoose.Schema({
   image: { type: String },
   selectedMethod: { type: String, required: true },
   Number: { type: String },
-  date: { type: Date, default: Date.now },
+  date: { type: String, default: getFormattedDate() },
   status: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
+  statusmessage: { type: String },
 });
 
 const withdraw_schema = new mongoose.Schema({
-  senderId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
+  senderId: { type: String, required: true },
   username: { type: String, required: true },
   amount: { type: Number, required: true },
   image: { type: String },
   selectedMethod: { type: String, required: true },
   Number: { type: String },
-  date: { type: Date, default: Date.now },
+  date: { type: String, default: getFormattedDate() },
   message: { type: String },
   status: {
     type: String,
     enum: ["pending", "approved", "rejected"],
     default: "pending",
   },
+  statusmessage: { type: String },
 });
 
 const moneyRequest = mongoose.model("money_request", money_requestSchema);

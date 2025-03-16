@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import {
   View,
   Text,
@@ -7,44 +7,41 @@ import {
   ScrollView,
 } from 'react-native';
 
-import {baseUrl, IP, SERVER_PORT} from '../env';
+import {baseUrl} from '../env';
 import axios from 'axios';
 import MoneyRequestCard from './components/MoneyRequestCard';
-
-const Withdraw = () => {
-  return (
-    <>
-      <Text> Withdraw Requests </Text>
-    </>
-  );
-};
+import Withdraw from './components/Withdraw';
 
 const AdminHome = () => {
   const [toggle, setToggle] = useState('moneyRequest');
-  const [item, setItem] = useState([
-    {gameName: 'raiden', amount: 100, remark: 'test'},
-  ]);
+  const [item, setItem] = useState([]);
   const [statusFilter, setStatusFilter] = useState('pending'); // Default filter is 'pending'
+  const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
   const admin = 'Arjun';
 
-  useEffect(() => {
-    console.log(`${baseUrl}khelmela/admin/money/getMoneyRequest`);
+  // Convert to useCallback to prevent unnecessary recreations
+  const fetchMoneyRequests = useCallback(async () => {
+    try {
+      const response = await axios.get(
+        `${baseUrl}/khelmela/admin/money/getMoneyRequest`,
+      );
+      setItem(response.data);
+    } catch (error) {
+      console.log('Error fetching money requests:', error);
+    }
+  }, []);
 
-    const getData = async () => {
-      try {
-        const response = await axios.get(
-          `${baseUrl}/khelmela/admin/money/getMoneyRequest`,
-        );
-        setItem(response.data);
-        console.log(response.data);
-      } catch (error) {
-        console.log('Error fetching data:', error);
-      } finally {
-        console.log('finally');
-      }
-    };
-    getData();
-  }, [toggle]);
+  // Fetch data when toggle changes or when refreshKey changes
+  useEffect(() => {
+    if (toggle === 'moneyRequest') {
+      fetchMoneyRequests();
+    }
+  }, [toggle, refreshKey, fetchMoneyRequests]);
+
+  // Function to trigger re-render from child components
+  const handleRequestUpdate = () => {
+    setRefreshKey(prevKey => prevKey + 1);
+  };
 
   // Function to filter items based on status
   const getFilteredItems = () => {
@@ -64,7 +61,6 @@ const AdminHome = () => {
 
   // Function to handle rendering components
   const handleRender = () => {
-    const handleDropRelease = id => {};
     if (toggle === 'moneyRequest') {
       const filteredItems = getFilteredItems();
 
@@ -141,10 +137,17 @@ const AdminHome = () => {
             </TouchableOpacity>
           </View>
 
+          {/* Refresh Button */}
+          <TouchableOpacity
+            style={styles.refreshButton}
+            onPress={fetchMoneyRequests}>
+            <Text style={styles.refreshText}>↻ Refresh</Text>
+          </TouchableOpacity>
+
           {/* Filter Summary */}
           <Text style={styles.filterSummary}>
             Showing {filteredItems.length}{' '}
-            {statusFilter !== 'all' ? statusFilter : ''} requests
+            {statusFilter !== 'all' ? statusFilter : ''} deposit requests
           </Text>
 
           <ScrollView>
@@ -163,13 +166,14 @@ const AdminHome = () => {
                   esewaNumber={request.esewaNumber}
                   senderId={request.senderId}
                   statusmessage={request.message}
-                  onPress={() => handleDropRelease(request)}
+                  onRequestUpdate={handleRequestUpdate} // Pass down callback for re-rendering
+                  handleRefresh={fetchMoneyRequests}
                 />
               ))
             ) : (
               <View style={styles.noRequestsContainer}>
                 <Text style={styles.noRequestsText}>
-                  No {statusFilter} requests found
+                  No {statusFilter} deposit requests found
                 </Text>
               </View>
             )}
@@ -177,15 +181,15 @@ const AdminHome = () => {
         </>
       );
     } else if (toggle === 'withDraw') {
-      return <Withdraw />;
+      return <Withdraw />; // Pass callback to Withdraw component
     } else {
       return <Text>No content</Text>;
     }
   };
 
   return (
-    <>
-      <View style={{}}>
+    <View style={styles.mainContainer}>
+      <View style={styles.headerContainer}>
         <Text style={styles.adminText}>Admin: {admin}</Text>
         {/* Toggle Buttons */}
         <View style={styles.buttonContainer}>
@@ -194,48 +198,68 @@ const AdminHome = () => {
               toggle === 'moneyRequest' ? styles.activeButton : styles.Button
             }
             onPress={() => setToggle('moneyRequest')}>
-            <Text> Add Request</Text>
+            <Text style={styles.toggleButtonText}>Deposit Requests</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             style={toggle === 'withDraw' ? styles.activeButton : styles.Button}
             onPress={() => setToggle('withDraw')}>
-            <Text>Withdraw Request </Text>
+            <Text style={styles.toggleButtonText}>Withdraw Requests</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* Render the selected component */}
-      {handleRender()}
-    </>
+      <View style={styles.contentContainer}>{handleRender()}</View>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#011638',
+  mainContainer: {
+    flex: 1,
+    backgroundColor: '#f8f9fa',
+  },
+  headerContainer: {
+    backgroundColor: '#fff',
+    elevation: 3,
+    paddingBottom: 10,
+  },
+  contentContainer: {
+    flex: 1,
   },
   Button: {
     backgroundColor: 'skyblue',
-    padding: 8,
+    padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
   },
   activeButton: {
     backgroundColor: 'orange',
-    padding: 8,
+    padding: 12,
     borderRadius: 10,
     alignItems: 'center',
+    flex: 1,
+    marginHorizontal: 5,
+  },
+  toggleButtonText: {
+    fontWeight: 'bold',
+    color: '#333',
   },
   adminText: {
     backgroundColor: 'lightgreen',
     fontWeight: 'bold',
-    padding: 4,
+    padding: 10,
+    fontSize: 16,
+    marginBottom: 10,
   },
   buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginVertical: 10,
+    marginVertical: 5,
+    paddingHorizontal: 10,
   },
   // Filter styles
   filterContainer: {
@@ -265,6 +289,18 @@ const styles = StyleSheet.create({
   activeFilterText: {
     color: 'white',
     fontSize: 12,
+    fontWeight: 'bold',
+  },
+  refreshButton: {
+    backgroundColor: '#0066CC',
+    paddingVertical: 6,
+    paddingHorizontal: 15,
+    borderRadius: 15,
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+  refreshText: {
+    color: 'white',
     fontWeight: 'bold',
   },
   filterSummary: {

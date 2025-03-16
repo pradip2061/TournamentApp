@@ -15,13 +15,13 @@ import InfoBox from '../../components/InfoBox';
 import {launchImageLibrary} from 'react-native-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import {baseUrl} from '../../env';
+import {BASE_URL, baseUrl} from '../../env';
 
 const DepositMoney = () => {
   const [selectedMethod, setSelectedMethod] = useState('eSewa');
   const [selectedImage, setSelectedImage] = useState(null);
   const [base64Image, setBase64Image] = useState(null);
-  const [esewaNumber, setEsewaNumber] = useState('');
+  const [Number, setNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -99,12 +99,16 @@ const DepositMoney = () => {
       const filename = `payment_proof_${timestamp}.jpg`;
 
       const imageResponse = await axios.post(
-        `${baseUrl}/khelmela/upload/upload/${token}`,
+        `${BASE_URL}/khelmela/upload/upload`,
         {
           image: base64Image,
+          folderName: 'fileShare',
           filename: filename,
-          folderName: 'Deposite', // Changed from 'Deposite' to match server-side check
-          esewaNumber: {Number: esewaNumber}, // Match the format expected in server code
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
         },
       );
 
@@ -121,19 +125,22 @@ const DepositMoney = () => {
       // after uploading Image , send Deposite Request
 
       const depositResponse = await axios.post(
-        `${baseUrl}/khelmela/Deposite/${token}`,
+        `${baseUrl}/khelmela/Deposite`,
         {
           amount: amount,
-          esewaNumber: esewaNumber,
+          Number: Number,
           selectedMethod: selectedMethod,
           image: photoUrl,
           date: Date.now(),
+        },
+        {
+          headers: {Authorization: `${token}`},
         },
       );
 
       Alert.alert(depositResponse.data.message);
     } catch (error) {
-      console.error('Error:', error.response?.data || error.message || error);
+      console.error('Error:', error.response);
       Alert.alert(
         'Error',
         error.response?.data?.error || error.message || 'Something went wrong',
@@ -189,16 +196,15 @@ const DepositMoney = () => {
               ? 'Enter your eSewa number'
               : 'Enter your Khalti number'
           }
-          
           keyboardType="numeric"
           placeholderTextColor={'grey'}
-          onChangeText={setEsewaNumber}
+          onChangeText={setNumber}
         />
         <TextInput
           style={styles.input}
           placeholder="Enter Amount"
           keyboardType="numeric"
-          placeholderTextColor={"grey"}
+          placeholderTextColor={'grey'}
           onChangeText={setAmount}
         />
 
@@ -250,7 +256,7 @@ const styles = StyleSheet.create({
     padding: 10,
     marginBottom: 20,
     borderRadius: 10,
-    color:'black'
+    color: 'black',
   },
   uploadButton: {
     flexDirection: 'row',
@@ -267,7 +273,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
-    borderRadius:25
+    borderRadius: 25,
   },
   depositText: {fontSize: 21, color: 'white'},
   uploadedImage: {width: 200, height: 200, marginTop: 20, borderRadius: 10},
