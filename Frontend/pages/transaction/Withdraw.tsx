@@ -12,7 +12,7 @@ import {
 import {baseUrl} from '../../env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const Withdraw = () => {
+const Withdraw = ({navigation}) => {
   const [selectedMethod, setSelectedMethod] = useState('eSewa');
   const [amount, setAmount] = useState('');
   const [number, setNumber] = useState('');

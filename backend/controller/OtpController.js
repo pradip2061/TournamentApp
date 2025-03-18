@@ -112,14 +112,7 @@ const verifyOtpanduser = async (req, res) => {
         },
       ],
 
-      friends: [
-        {
-          username: "admin",
-          image:
-            "https://firebasestorage.googleapis.com/v0/b/khelmela-98.firebasestorage.app/o/mainLogo%2Flogo.jpg?alt=media&token=07f1f6ae-2391-4143-83f4-6ff44bba581b",
-          id: "admin",
-        },
-      ],
+      friends: [{ id: "admin" }],
     });
 
     // Find all admin users and add the new user to their friends lists
@@ -128,9 +121,7 @@ const verifyOtpanduser = async (req, res) => {
       {
         $push: {
           friends: {
-            username: username,
-            image: newUser.image || "",
-            id: newUser._id.toString(), // Convert ObjectId to string if needed
+            id: newUser._id.toString(),
           },
         },
       }

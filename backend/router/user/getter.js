@@ -1,50 +1,59 @@
 const express = require("express");
 const router = express.Router();
-const { jwtDecode } = require("jwt-decode");
+
 const { User } = require("../../model/schema");
 const ClashSquad = require("../../model/ClashSquadModel");
+const Authverify = require("../../middleware/AuthVerify");
 
 // Route to send specific data only *****************************
-router.get("/:request/:token", async (req, res) => {
+router.get("/userRequest/:request", Authverify, async (req, res) => {
   console.log("Route request Active >>>>>>>>>>>>>>>>>>>>>>>>>>>");
 
   try {
-    const { token, request } = req.params;
+    const { request } = req.params;
+    console.log("User data from auth middleware:", req.user);
 
-    console.log(token);
+    const user = await User.findById(req.user);
 
-    if (!token) {
-      console.log("Token not found");
-      return res.status(400).json({ message: "Token is required" });
+    if (request === "friends") {
+      let friendInfo = [];
+
+      for (let i = 0; i < user.friends.length; i++) {
+        console.log();
+
+        const friend = await User.findById(user.friends[i].id);
+
+        console.log(user.friends[i].id);
+        friendInfo.push({
+          id: user.friends[i].id,
+          username: friend.username,
+          image: friend.image,
+        });
+
+        console.log(friendInfo);
+      }
+
+      console.log("Friend info: ", friendInfo);
+      return res.json(friendInfo);
     }
 
-    const id = await jwtDecode(token).id;
-    const user = await User.findById(id).populate(request);
-
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      console.log("User not found .........");
+      return res.status(400).json({ message: "User not found" });
     }
 
     if (request === "user") {
       return res.json(user);
     }
 
-    const requestedData = user[request];
-
-    if (requestedData === undefined) {
+    if (!(request in user)) {
       return res
         .status(400)
         .json({ message: `Invalid request: ${request} not found` });
     }
 
-    // Handle different data types
-    if (Array.isArray(requestedData)) {
-      return res.json(requestedData); // Return array directly
-    } else if (typeof requestedData === "object" && requestedData !== null) {
-      return res.json(requestedData); // Return object directly
-    } else {
-      return res.json({ data: requestedData }); // Wrap primitive values in an object
-    }
+    console.log("Returned......... ", user[request]);
+    return res.json(user[request]);
   } catch (error) {
     console.error("Error fetching data:", error);
     res.status(500).json({ message: "Server error" });

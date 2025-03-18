@@ -21,7 +21,8 @@ import {jwtDecode} from 'jwt-decode';
 
 const LandingChat = ({navigation, route}) => {
   const {friends: initialFriends} = route.params;
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState('');
+  const [re, setRe] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [friends, setFriends] = useState(initialFriends);
   const [filteredFriends, setFilteredFriends] = useState(initialFriends);
@@ -30,18 +31,34 @@ const LandingChat = ({navigation, route}) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        const decoded = jwtDecode(token);
+        setToken(token);
+        setUser(decoded.id);
+      } catch (error) {
+        console.error('Error retrieving token:', error);
+      }
+    };
+    getUser();
+  }, []);
+
+  //
+
   // Function to fetch updated friends list
   const fetchFriends = useCallback(async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) return;
 
+      console.log('token from callback', token);
+
       const response = await axios.get(
-        `${BASE_URL}/khelmela/getFriends/${token}`,
+        `${BASE_URL}/khelmela/userRequest/friends`,
         {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: {Authorization: `${token}`},
         },
       );
 
@@ -61,19 +78,6 @@ const LandingChat = ({navigation, route}) => {
     setRefreshing(false);
   }, [fetchFriends]);
 
-  useEffect(() => {
-    const getUser = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        const decoded = jwtDecode(token);
-        setUser(decoded.id);
-      } catch (error) {
-        console.error('Error retrieving token:', error);
-      }
-    };
-    getUser();
-  }, []);
-
   const searchPeople = async () => {
     if (!searchTerm.trim()) {
       Alert.alert('Error', 'Please enter a name to search');
@@ -82,9 +86,15 @@ const LandingChat = ({navigation, route}) => {
 
     setLoading(true);
     try {
-      const response = await axios.post(`${BASE_URL}/khelmela/search-users`, {
-        name: searchTerm,
-      });
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/search-users`,
+        {
+          name: searchTerm,
+        },
+        {
+          headers: {Authorization: `${token}`},
+        },
+      );
 
       setSearchResults(response.data.users || []);
       console.log(response.data.users);
@@ -102,16 +112,13 @@ const LandingChat = ({navigation, route}) => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
-        `${BASE_URL}/khelmela/addFriends/${token}`,
+        `${BASE_URL}/khelmela/addFriends`,
         {
-          username: userToAdd.username,
-          image: userToAdd.image || ' default',
           friendId: userToAdd.id,
-          userId: user,
         },
         {
           headers: {
-            Authorization: `Bearer ${token}`,
+            Authorization: `${token}`,
           },
         },
       );
@@ -317,18 +324,17 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 15,
     backgroundColor: 'white',
-   
+
     elevation: 4,
-    
+
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.1,
-    
   },
   header: {
     fontSize: 28,
     fontWeight: 'bold',
     color: 'Black',
-    textAlign:'center'
+    textAlign: 'center',
   },
   searchContainer: {
     paddingHorizontal: 20,
@@ -379,7 +385,6 @@ const styles = StyleSheet.create({
   listContentContainer: {
     paddingBottom: 20,
     flexGrow: 1,
-    
   },
   friendCard: {
     flexDirection: 'row',
@@ -388,10 +393,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'white',
     marginBottom: 12,
     borderRadius: 16,
-    
-
-    
-    
   },
   avatar: {
     width: 60,
@@ -532,11 +533,10 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: 10,
-    
+
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 1,
-   
   },
   addButtonText: {
     color: 'white',
@@ -547,10 +547,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     alignItems: 'center',
     marginTop: 'auto',
-    width:150,
-    marginLeft:100,
-    borderRadius:50,
-    marginBottom:10
+    width: 150,
+    marginLeft: 100,
+    borderRadius: 50,
+    marginBottom: 10,
   },
   closeButtonText: {
     color: 'white',

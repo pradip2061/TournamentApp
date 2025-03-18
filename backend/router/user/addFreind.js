@@ -3,30 +3,42 @@ const router = express.Router();
 const { User } = require("../../model/schema");
 
 const { jwtDecode } = require("jwt-decode");
+const Authverify = require("../../middleware/AuthVerify");
 
 router.get("/addFriends", (req, res) => {
   res.send("Add Friends Page");
 });
-// route to search
-router.post("/search-users", async (req, res) => {
+
+router.post("/search-users", Authverify, async (req, res) => {
   console.log("Search user route _-------->");
   try {
     const { name } = req.body;
+    const userId = req.user; // Extract _id properly
+
+    console.log("User ID:", userId);
+
+    if (!userId) {
+      console.log("User ID not found .........");
+      return res.status(400).json({ message: "User ID not found" });
+    }
+
+    // Fetch the user's friends list
+    const user = await User.findById(userId).lean();
+    const mainuser = user;
+    const userFriends = user?.friends || []; // Ensure it's always an array
+
+    console.log("User's friends:", userFriends);
 
     if (!name) {
       return res.status(400).json({ error: "Name parameter is required" });
     }
 
-    // Convert the search term to lowercase for case-insensitive comparison
     const searchTerm = name.toLowerCase();
-
-    // Create a regex pattern for flexible matching
-    // This will match parts of usernames containing the search term
     const regex = new RegExp(searchTerm, "i");
 
-    // Find users with usernames matching the search pattern
+    // Find users with matching usernames, including the friends field
     const users = await User.find({ username: regex })
-      .select("_id username image")
+      .select("_id username image friends")
       .lean();
 
     if (users.length === 0) {
@@ -36,13 +48,17 @@ router.post("/search-users", async (req, res) => {
       });
     }
 
-    // Format the response to include only the required fields
-    const formattedUsers = users.map((user) => ({
-      id: user._id,
-      username: user.username,
-      image: user.image || null, // Handle cases where image might be undefined
-    }));
-    console.log(formattedUsers);
+    const formattedUsers = users
+      .filter(
+        (user) =>
+          user._id.toString() !== userId.toString() &&
+          !mainuser.friends.some((f) => f.id === user._id.toString())
+      )
+      .map((user) => ({
+        id: user._id,
+        username: user.username,
+        image: user.image || null,
+      }));
 
     return res.status(200).json({
       message: `Found ${formattedUsers.length} users matching "${name}"`,
@@ -53,15 +69,16 @@ router.post("/search-users", async (req, res) => {
     return res.status(500).json({ error: "Internal Server Error" });
   }
 });
-router.post("/addFriends/:token", async (req, res) => {
+
+// route to search
+router.post("/addFriends", Authverify, async (req, res) => {
   console.log("add Friend route hit >>>>>>>>> ");
   try {
-    const { token } = req.params;
     const { friendId } = req.body; // Expecting friend data in request body
 
-    const userId = await jwtDecode(token).id;
+    const userId = req.user;
 
-    console.log("decoded Id ----> " + userId);
+    console.log("USer Id ----> " + userId);
 
     if (!friendId) {
       return res.status(400).json({ message: "FriendId is required" });
@@ -95,8 +112,6 @@ router.post("/addFriends/:token", async (req, res) => {
         $push: {
           friends: {
             id: friendId,
-            username: friend.username, // Corrected
-            image: friend.image, // Corrected
           },
         },
       }

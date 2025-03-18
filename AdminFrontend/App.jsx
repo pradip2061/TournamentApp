@@ -1,24 +1,30 @@
 import React from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createStackNavigator} from '@react-navigation/stack';
-import AdminLogin from './pages/AdminLogin';
 import Dashboard from './pages/Dashboard';
-import PowerRoom from './pages/PowerRoom';
-import AdminHome from './pages/AdminHome';
-import UploadPhoto from './pages/UploadPhoto';
-import Chat from './pages/chat';
-import LandingChat from './pages/LandingChat';
-import AddMoney from './pages/AddMoney';
+import PowerRoom from './pages/PowerRoom/PowerRoom';
+import UploadPhoto from './pages/Match_watcher/UploadPhoto';
+import LandingChat from './pages/Chat/LandingChat';
+import Authenticate from './pages/Authentication/Authenticate';
+import PrivateChat from './pages/Chat/PrivateChat';
+import FirstPage from './pages/Authentication/first';
+import AdminHome from './pages/Transaction/AdminHome';
+import Withdraw from './pages/components/Withdraw';
 
 const Stack = createStackNavigator();
 
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="AdminLogin">
+      <Stack.Navigator initialRouteName="firstPage">
         <Stack.Screen
-          name="AdminLogin"
-          component={AdminLogin}
+          name="firstPage"
+          component={FirstPage}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Authenticate"
+          component={Authenticate}
           options={{headerShown: false}}
         />
 
@@ -42,8 +48,16 @@ const App = () => {
           component={LandingChat}
           options={{headerShown: false}}
         />
-        <Stack.Screen name="Chat" component={Chat} />
-
+        <Stack.Screen
+          name="PrivateChat"
+          component={PrivateChat}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="Withdraw"
+          component={Withdraw}
+          options={{headerShown: false}}
+        />
         <Stack.Screen
           name="UploadPhoto"
           component={UploadPhoto}

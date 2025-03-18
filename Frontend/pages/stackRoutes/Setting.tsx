@@ -1,77 +1,94 @@
-import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, ScrollView, Alert, TextInput } from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+  TextInput,
+} from 'react-native';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome from 'react-native-vector-icons/FontAwesome';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import Entypo from 'react-native-vector-icons/Entypo';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
-import axios from 'axios'
-const img = require('../../assets/loading.gif')
-import{BASE_URL} from '../../env'
-import { Modal } from 'react-native';
+import axios from 'axios';
+const img = require('../../assets/loading.gif');
+import {BASE_URL} from '../../env';
+import {Modal} from 'react-native';
 const Setting = ({navigation}) => {
-  const[changepass,setChangepass]=useState(false)
-  const[loading,setLoading]=useState(false)
-  const[data,setData]=useState([])
-  const [oldPassword, setOldPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [changepass, setChangepass] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
-  
- const logout=async()=>{
-  await AsyncStorage.clear()
-  navigation.navigate('Authenticate')
-  
- }
+  const logout = async () => {
+    await AsyncStorage.clear();
+    navigation.navigate('Authenticate');
+  };
 
- const changepassword= async(e)=>{
-  e.preventDefault();
-  setLoading(true)
-  const token =await AsyncStorage.getItem('token')
-try {
-  axios.post(`${BASE_URL}/khelmela/changepassword`,{oldPassword,newPassword},{
-    headers:{
-      Authorization:`${token}`,
-      "Content-Type":'application/json'
-    }
-  })
-  .then((response)=>{
-    Alert.alert(response.data.message)
-    setLoading(false)
-    setNewPassword('')
-    setOldPassword('')
-    setChangepass(false)
-  })
-} catch (error) {
-  Alert.alert(error.response.data.message)
-}finally{
-  setLoading(false)
-}
- }
-useEffect(()=>{
-  const getProfile =async()=>{
-  const token =await AsyncStorage.getItem('token')
+  const changepassword = async e => {
+    e.preventDefault();
+    setLoading(true);
+    const token = await AsyncStorage.getItem('token');
     try {
-       axios.get(`${BASE_URL}/khelmela/getprofile`,{
-        headers:{
-          Authorization:`${token}`
-        }
-      })
-      .then((response)=>{
-        setData(response.data.data)
-      })
+      axios
+        .post(
+          `${BASE_URL}/khelmela/changepassword`,
+          {oldPassword, newPassword},
+          {
+            headers: {
+              Authorization: `${token}`,
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+        .then(response => {
+          Alert.alert(response.data.message);
+          setLoading(false);
+          setNewPassword('');
+          setOldPassword('');
+          setChangepass(false);
+        });
     } catch (error) {
-      
+      Alert.alert(error.response.data.message);
+    } finally {
+      setLoading(false);
     }
-     }
-     getProfile()
-},[])
+  };
+  useEffect(() => {
+    const getProfile = async () => {
+      const token = await AsyncStorage.getItem('token');
+      try {
+        axios
+          .get(`${BASE_URL}/khelmela/getprofile`, {
+            headers: {
+              Authorization: `${token}`,
+            },
+          })
+          .then(response => {
+            setData(response.data.data);
+          });
+      } catch (error) {}
+    };
+    getProfile();
+  }, []);
   return (
-    
     <ScrollView style={styles.container}>
       {/* User Info Section with Icons */}
       <View style={styles.userSection}>
-        <Image source={{uri:data?.image||"https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}} style={styles.profileImage} />
+        <Image
+          source={{
+            uri:
+              data?.image ||
+              'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+          }}
+          style={styles.profileImage}
+        />
         <View style={styles.userInfo}>
           <View style={styles.userRow}>
             <Ionicons name="person-circle-outline" size={24} color="#555" />
@@ -86,8 +103,9 @@ useEffect(()=>{
 
       {/* Personal Details & Password */}
       <View style={styles.section}>
-        
-        <TouchableOpacity style={styles.item}  onPress={()=>setChangepass(true)}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => setChangepass(true)}>
           <Ionicons name="lock-closed-outline" size={27} color="#555" />
           <Text style={styles.itemText}>Change Password</Text>
         </TouchableOpacity>
@@ -95,11 +113,15 @@ useEffect(()=>{
 
       {/* Deposit & Withdraw Money */}
       <View style={styles.section}>
-        <TouchableOpacity style={styles.item} onPress={()=>navigation.navigate('Deposite')}>
+        <TouchableOpacity
+          style={styles.item}
+          onPress={() => navigation.navigate('Deposite')}>
           <FontAwesome name="money" size={27} color="#555" />
           <Text style={styles.itemText}>Deposit Money</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.item}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Withdraw')}
+          style={styles.item}>
           <MaterialIcons name="account-balance-wallet" size={27} color="#555" />
           <Text style={styles.itemText}>Withdraw Money</Text>
         </TouchableOpacity>
@@ -107,12 +129,16 @@ useEffect(()=>{
 
       {/* Other Options */}
       <View style={styles.section}>
-      <TouchableOpacity style={styles.item}>
+        <TouchableOpacity style={styles.item}>
           <Entypo name="back-in-time" size={27} color="#555" />
           <Text style={styles.itemText}>History</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
-          <Ionicons name="notifications-circle-outline" size={33} color="#555" />
+          <Ionicons
+            name="notifications-circle-outline"
+            size={33}
+            color="#555"
+          />
           <Text style={styles.itemText}>Notification </Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.item}>
@@ -125,7 +151,7 @@ useEffect(()=>{
         </TouchableOpacity>
         <TouchableOpacity style={styles.item} onPress={logout}>
           <Ionicons name="log-out-outline" size={27} color="red" />
-          <Text style={[styles.itemText, { color: 'red' }]} >Logout</Text>
+          <Text style={[styles.itemText, {color: 'red'}]}>Logout</Text>
         </TouchableOpacity>
       </View>
 
@@ -142,53 +168,53 @@ useEffect(()=>{
         </TouchableOpacity>
       </View>
       <Modal transparent={true} animationType="fade" visible={changepass}>
-      <View style={styles.overlay}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.title}>Change Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Old Password"
-            secureTextEntry
-            value={oldPassword}
-            onChangeText={(text)=>setOldPassword(text)}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="New Password"
-            secureTextEntry
-            value={newPassword}
-            onChangeText={(text)=>setNewPassword(text)}
-          />
-          <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.cancelButton} onPress={()=>setChangepass(false)}>
-              <Text style={styles.buttonText} >Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={styles.submitButton} onPress={changepassword}>
-              <Text style={styles.buttonText}>Change Password</Text>
-            </TouchableOpacity>
+        <View style={styles.overlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.title}>Change Password</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Old Password"
+              secureTextEntry
+              value={oldPassword}
+              onChangeText={text => setOldPassword(text)}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="New Password"
+              secureTextEntry
+              value={newPassword}
+              onChangeText={text => setNewPassword(text)}
+            />
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={styles.cancelButton}
+                onPress={() => setChangepass(false)}>
+                <Text style={styles.buttonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.submitButton}
+                onPress={changepassword}>
+                <Text style={styles.buttonText}>Change Password</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
-    <Modal transparent={true} animationType="fade" visible={loading}>
-    <View style={styles.overlay}>
-      <Image source={img} alt='no image'/>
-      </View>
       </Modal>
-      
+      <Modal transparent={true} animationType="fade" visible={loading}>
+        <View style={styles.overlay}>
+          <Image source={img} alt="no image" />
+        </View>
+      </Modal>
     </ScrollView>
-    
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 19,
-    backgroundColor:'F2F2F2',
-    
-
+    backgroundColor: 'F2F2F2',
   },
-  
+
   userSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -196,8 +222,8 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     marginBottom: 10,
-    marginTop:10,
-    elevation: 5
+    marginTop: 10,
+    elevation: 5,
   },
   profileImage: {
     width: 80,
@@ -214,20 +240,21 @@ const styles = StyleSheet.create({
   },
   username: {
     fontSize: 18,
-    fontWeight:"500",
+    fontWeight: '500',
     marginLeft: 10,
   },
   email: {
     fontSize: 14,
-   
-    fontWeight:"500",
+
+    fontWeight: '500',
     marginLeft: 10,
   },
   section: {
     backgroundColor: '#FFF',
     borderRadius: 10,
     padding: 10,
-    marginBottom: 20,elevation: 5
+    marginBottom: 20,
+    elevation: 5,
   },
   item: {
     flexDirection: 'row',
@@ -245,10 +272,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginVertical: 20,
-    backgroundColor:'#fff',
-    paddingBlock:10,
-    borderRadius:15,elevation: 5
-  }, overlay: {
+    backgroundColor: '#fff',
+    paddingBlock: 10,
+    borderRadius: 15,
+    elevation: 5,
+  },
+  overlay: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',

@@ -1,27 +1,41 @@
-import React from 'react';
-import {View, Text, Image, StyleSheet, TouchableOpacity} from 'react-native';
+import React, {useEffect} from 'react';
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
-
-const Dashboard = () => {
-  const navigation = useNavigation();
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {BASE_URL} from '../env';
+const Dashboard = ({navigation}) => {
+  useEffect(() => {
+    const token = AsyncStorage.getItem('token');
+    if (!token) {
+      Alert.alert('Unauthorized ', 'Please login to access dashboard');
+      navigation.navigate('AdminLogin');
+      return;
+    }
+  }, []);
 
   const handleDeposite = () => {
     navigation.navigate('AdminHome');
   };
+  const handleChatPress = async () => {
+    console.log('Chat Press...........');
+    const token = await AsyncStorage.getItem('token');
+    const response = await axios.get(
+      `${BASE_URL}/khelmela/userRequest/friends`,
+      {
+        headers: {Authorization: `${token}`},
+      },
+    );
 
-  const findFriends = async () => {
-    // axios.get(`${IP}:${host}/findFriends/${Id}`);
-    const friends = [
-      {id: '1', name: 'Radiden'},
-      {id: '2', name: 'Pradip'},
-      {id: '3', name: 'Sagar'},
-      {id: '4', name: 'Rohan'},
-      {id: '5', name: 'Rahul'},
-      {id: '6', name: 'Gaurav'},
-      {id: '7', name: 'Arjun'},
-    ];
-    navigation.navigate('LandingChat', {friends: friends});
+    console.log(response);
+    navigation.navigate('LandingChat', {friends: response.data});
   };
 
   return (
@@ -104,7 +118,8 @@ const Dashboard = () => {
       <View style={styles.homeContainer}>
         <TouchableOpacity
           onPress={() => {
-            findFriends();
+            console.log('Landing Chat .........');
+            handleChatPress();
           }}>
           <Image
             source={require('../assets/home.png')}

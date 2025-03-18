@@ -10,6 +10,7 @@ const CreateRouter = require("./router/user/CreateRouter");
 const CheckResultRouter = require("./router/user/CheckResultRouter");
 const PubgRouter = require("./router/user/PubgRouter");
 const getter = require("./router/user/getter");
+const matchValidation = require("./router/admin/geminiVal");
 
 const {
   router: ChatRouter,
@@ -18,6 +19,7 @@ const {
 const addFriends = require("./router/user/addFreind");
 const userMoney = require("./router/user/money");
 const upload = require("./utility/imageUpload");
+
 dotenv.config();
 
 const app = express();
@@ -45,7 +47,8 @@ app.use(
   PubgRouter,
   getter,
   addFriends,
-  userMoney
+  userMoney,
+  matchValidation
 );
 
 app.use("/khelmela/admin", Admin);

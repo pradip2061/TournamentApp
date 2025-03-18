@@ -3,10 +3,12 @@ const router = express.Router();
 const { Tournament } = require("../../model/schema");
 require("dotenv").config();
 
-router.get("/", (req, res) => {
+router.get("/matchValidation", (req, res) => {
   res.send("This is the Gemini router");
 });
-router.post("/geminiValidate", async (req, res) => {
+
+router.post("/matchValidation/geminiValidate", async (req, res) => {
+  console.log("Gemini ROute Got hit !!!!!!!!!!..............");
   let message = "";
   let tournament = {};
   const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -18,7 +20,7 @@ router.post("/geminiValidate", async (req, res) => {
       return; // Or handle the error as needed
     }
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" }); // Use the correct model name
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" }); // Use the correct model name
 
     const imagePart = {
       inlineData: {
