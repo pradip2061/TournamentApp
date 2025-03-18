@@ -14,8 +14,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalNotify from './ModalNotify';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
-import{BASE_URL} from '../env'
+import { BASE_URL } from '../env';
 import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
+
 const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
 const erangle = require('../assets/erangle.jpg');
@@ -23,13 +24,13 @@ const sanhok = require('../assets/sanhok.jpg');
 
 const PubgFullMatchCard = ({ matches }) => {
   const [modal, setModal] = useState(false);
-  const{data}=useContext(CheckAdminContext)
+  const { data } = useContext(CheckAdminContext);
   const matchId = matches._id;
   const [notifyModel, setNotifyModel] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [checkJoined, setCheckJoined] = useState('');
-  const [player1, setPlayer1] = useState(data?.gameName?.[0]?.pubg);
+  const [player1] = useState(data?.gameName?.[0]?.pubg || ''); // Removed setPlayer1 to make it non-editable
   const [player2, setPlayer2] = useState('');
   const [player3, setPlayer3] = useState('');
   const [player4, setPlayer4] = useState('');
@@ -42,15 +43,17 @@ const PubgFullMatchCard = ({ matches }) => {
       setNotifyModel(false);
     }, 900);
   };
- useEffect(()=>{
-    const getName=()=>{
-      const Name = matches.gameName.filter((item)=>item.userid === data._id)
-      setPlayer2(Name?.[0]?.player2)
-      setPlayer3(Name?.[0]?.player3)
-      setPlayer4(Name?.[0]?.player4)
-        }
-        getName()
-  },[])
+
+  useEffect(() => {
+    const getName = () => {
+      const Name = matches.gameName.filter((item) => item.userid === data._id);
+      setPlayer2(Name?.[0]?.player2 || '');
+      setPlayer3(Name?.[0]?.player3 || '');
+      setPlayer4(Name?.[0]?.player4 || '');
+    };
+    getName();
+  }, [matches.gameName, data._id]);
+
   const joinuser = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -87,7 +90,6 @@ const PubgFullMatchCard = ({ matches }) => {
         .then(response => {
           if (response.status === 200) {
             setCheckJoined(response.data.message);
-            console.log(response.data.message);
           }
         });
     };
@@ -107,16 +109,13 @@ const PubgFullMatchCard = ({ matches }) => {
     setMessage('');
     const token = await AsyncStorage.getItem('token');
     try {
+      const payload = { matchId, player1, player2, player3, player4 }; // Only used in squad mode
       await axios
-        .post(
-          `${BASE_URL}/khelmela/addName`,
-          { matchId, player1, player2, player3,player4 },
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
+        .post(`${BASE_URL}/khelmela/addName`, payload, {
+          headers: {
+            Authorization: `${token}`,
           },
-        )
+        })
         .then(response => {
           setMessage(response.data.message);
         });
@@ -138,7 +137,7 @@ const PubgFullMatchCard = ({ matches }) => {
         });
     };
     checkmatchType();
-  }, []);
+  }, [matchId]);
 
   return (
     <LinearGradient
@@ -209,22 +208,22 @@ const PubgFullMatchCard = ({ matches }) => {
       </View>
       <View style={styles.divider} />
 
-      {/* Time and Entry Fee in the same row */}
       <View style={styles.timeAndEntryContainer}>
         <View style={styles.timeContainer}>
           <Text style={styles.texttime}>Time: {matches.time || '3:00 PM'}</Text>
           {checkJoined === 'notjoined' ? (
-          <TouchableOpacity
-            style={styles.entryButton}
-            onPress={() => setModal(true)}
-          >
-            <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
-          </TouchableOpacity>
-        ): <TouchableOpacity style={styles.joinedButton}>
-        <Text style={{ color: 'white' }}>Joined</Text>
-      </TouchableOpacity>}
+            <TouchableOpacity
+              style={styles.entryButton}
+              onPress={() => setModal(true)}
+            >
+              <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.joinedButton}>
+              <Text style={{ color: 'white' }}>Joined</Text>
+            </TouchableOpacity>
+          )}
         </View>
-        
       </View>
 
       <Modal transparent animationType="slide" visible={modal}>
@@ -268,33 +267,35 @@ const PubgFullMatchCard = ({ matches }) => {
             </View>
           </View>
           <View>
-            <TextInput
-              style={styles.inputs}
-              placeholder="player 1"
-              value={player1}
-              onChangeText={text => setPlayer1(text)}
-            />
-            <TextInput
-              style={styles.inputs}
-              placeholder="player 2"
-              value={player2}
-              onChangeText={text => setPlayer2(text)}
-            />
-            <TextInput
-              style={styles.inputs}
-              placeholder="player 3"
-              value={player3}
-              onChangeText={text => setPlayer3(text)}
-            />
-            <TextInput
-              style={styles.inputs}
-              placeholder="player 4"
-              value={player4}
-              onChangeText={text => setPlayer4(text)}
-            />
-            <TouchableOpacity style={styles.joinedButton} onPress={addName}>
-              <Text style={{ color: 'white' }}>Add gameName</Text>
-            </TouchableOpacity>
+            {/* Conditional rendering based on playermode */}
+            {matches.playermode === 'solo' ? (
+              <Text style={styles.mainPlayerText}>{player1}</Text>
+            ) : (
+              <>
+                <Text style={styles.mainPlayerText}>{player1}</Text>
+                <TextInput
+                  style={styles.inputs}
+                  placeholder="player 2"
+                  value={player2}
+                  onChangeText={text => setPlayer2(text)}
+                />
+                <TextInput
+                  style={styles.inputs}
+                  placeholder="player 3"
+                  value={player3}
+                  onChangeText={text => setPlayer3(text)}
+                />
+                <TextInput
+                  style={styles.inputs}
+                  placeholder="player 4"
+                  value={player4}
+                  onChangeText={text => setPlayer4(text)}
+                />
+                <TouchableOpacity style={styles.joinedButton} onPress={addName}>
+                  <Text style={{ color: 'white' }}>Add gameName</Text>
+                </TouchableOpacity>
+              </>
+            )}
           </View>
         </View>
       ) : checkJoined === 'notjoined' ? null : (
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
     marginLeft: 30,
     padding: 10,
     gap: 15,
-    borderRadius: 25
+    borderRadius: 25,
   },
   header: {
     flexDirection: 'row',
@@ -381,12 +382,12 @@ const styles = StyleSheet.create({
     height: 30,
     alignItems: 'center',
     backgroundColor: 'white',
-    flexDirection:'row',
-    gap:120
+    flexDirection: 'row',
+    gap: 120,
   },
   texttime: {
     color: 'black',
-    fontSize: 12, // Slightly smaller for fit
+    fontSize: 12,
     fontWeight: '600',
   },
   joinedContainer: {
@@ -417,21 +418,35 @@ const styles = StyleSheet.create({
     color: '#fff',
     backgroundColor: 'rgba(255, 255, 255, 0.2)',
   },
+  mainPlayerText: {
+    width: 120,
+    height: 40,
+    borderWidth: 1,
+    borderColor: '#fff',
+    marginVertical: 5,
+    paddingHorizontal: 10,
+    color: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.4)', // Slightly different background to distinguish it
+    textAlign: 'center',
+    lineHeight: 40, // Centers text vertically
+    fontWeight: 'bold',
+  },
   joinedButton: {
     backgroundColor: 'green',
     height: 30,
     width: '100%',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius:25
+    borderRadius: 25,
+    marginTop: 10,
   },
   entryButton: {
     backgroundColor: 'green',
     height: 30,
-    width: 110, // Match timeContainer width
+    width: 110,
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 25, // Match timeContainer's rounded style
+    borderRadius: 25,
   },
   loadingText: {
     color: '#fff',
