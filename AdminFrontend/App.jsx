@@ -10,6 +10,7 @@ import PrivateChat from './pages/Chat/PrivateChat';
 import FirstPage from './pages/Authentication/first';
 import AdminHome from './pages/Transaction/AdminHome';
 import Withdraw from './pages/components/Withdraw';
+import GamePannel from './pages/Tournament/GamePannel';
 
 const Stack = createStackNavigator();
 
@@ -61,6 +62,11 @@ const App = () => {
         <Stack.Screen
           name="UploadPhoto"
           component={UploadPhoto}
+          options={{headerShown: false}}
+        />
+        <Stack.Screen
+          name="GamePannel"
+          component={GamePannel}
           options={{headerShown: false}}
         />
       </Stack.Navigator>

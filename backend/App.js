@@ -19,7 +19,6 @@ const {
 const addFriends = require("./router/user/addFreind");
 const userMoney = require("./router/user/money");
 const upload = require("./utility/imageUpload");
-
 dotenv.config();
 
 const app = express();

@@ -7,24 +7,33 @@ import {
   Modal,
   TextInput,
 } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalNotify from './ModalNotify';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
+<<<<<<< HEAD
 import { BASE_URL } from '../env';
 import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
 
+=======
+import {BASE_URL} from '../env';
+import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
+>>>>>>> b922747 (rebase changes)
 const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
 const erangle = require('../assets/erangle.jpg');
 const sanhok = require('../assets/sanhok.jpg');
 
-const PubgFullMatchCard = ({ matches }) => {
+const PubgFullMatchCard = ({matches}) => {
   const [modal, setModal] = useState(false);
+<<<<<<< HEAD
   const { data } = useContext(CheckAdminContext);
+=======
+  const {data} = useContext(CheckAdminContext);
+>>>>>>> b922747 (rebase changes)
   const matchId = matches._id;
   const [notifyModel, setNotifyModel] = useState(false);
   const [message, setMessage] = useState('');
@@ -43,6 +52,7 @@ const PubgFullMatchCard = ({ matches }) => {
       setNotifyModel(false);
     }, 900);
   };
+<<<<<<< HEAD
 
   useEffect(() => {
     const getName = () => {
@@ -54,12 +64,23 @@ const PubgFullMatchCard = ({ matches }) => {
     getName();
   }, [matches.gameName, data._id]);
 
+=======
+  useEffect(() => {
+    const getName = () => {
+      const Name = matches.gameName.filter(item => item.userid === data._id);
+      setPlayer2(Name?.[0]?.player2);
+      setPlayer3(Name?.[0]?.player3);
+      setPlayer4(Name?.[0]?.player4);
+    };
+    getName();
+  }, []);
+>>>>>>> b922747 (rebase changes)
   const joinuser = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/joinuserPubg`,
-        { matchId },
+        {matchId},
         {
           headers: {
             Authorization: `${token}`,
@@ -80,7 +101,7 @@ const PubgFullMatchCard = ({ matches }) => {
       await axios
         .post(
           `${BASE_URL}/khelmela/checkuserPubg`,
-          { matchId },
+          {matchId},
           {
             headers: {
               Authorization: `${token}`,
@@ -111,9 +132,19 @@ const PubgFullMatchCard = ({ matches }) => {
     try {
       const payload = { matchId, player1, player2, player3, player4 }; // Only used in squad mode
       await axios
+<<<<<<< HEAD
         .post(`${BASE_URL}/khelmela/addName`, payload, {
           headers: {
             Authorization: `${token}`,
+=======
+        .post(
+          `${BASE_URL}/khelmela/addName`,
+          {matchId, player1, player2, player3, player4},
+          {
+            headers: {
+              Authorization: `${token}`,
+            },
+>>>>>>> b922747 (rebase changes)
           },
         })
         .then(response => {
@@ -129,7 +160,7 @@ const PubgFullMatchCard = ({ matches }) => {
   useEffect(() => {
     const checkmatchType = () => {
       axios
-        .post(`${BASE_URL}/khelmela/checkmatchTypePubg`, { matchId })
+        .post(`${BASE_URL}/khelmela/checkmatchTypePubg`, {matchId})
         .then(response => {
           if (response.status === 200) {
             setCheckMatch(response.data.message);
@@ -141,10 +172,9 @@ const PubgFullMatchCard = ({ matches }) => {
 
   return (
     <LinearGradient
-      colors={["#0f0c29", "#302b63", "#24243e"]}
+      colors={['#0f0c29', '#302b63', '#24243e']}
       style={styles.container}
-      key={matches._id}
-    >
+      key={matches._id}>
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image source={img} alt={'no image'} style={styles.image} />
@@ -214,6 +244,7 @@ const PubgFullMatchCard = ({ matches }) => {
           {checkJoined === 'notjoined' ? (
             <TouchableOpacity
               style={styles.entryButton}
+<<<<<<< HEAD
               onPress={() => setModal(true)}
             >
               <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
@@ -221,6 +252,16 @@ const PubgFullMatchCard = ({ matches }) => {
           ) : (
             <TouchableOpacity style={styles.joinedButton}>
               <Text style={{ color: 'white' }}>Joined</Text>
+=======
+              onPress={() => setModal(true)}>
+              <Text style={{color: 'white'}}>
+                Entry fee: {matches.entryFee}
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <TouchableOpacity style={styles.joinedButton}>
+              <Text style={{color: 'white'}}>Joined</Text>
+>>>>>>> b922747 (rebase changes)
             </TouchableOpacity>
           )}
         </View>
@@ -233,14 +274,12 @@ const PubgFullMatchCard = ({ matches }) => {
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
-                onPress={() => setModal(false)}
-              >
+                onPress={() => setModal(false)}>
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.yesButton]}
-                onPress={joinuser}
-              >
+                onPress={joinuser}>
                 <Text style={styles.buttonText}>Yes</Text>
               </TouchableOpacity>
             </View>
@@ -254,19 +293,20 @@ const PubgFullMatchCard = ({ matches }) => {
         <View style={styles.joinedContainer}>
           <View style={styles.inputContainer}>
             <View style={styles.input}>
-              <Text>customid: 88997</Text>
+              <Text>customid: {matches?.coustum.id}</Text>
               <TouchableOpacity onPress={clipboardid}>
-                <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
+                <AntDesign name="copy1" size={17} style={{marginLeft: 10}} />
               </TouchableOpacity>
             </View>
             <View style={styles.input}>
-              <Text>custom: 54988</Text>
+              <Text>Password : {matches?.coutum?.password}</Text>
               <TouchableOpacity onPress={clipboardpass}>
-                <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
+                <AntDesign name="copy1" size={17} style={{marginLeft: 10}} />
               </TouchableOpacity>
             </View>
           </View>
           <View>
+<<<<<<< HEAD
             {/* Conditional rendering based on playermode */}
             {matches.playermode === 'solo' ? (
               <Text style={styles.mainPlayerText}>{player1}</Text>
@@ -296,6 +336,35 @@ const PubgFullMatchCard = ({ matches }) => {
                 </TouchableOpacity>
               </>
             )}
+=======
+            <TextInput
+              style={styles.inputs}
+              placeholder="player 1"
+              value={player1}
+              onChangeText={text => setPlayer1(text)}
+            />
+            <TextInput
+              style={styles.inputs}
+              placeholder="player 2"
+              value={player2}
+              onChangeText={text => setPlayer2(text)}
+            />
+            <TextInput
+              style={styles.inputs}
+              placeholder="player 3"
+              value={player3}
+              onChangeText={text => setPlayer3(text)}
+            />
+            <TextInput
+              style={styles.inputs}
+              placeholder="player 4"
+              value={player4}
+              onChangeText={text => setPlayer4(text)}
+            />
+            <TouchableOpacity style={styles.joinedButton} onPress={addName}>
+              <Text style={{color: 'white'}}>Add gameName</Text>
+            </TouchableOpacity>
+>>>>>>> b922747 (rebase changes)
           </View>
         </View>
       ) : checkJoined === 'notjoined' ? null : (
@@ -438,7 +507,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 25,
+<<<<<<< HEAD
     marginTop: 10,
+=======
+>>>>>>> b922747 (rebase changes)
   },
   entryButton: {
     backgroundColor: 'green',

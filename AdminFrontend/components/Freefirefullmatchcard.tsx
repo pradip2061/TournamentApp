@@ -1,296 +1,365 @@
-import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   Image,
   TouchableOpacity,
-  Modal,
   TextInput,
-  KeyboardAvoidingView,
-  ScrollView,
-  Platform,
+  Modal,
+  FlatList,
+  Alert,
 } from 'react-native';
+import React, {useEffect, useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
-import ModalNotify from './ModalNotify';
 import LinearGradient from 'react-native-linear-gradient';
-import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
-import{BASE_URL} from '../env'
-// Placeholder images (replace with your actual image paths)
+import {BASE_URL} from '../env';
+
 const freefire = require('../assets/freefire.jpeg');
-const bermuda = require('../assets/bermuda.jpg');
-const purgatory = require('../assets/pugatory.png');
 const kalahari = require('../assets/kalahari.webp');
 
-const Freefirefullmatchcard = ({ matches }) => {
-  const { setTrigger,data} = useContext(CheckAdminContext);
-  const [joinModel, setJoinModel] = useState(false);
-  const [checKJoined, setCheckJoined] = useState('');
-  const [visible, setVisible] = useState(false);
-  const [message, setMessage] = useState('');
-  const [error, setError] = useState('');
-  const [player1, setPlayer1] = useState(data?.gameName?.[0]?.freefire);
-  const [player2, setPlayer2] = useState('');
-  const [player3, setPlayer3] = useState('');
-  const [player4, setPlayer4] = useState('');
+const bermuda = require('../assets/bermuda.jpg');
+const purgatory = require('../assets/pugatory.png');
+
+const Freefirefullmatchcard = ({matches}) => {
   const matchId = matches._id;
-  const joinuser = async () => {
-    const token = await AsyncStorage.getItem('token');
-    try {
-      if(matches.TotalPlayer === 54){
-        setMessage('Slot is full!')
-        return 
-      }
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/joinff`,
-          { matchId },
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          }
-        )
-        .then((response) => {
-          setMessage(response.data.message);
-          setTrigger('done');
-        });
-    } catch (error) {
-      setError(error.response.data.message);
-    } finally {
-      notify();
-      setJoinModel(false);
+  const [checkmatch, setCheckMatch] = useState('');
+  const [customId, setCustomId] = useState('');
+  const [customPassword, setCustomPassword] = useState('');
+  const [selectedTime, setSelectedTime] = useState('');
+  const initalTime = matches.time;
+  const [amPm, setAmPm] = useState('PM');
+  const [timeModalVisible, setTimeModalVisible] = useState(false);
+
+  const [hidematch, setHidematch] = useState(false);
+
+  console.log(matches);
+
+  // Available time options
+  const timeOptions = [
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '10',
+    '11',
+    '12',
+  ];
+
+  const clipboardId = () => {
+    if (customId) {
+      Clipboard.setString(customId);
     }
   };
 
-  useEffect(()=>{
-    const getName=()=>{
-      const Name = matches.gameName.filter((item)=>item.userid === data._id)
-      setPlayer2(Name?.[0]?.player2)
-      setPlayer3(Name?.[0]?.player3)
-      setPlayer4(Name?.[0]?.player4)
-        }
-        getName()
-  },[])
- 
-
-  const notify = () => {
-    setJoinModel(false);
-    setVisible(true);
-    setTimeout(() => {
-      setVisible(false);
-    }, 900);
+  const clipboardPass = () => {
+    if (customPassword) {
+      Clipboard.setString(customPassword);
+    }
   };
 
-  useEffect(() => {
-    const checkuser = async () => {
+  const toggleAmPm = () => {
+    setAmPm(amPm === 'AM' ? 'PM' : 'AM');
+  };
+
+  const handleMatchHide = async () => {
+    try {
       const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/checkuserff`,
-          { matchId },
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          }
-        )
-        .then((response) => {
-          if (response.status === 200) {
-            setCheckJoined(response.data.message);
-          }
-        });
-    };
-    checkuser();
-  }, [matchId]);
-  console.log(matches)
-  const clipboardid = () => {
-    Clipboard.setString('hello');
-  };
 
-  const clipboardpass = () => {
-    Clipboard.setString('hello');
-  };
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/admin/hideMatch`,
+        {
+          matchId,
+          matchType: 'FF',
+        },
+        {
+          headers: {Authorization: `${token}`},
+        },
+      );
+      console.log(response);
+      Alert.alert('', response.data.message);
 
-  const addName = async () => {
-    const token = await AsyncStorage.getItem('token');
-    try {
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/addNameff`,
-          { matchId, player1, player2, player3,player4 },
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          }
-        )
-        .then((response) => {
-          setMessage(response.data.message);
-        });
+      setHidematch(false);
     } catch (error) {
-      setError(error.response.data.message);
-    } finally {
-      notify();
+      console.log(error);
+      Alert.alert('', 'Error');
     }
   };
 
+  const openTimeSelector = () => {
+    setTimeModalVisible(true);
+  };
 
+  const selectTime = time => {
+    setSelectedTime(time);
+    setTimeModalVisible(false);
+  };
+
+  const renderTimeItem = ({item}) => (
+    <TouchableOpacity
+      style={[
+        styles.timeItem,
+        selectedTime === item && styles.selectedTimeItem,
+      ]}
+      onPress={() => selectTime(item)}>
+      <Text
+        style={[
+          styles.timeItemText,
+          selectedTime === item && styles.selectedTimeItemText,
+        ]}>
+        {item}
+      </Text>
+    </TouchableOpacity>
+  );
+
+  const UpdateIdPassword = async () => {
+    try {
+      let data = {};
+      const token = await AsyncStorage.getItem('token');
+
+      if (selectedTime) {
+        data = {
+          matchId,
+          coustum: {
+            id: customId,
+            password: customPassword,
+          },
+          time: selectedTime,
+        };
+      }
+      //
+      else {
+        data = {
+          matchType: 'FF',
+          matchId,
+          coustum: {
+            id: customId,
+            password: customPassword,
+          },
+        };
+      }
+
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/admin/updateFullMatch`,
+        data,
+        {
+          headers: {Authorization: `${token}`},
+        },
+      );
+
+      console.log(data);
+      Alert.alert('Sucessful', response?.data?.message);
+    } catch (error) {
+      console.error('Failed to update:', error);
+      Alert.alert('Failed', 'Failed to update');
+    }
+  };
 
   return (
-    // <KeyboardAvoidingView
-    //   behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    //   style={{ flex: 1 }}
-    // >
-      <View>
-        {/* Removed LinearGradient from here */}
-        <LinearGradient
-          colors={["#0f0c29", "#302b63", "#24243e"]}
-          style={styles.container} // Applied LinearGradient to container
-        >
-          <View>
-            <View style={styles.header}>
-              <View style={styles.headerLeft}>
-                <Image source={freefire} style={styles.image} />
-                <Text style={styles.text}>Freefire Full Match</Text>
-              </View>
-              <Text style={styles.text}>Player mode: {matches.playermode}</Text>
-            </View>
-
-            <View style={styles.mapContainer}>
-              <Text style={styles.title}>MAP: Random</Text>
-              <Text style={styles.title}>Total player: 48</Text>
-            </View>
-
-            <View style={styles.mapImages}>
-              <Image source={bermuda} style={styles.imagemap} />
-              <Image source={purgatory} style={styles.imagemap} />
-              <Image source={kalahari} style={styles.imagemap} />
-            </View>
-
-            <View style={styles.detailsContainer}>
-              <View>
-                <Text style={styles.text}>Winner:</Text>
-                <Text style={styles.text}>Top: 3</Text>
-                <Text style={styles.text}>Top: 15</Text>
-              </View>
-              <View>
-                <Text style={styles.text}>Odds:</Text>
-                <Text style={styles.text}>3x</Text>
-                <Text style={styles.text}>1.5x</Text>
-              </View>
-              </View>
-              <View style={styles.divider} />
-              
-              <View style={styles.timeContainer}>
-                <Text style={styles.texttime}>Time: 9:00 AM</Text>
-              {
-                checKJoined === 'joined'?(
-                  <TouchableOpacity style={styles.joinedButton}>
-                    <Text style={{ color: 'white' }}>Joined</Text>
-                  </TouchableOpacity>
-                ):<TouchableOpacity
-                style={styles.entryButton}
-                onPress={() => setJoinModel(true)}
-              >
-                <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
-              </TouchableOpacity>
-              }
-              </View>
-            
-
-            {checKJoined === 'joined' ? (
-              <View style={styles.joinedContainer}>
-                <View style={styles.inputContainer}>
-                  <View style={styles.input}>
-                    <Text>customid: 88997</Text>
-                    <TouchableOpacity onPress={clipboardid}>
-                      <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
-                    </TouchableOpacity>
-                  </View>
-                  <View style={styles.input}>
-                    <Text>custom: 54988</Text>
-                    <TouchableOpacity onPress={clipboardpass}>
-                      <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
-                    </TouchableOpacity>
-                  </View>
-                </View>
-                <View style={styles.playerbox}>
-                 <TextInput
-                    style={styles.inputs}
-                    placeholder="player 1"
-                    value={player1}
-                    onChangeText={(text) => setPlayer1(text)}
-                  />
-                  <TextInput
-                    style={styles.inputs}
-                    placeholder="player 2"
-                    value={player2}
-                    onChangeText={(text) => setPlayer2(text)}
-                  />
-                  <TextInput
-                    style={styles.inputs}
-                    placeholder="player 3"
-                    value={player3}
-                    onChangeText={(text) => setPlayer3(text)}
-                  />
-                  <TextInput
-                    style={styles.inputs}
-                    placeholder="player 4"
-                    value={player4}
-                    onChangeText={(text) => setPlayer4(text)}
-                  />
-                  
-                  <TouchableOpacity style={styles.joinedButton}>
-                    <Text style={{ color: 'white' }} onPress={addName}>
-                      Add gameName
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
-            ):null }
-
-            <ModalNotify visible={visible} message={message} error={error} />
-
-            <Modal transparent animationType="slide" visible={joinModel}>
-              <View style={styles.modalContainer}>
-                <View style={styles.modalContent}>
-                  <Text style={styles.modalText}>Did you join Match?</Text>
-                  <View style={styles.buttonContainer}>
-                    <TouchableOpacity
-                      style={[styles.button, styles.noButton]}
-                      onPress={() => setJoinModel(false)}
-                    >
-                      <Text style={styles.buttonText}>No</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={[styles.button, styles.yesButton]}
-                      onPress={joinuser}
-                    >
-                      <Text style={styles.buttonText}>Yes</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            </Modal>
-          </View>
-        </LinearGradient>
+    <LinearGradient
+      colors={['#0f0c29', '#302b63', '#24243e']}
+      style={styles.container}
+      key={matches._id}>
+      <TouchableOpacity
+        style={styles.crossbutton}
+        onPress={() => setHidematch(true)}>
+        <Text style={styles.cross}>X</Text>
+      </TouchableOpacity>
+      <View style={styles.header}>
+        <View style={styles.headerLeft}>
+          <Image source={freefire} alt={'no image'} style={styles.image} />
+          <Text style={styles.text}> FreeFire Full Match</Text>
+        </View>
+        <Text style={styles.text}>Player mode: {matches.playermode}</Text>
       </View>
-    // </KeyboardAvoidingView>
+
+      <View style={styles.mapContainer}>
+        <Text style={styles.title}>MAP: Random</Text>
+        <Text style={styles.title}>Total player: {matches.TotalPlayer}</Text>
+      </View>
+
+      <View style={styles.mapImages}>
+        <Image source={bermuda} alt="no image" style={styles.imagemap} />
+        <Image source={kalahari} alt="no image" style={styles.imagemap} />
+        <Image source={purgatory} alt="no image" style={styles.imagemap} />
+      </View>
+
+      <View style={styles.detailsContainer}>
+        {checkmatch === 'solo' ? (
+          <>
+            <View>
+              <Text style={styles.text}>Winner:</Text>
+              <Text style={styles.text}>Top: 4</Text>
+              <Text style={styles.text}>Top: 22</Text>
+            </View>
+            <View>
+              <Text style={styles.text}>Odds:</Text>
+              <Text style={styles.text}>3x</Text>
+              <Text style={styles.text}>1.5x</Text>
+            </View>
+          </>
+        ) : checkmatch === 'squad' ? (
+          <>
+            <View>
+              <Text style={styles.text}>Winner:</Text>
+              <Text style={styles.text}>Top: 2</Text>
+              <Text style={styles.text}>Top: 6</Text>
+            </View>
+            <View>
+              <Text style={styles.text}>Odds:</Text>
+              <Text style={styles.text}>3x</Text>
+              <Text style={styles.text}>1.5x</Text>
+            </View>
+          </>
+        ) : (
+          <>
+            <View>
+              <Text style={styles.text}>Winner:</Text>
+              <Text style={styles.text}>Top: 2</Text>
+              <Text style={styles.text}>Top: 16</Text>
+            </View>
+            <View>
+              <Text style={styles.text}>Odds:</Text>
+              <Text style={styles.text}>3x</Text>
+              <Text style={styles.text}>1.5x</Text>
+            </View>
+          </>
+        )}
+      </View>
+      <View style={styles.divider} />
+
+      {/* Time Selection with AM/PM Toggle */}
+      <View style={styles.timeAndEntryContainer}>
+        <View style={styles.timeSelectionContainer}>
+          <TouchableOpacity
+            style={styles.timeDisplayButton}
+            onPress={openTimeSelector}>
+            <Text style={styles.timeDisplayText}>
+              {selectedTime || initalTime}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.amPmToggle} onPress={toggleAmPm}>
+            <Text style={styles.amPmText}>{amPm}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <View style={styles.joinedContainer}>
+        <View style={styles.inputContainer}>
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Custom-Id: </Text>
+            <TextInput
+              style={[styles.inputBox, {color: 'blue'}]}
+              placeholder={matches?.coustum?.id}
+              onChangeText={setCustomId}
+            />
+            <TouchableOpacity onPress={clipboardId}>
+              <AntDesign name="copy1" size={17} style={{marginLeft: 10}} />
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.input}>
+            <Text style={styles.inputLabel}>Password:</Text>
+            <TextInput
+              placeholder={matches?.coustum?.password}
+              style={[styles.inputBox, {marginLeft: 8, color: 'red'}]}
+              onChangeText={setCustomPassword}
+            />
+            <TouchableOpacity onPress={clipboardPass}>
+              <AntDesign name="copy1" size={17} style={{marginLeft: 10}} />
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        <TouchableOpacity
+          onPress={UpdateIdPassword}
+          style={styles.joinedButton}>
+          <Text style={styles.buttonText}>Update</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Hide Modal */}
+
+      <Modal animationType="slide" transparent={true} visible={hidematch}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalBox}>
+            <Text style={styles.modalTitle}>Hide Match</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to hide this match?
+            </Text>
+
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.button, styles.cancelButton]}
+                onPress={() => setHidematch(false)}>
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.button, styles.confirmButton]}
+                onPress={() => {
+                  setHidematch(false);
+                  handleMatchHide();
+                }}>
+                <Text style={styles.confirmButtonText}>Yes, Hide</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Time Selection Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={timeModalVisible}
+        onRequestClose={() => setTimeModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <View style={{backgroundColor: 'white'}}>
+            <Text style={styles.modalTitle}>Select Time</Text>
+            <FlatList
+              data={timeOptions}
+              renderItem={renderTimeItem}
+              keyExtractor={item => item}
+              numColumns={4}
+              contentContainerStyle={styles.timeList}
+            />
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setTimeModalVisible(false)}>
+              <Text style={styles.closeButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+    </LinearGradient>
   );
 };
-
 const styles = StyleSheet.create({
+  // Existing styles - unchanged
   container: {
     width: 340,
-    marginLeft: 20,
-    padding: 10,
+    marginLeft: 30,
+    padding: 12,
     gap: 15,
-    overflow: 'scroll', // Note: 'overflow' should be handled differently in React Native (e.g., with ScrollView)
-    borderRadius:25,
+    borderRadius: 25,
+    marginBottom: 30,
+  },
+  crossbutton: {
+    backgroundColor: 'red',
+    marginLeft: '90%',
+    width: 30,
+    padding: 5,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: -14,
   },
   header: {
     flexDirection: 'row',
@@ -308,132 +377,202 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 30,
-    marginLeft:-10
-
+    marginLeft: -10,
   },
   text: {
     fontSize: 13.6,
     fontWeight: '700',
-    color: 'white', // White text to contrast with gradient
-    gap:20
-  },
-  divider:{
-    height: 1,
-    backgroundColor: 'white',
-    marginVertical: 10,
-    width: '100%',
+    color: 'white',
   },
   mapContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginTop:6
+    marginTop: 6,
   },
   title: {
     fontSize: 12.5,
     fontWeight: '700',
-    color: '#fff', // White text for visibility
+    color: '#fff',
   },
   mapImages: {
     flexDirection: 'row',
     gap: 10,
-    marginTop:10,
-    
+    marginTop: 10,
   },
   imagemap: {
     width: 100,
     height: 80,
-    borderRadius:20
+    borderRadius: 20,
   },
   detailsContainer: {
     flexDirection: 'row',
     gap: 76,
     alignItems: 'center',
-    marginTop:10
+    marginTop: 10,
   },
-  timeContainer: {
-    borderWidth: 2,
-    borderColor: 'black',
-    borderRadius:25,
-    width: 110,
-    padding: 1,
-    height: 30,
-    alignItems:'center',
-    flexDirection:"row",
-    backgroundColor:'white',
-    gap:110,
-    marginTop:10
+  divider: {
+    height: 1,
+    backgroundColor: 'white',
+    marginVertical: 10,
+    width: '100%',
   },
-  texttime:{
-    color:'black',
+  timeAndEntryContainer: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  timeSelectionContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 10,
+  },
+  timeDisplayButton: {
+    backgroundColor: 'white',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 15,
+    minWidth: 60,
+    alignItems: 'center',
+  },
+  timeDisplayText: {
+    color: '#24243e',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  amPmToggle: {
+    backgroundColor: '#24243e',
+    paddingHorizontal: 15,
+    paddingVertical: 8,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'white',
+  },
+  amPmText: {
+    color: 'white',
+    fontWeight: 'bold',
   },
   joinedContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop:30
   },
   inputContainer: {
     gap: 10,
+    width: '75%',
   },
   input: {
-    height: 30,
-    paddingHorizontal: 10,
+    height: 40,
+    paddingHorizontal: 8,
     borderWidth: 1,
     borderColor: '#ccc',
+    borderRadius: 5,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: 'rgba(255, 255, 255, 0.9)', // Slight transparency for contrast
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
   },
-  inputs: {
-    width: 120,
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  inputBox: {
+    flex: 1,
     height: 40,
-    borderWidth: 1,
-    borderColor: '#fff', // White border
-    marginVertical: 5,
-    paddingHorizontal: 10,
-    color: '#fff', // White text
-    backgroundColor: 'rgba(255, 255, 255, 0.2)', // Transparent white background
+    fontSize: 13,
+    padding: 0,
   },
   joinedButton: {
     backgroundColor: 'green',
-    height: 30,
-    width: '100%',
+    height: 40,
+    width: '22%',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius:25
+    borderRadius: 10,
   },
- 
-  entryButton: {
-    backgroundColor: 'green',
-    height: 30,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    
+  buttonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 13,
   },
-  loadingText: {
-    color: '#fff', // White text for visibility
-    fontSize: 20,
-    marginLeft: 10,
-    marginTop: 20,
-  },
+
+  // Current modal styles
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-   
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalContent: {
-    backgroundColor: '#fff',
+    backgroundColor: 'white',
+    borderRadius: 20,
     padding: 20,
-    borderRadius: 10,
-    width: 300,
+    width: '80%',
     alignItems: 'center',
   },
-  modalText: {
+  modalTitle: {
     fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    color: '#24243e',
+  },
+  timeList: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  timeItem: {
+    width: 60,
+    height: 60,
+    justifyContent: 'center',
+    alignItems: 'center',
+    margin: 5,
+    borderRadius: 30,
+    backgroundColor: '#f0f0f0',
+  },
+  selectedTimeItem: {
+    backgroundColor: '#302b63',
+  },
+  timeItemText: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#24243e',
+  },
+  selectedTimeItemText: {
+    color: 'white',
+  },
+  closeButton: {
+    marginTop: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: '#24243e',
+    borderRadius: 10,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
+
+  // New hide match modal styles
+  modalBox: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 10,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
     marginBottom: 20,
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#555',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -443,18 +582,23 @@ const styles = StyleSheet.create({
   button: {
     paddingVertical: 12,
     paddingHorizontal: 20,
-    borderRadius: 5,
+    borderRadius: 8,
+    minWidth: '45%',
+    alignItems: 'center',
   },
-  noButton: {
-    backgroundColor: '#dc3545',
+  cancelButton: {
+    backgroundColor: '#f1f1f1',
   },
-  yesButton: {
-    backgroundColor: '#28a745',
+  confirmButton: {
+    backgroundColor: '#ff3b30',
   },
-  buttonText: {
-    color: '#fff',
-    fontWeight: 'bold',
+  cancelButtonText: {
+    color: '#555',
+    fontWeight: '600',
+  },
+  confirmButtonText: {
+    color: 'white',
+    fontWeight: '600',
   },
 });
-
 export default Freefirefullmatchcard;

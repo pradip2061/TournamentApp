@@ -9,26 +9,28 @@ const schema = mongoose.Schema(
       type: Number,
       default: 0,
     },
-    gameName:[{
-    userid:{
-      type:String
-    },
-    player1:{
-      type:String
-    },
-    player2:{
-      type:String
-    },
-    player3:{
-      type:String
-    },
-    player4:{
-      type:String
-    },
-    slot:{
-      type:String
-    }
-  }],
+    gameName: [
+      {
+        userid: {
+          type: String,
+        },
+        player1: {
+          type: String,
+        },
+        player2: {
+          type: String,
+        },
+        player3: {
+          type: String,
+        },
+        player4: {
+          type: String,
+        },
+        slot: {
+          type: String,
+        },
+      },
+    ],
     status: {
       type: String,
       enum: ["running", "pending", "completed"],
@@ -38,10 +40,15 @@ const schema = mongoose.Schema(
       type: Number,
     },
     userid: [String],
-    time:{
-      type:String
-    }
+    time: {
+      type: String,
+    },
+    coustum: {
+      id: { type: String },
+      password: { type: String },
+    },
   },
+
   {
     timestamps: true,
   }

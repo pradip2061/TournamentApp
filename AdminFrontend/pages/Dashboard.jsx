@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -12,18 +12,31 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL} from '../env';
 const Dashboard = ({navigation}) => {
+  const [userdata, setUserdata] = useState({});
   useEffect(() => {
-    const token = AsyncStorage.getItem('token');
-    if (!token) {
-      Alert.alert('Unauthorized ', 'Please login to access dashboard');
-      navigation.navigate('AdminLogin');
-      return;
-    }
+    const getdata = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Unauthorized ', 'Please login to access dashboard');
+        navigation.navigate('Authenticate');
+        return;
+      }
+
+      const response = await axios.get(
+        `${BASE_URL}/khelmela/userRequest/user`,
+        {
+          headers: {Authorization: `${token}`},
+        },
+      );
+      setUserdata(response.data);
+    };
+    getdata();
   }, []);
 
   const handleDeposite = () => {
     navigation.navigate('AdminHome');
   };
+
   const handleChatPress = async () => {
     console.log('Chat Press...........');
     const token = await AsyncStorage.getItem('token');
@@ -45,22 +58,21 @@ const Dashboard = ({navigation}) => {
         <Text style={styles.headerText}>Admin Panel</Text>
         <TouchableOpacity
           style={styles.logoutButton}
-          onPress={() => navigation.navigate('Login')}>
+          onPress={() => {
+            AsyncStorage.clear;
+            navigation.navigate('Authenticate');
+          }}>
           <Image source={require('../assets/logout.png')} style={styles.icon} />
         </TouchableOpacity>
       </View>
 
       {/* Admin Info */}
       <View style={styles.adminInfo}>
-        <Image
-          source={require('../assets/arjunadmin.png')}
-          style={styles.profileImage}
-        />
+        <Image source={{uri: userdata.image}} style={styles.profileImage} />
         <View>
-          <Text style={styles.infoText}>Admin: Arjun Neupane</Text>
-          <Text style={styles.infoText}>Username: raiden</Text>
-          <Text style={styles.infoText}>Email: raidendemoid@gmail.com</Text>
-          <Text style={styles.infoText}>Contact No: 9825662991</Text>
+          <Text style={styles.infoText}>Username: {userdata?.username} </Text>
+          <Text style={styles.infoText}>Email: {userdata?.email} </Text>
+          <Text style={styles.infoText}>Contact No: {userdata?.number}</Text>
         </View>
       </View>
 
@@ -77,7 +89,7 @@ const Dashboard = ({navigation}) => {
             source={require('../assets/deposit.png')}
             style={styles.boxImage}
           />
-          <Text style={styles.boxText}>Money Deposit</Text>
+          <Text style={styles.boxText}>Money Request </Text>
         </TouchableOpacity>
 
         {/* Games Data */}
@@ -102,15 +114,15 @@ const Dashboard = ({navigation}) => {
           <Text style={styles.boxText}>Power Room</Text>
         </TouchableOpacity>
 
-        {/* Withdraw Request */}
+        {/* GamePannel  */}
         <TouchableOpacity
           style={styles.box}
-          onPress={() => navigation.navigate('AdminHome')}>
+          onPress={() => navigation.navigate('GamePannel')}>
           <Image
             source={require('../assets/withdrawwallet.png')}
             style={styles.boxImage}
           />
-          <Text style={styles.boxText}>Withdraw Request</Text>
+          <Text style={styles.boxText}> Tournament </Text>
         </TouchableOpacity>
       </View>
 

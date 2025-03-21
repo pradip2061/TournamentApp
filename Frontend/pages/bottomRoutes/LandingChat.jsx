@@ -30,6 +30,7 @@ const LandingChat = ({navigation, route}) => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [token, setToken] = useState('');
 
   useEffect(() => {
     const getUser = async () => {
@@ -42,6 +43,8 @@ const LandingChat = ({navigation, route}) => {
         console.error('Error retrieving token:', error);
       }
     };
+    console.log(route.params);
+
     getUser();
   }, []);
 
@@ -138,7 +141,7 @@ const LandingChat = ({navigation, route}) => {
   const handleOnpress = item => {
     navigation.navigate('PrivateChat', {
       userId: user,
-      FriendId: item.id,
+      FriendId: item._id,
       photoUrl: item.image || item.photoUrl,
       name: item.username || item.name,
     });
