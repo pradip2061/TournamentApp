@@ -11,13 +11,15 @@ import axios from 'axios';
 import MoneyRequestCard from '../components/MoneyRequestCard';
 import Withdraw from '../components/Withdraw';
 import {baseUrl} from '../../env';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const AdminHome = () => {
   const [toggle, setToggle] = useState('moneyRequest');
   const [item, setItem] = useState([]);
   const [statusFilter, setStatusFilter] = useState('pending'); // Default filter is 'pending'
   const [refreshKey, setRefreshKey] = useState(0); // Add a refresh key to force re-render
-  const admin = 'Arjun';
+  const [user, setUser] = useState({});
+  const admin = user.username;
 
   // Convert to useCallback to prevent unnecessary recreations
   const fetchMoneyRequests = useCallback(async () => {
@@ -35,6 +37,19 @@ const AdminHome = () => {
   useEffect(() => {
     if (toggle === 'moneyRequest') {
       fetchMoneyRequests();
+      const getUser = async () => {
+        const token = await AsyncStorage.getItem('token');
+        const response = await axios.get(
+          `${baseUrl}/khelmela/userRequest/user`,
+          {
+            headers: {Authorization: `${token}`},
+          },
+        );
+        console.log(response.data);
+        setUser(response.data);
+      };
+
+      getUser();
     }
   }, [toggle, refreshKey, fetchMoneyRequests]);
 

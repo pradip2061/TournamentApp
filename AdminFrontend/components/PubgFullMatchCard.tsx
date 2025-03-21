@@ -34,8 +34,6 @@ const PubgFullMatchCard = ({matches}) => {
 
   const [hidematch, setHidematch] = useState(false);
 
-  console.log(matches);
-
   // Available time options
   const timeOptions = [
     '1',

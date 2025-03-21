@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -9,12 +9,48 @@ import {
 import FreeFire from '../freefire/FreeFire';
 import Pubg from '../pubg/Pubg';
 import MatchTypeModal from '../../components/CreateModal';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import axios from 'axios';
+import {baseUrl} from '../../env';
 const AdminHome = () => {
   const [toggle, setToggle] = useState('FreeFire');
   const [modalVisible, setModalVisible] = useState(false);
+  const [admin, setAdmin] = useState('');
 
-  const admin = 'Arjun';
+  console.log('admin ................');
+
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        console.log('Effect ................');
+        const token = await AsyncStorage.getItem('token');
+        console.log('Token from AsyncStorage:', token);
+
+        if (!token) {
+          console.log('No token found');
+          return;
+        }
+
+        const response = await axios.get(
+          'http://10.216.74.109:3000/khelmela/userRequest/user', // Ensure this URL matches your running backend
+          {
+            headers: {Authorization: `Bearer ${token}`},
+          },
+        );
+
+        console.log('User data:', response.data);
+        setAdmin(response.data.username);
+      } catch (error) {
+        if (error.response?.status === 401) {
+          console.error('Invalid or expired token. Removing token.');
+          await AsyncStorage.removeItem('token');
+        }
+        console.error('Error fetching user:', error);
+      }
+    };
+
+    getUser();
+  }, []);
 
   const handleRender = () => {
     if (toggle === 'FreeFire') {
