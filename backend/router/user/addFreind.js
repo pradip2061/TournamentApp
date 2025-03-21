@@ -74,36 +74,41 @@ router.post("/search-users", Authverify, async (req, res) => {
 router.post("/addFriends", Authverify, async (req, res) => {
   console.log("add Friend route hit >>>>>>>>> ");
   try {
-    const { friendId } = req.body; // Expecting friend data in request body
-
+    const { friendId } = req.body;
     const userId = req.user;
 
-    console.log("USer Id ----> " + userId);
+    console.log("User Id ----> " + userId);
 
     if (!friendId) {
       return res.status(400).json({ message: "FriendId is required" });
     }
 
-    const user = await User.findOne({ _id: userId }).lean(); // Convert to plain object
-    const friend = await User.findOne({ _id: friendId }).lean(); // Convert to plain object
+    const user = await User.findOne({ _id: userId }).lean();
+    const friend = await User.findOne({ _id: friendId }).lean();
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-
     if (!friend) {
       return res.status(404).json({ message: "Friend not found" });
     }
 
-    if (user.friends.some((f) => f.id === friendId)) {
-      return res.json({ message: "Friend already added" });
-    }
+    // Check if they are already friends
+    const isUserAlreadyFriends = await User.exists({
+      _id: userId,
+      "friends.id": friendId,
+    });
 
-    if (friend.friends.some((f) => f.id === friendId)) {
-      return res.json({ message: "Friend already added" });
-    }
+    const isFriendAlreadyFriends = await User.exists({
+      _id: friendId,
+      "friends.id": userId,
+    });
 
     console.log("Friend data:", friend);
+
+    if (isUserAlreadyFriends) {
+      return res.json({ message: "Friend already added" });
+    }
 
     // Add friend to user's friend list
     await User.updateOne(
@@ -117,19 +122,19 @@ router.post("/addFriends", Authverify, async (req, res) => {
       }
     );
 
-    // Add user to friend's friend list
-    await User.updateOne(
-      { _id: friendId },
-      {
-        $push: {
-          friends: {
-            id: userId,
-            username: user.username, // Corrected
-            image: user.image, // Corrected
+    // Only add user to friend's friend list if user is NOT already in their list
+    if (!isFriendAlreadyFriends) {
+      await User.updateOne(
+        { _id: friendId },
+        {
+          $push: {
+            friends: {
+              id: userId,
+            },
           },
-        },
-      }
-    );
+        }
+      );
+    }
 
     res.status(200).json({ message: "Friend added successfully" });
   } catch (error) {

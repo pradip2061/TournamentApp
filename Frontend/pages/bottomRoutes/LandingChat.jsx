@@ -19,13 +19,15 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL} from '../../env';
 import {jwtDecode} from 'jwt-decode';
 
-const LandingChat = ({navigation, route}) => {
-  const {friends: initialFriends} = route.params;
+const LandingChat = ({navigation}) => {
+  // Remove initialFriends from route.params destructuring
   const [user, setUser] = useState('');
   const [re, setRe] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [friends, setFriends] = useState(initialFriends);
-  const [filteredFriends, setFilteredFriends] = useState(initialFriends);
+  const [clicked, setClicked] = useState(false);
+  // Initialize as empty arrays instead of using route.params
+  const [friends, setFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -39,77 +41,61 @@ const LandingChat = ({navigation, route}) => {
         const decoded = jwtDecode(token);
         setToken(token);
         setUser(decoded.id);
+
+        // Fetch friends data after getting the token
+        fetchFriends(token);
       } catch (error) {
         console.error('Error retrieving token:', error);
       }
     };
-    console.log(route.params);
 
     getUser();
   }, []);
 
-  //
+  // Modify the fetchFriends function to accept a token parameter
+  const fetchFriends = useCallback(
+    async (currentToken = null) => {
+      try {
+        // Use the passed token or get it from storage
+        const tokenToUse =
+          currentToken || token || (await AsyncStorage.getItem('token'));
+        if (!tokenToUse) {
+          Alert.alert('token Problem ');
 
-  // Function to fetch updated friends list
-  const fetchFriends = useCallback(async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) return;
+          return;
+        }
 
-      console.log('token from callback', token);
+        setLoading(true);
 
-      const response = await axios.get(
-        `${BASE_URL}/khelmela/userRequest/friends`,
-        {
-          headers: {Authorization: `${token}`},
-        },
-      );
+        const response = await axios.get(
+          `${BASE_URL}/khelmela/userRequest/friends`,
+          {
+            headers: {Authorization: `${tokenToUse}`},
+          },
+        );
 
-      if (response.data && response.data.friends) {
-        setFriends(response.data.friends);
-        setFilteredFriends(response.data.friends);
+        console.log(response.data[0]._id);
+
+        if (response.data && response.data) {
+          setFriends(response.data);
+          setFilteredFriends(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+        Alert.alert('Error', 'Failed to load friends');
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error('Error fetching friends:', error);
-    }
-  }, []);
+    },
+    [token],
+  );
 
-  // Pull-to-refresh handler
+  // Update onRefresh to use the current token
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchFriends();
     setRefreshing(false);
   }, [fetchFriends]);
-
-  const searchPeople = async () => {
-    if (!searchTerm.trim()) {
-      Alert.alert('Error', 'Please enter a name to search');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/search-users`,
-        {
-          name: searchTerm,
-        },
-        {
-          headers: {Authorization: `${token}`},
-        },
-      );
-
-      setSearchResults(response.data.users || []);
-      console.log(response.data.users);
-
-      setShowSearchResults(true);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      Alert.alert('Error', 'Failed to search users');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const addFriend = async userToAdd => {
     try {
@@ -125,8 +111,14 @@ const LandingChat = ({navigation, route}) => {
           },
         },
       );
+      setClicked(true);
 
       Alert.alert('Success', response.data?.message || 'Friend  added !');
+      setTimeout(() => {
+        setShowSearchResults(false);
+        setClicked(false);
+      }, 900);
+
       // Refresh friends list after adding a friend
       fetchFriends();
     } catch (error) {
@@ -135,6 +127,49 @@ const LandingChat = ({navigation, route}) => {
         'Error',
         error.response?.data?.message || 'Failed to add friend',
       );
+    }
+  };
+
+  const searchPeople = async () => {
+    if (!searchTerm.trim()) {
+      Alert.alert('Error', 'Please enter a name to search');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const tokenToUse = token || (await AsyncStorage.getItem('token'));
+      if (!tokenToUse) {
+        Alert.alert('Error', 'Authentication required');
+        return;
+      }
+
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/search-users`,
+        {
+          name: searchTerm,
+        },
+        {
+          headers: {Authorization: `${tokenToUse}`},
+        },
+      );
+
+      if (response.data && response.data.users) {
+        setSearchResults(response.data.users);
+        setShowSearchResults(true);
+      } else {
+        // Handle empty response
+        setSearchResults([]);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error.message);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to search users',
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -209,7 +244,7 @@ const LandingChat = ({navigation, route}) => {
           <Text style={styles.sectionTitle}>Recent Chats</Text>
           <FlatList
             data={filteredFriends}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item._id.toString()}
             renderItem={({item}) => (
               <TouchableOpacity
                 style={styles.friendCard}
@@ -290,11 +325,13 @@ const LandingChat = ({navigation, route}) => {
                           <Text style={styles.resultSubtext}>Tap to chat</Text>
                         </View>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => addFriend(item)}>
-                        <Text style={styles.addButtonText}>Add Friend</Text>
-                      </TouchableOpacity>
+                      {!clicked && (
+                        <TouchableOpacity
+                          style={styles.addButton}
+                          onPress={() => addFriend(item)}>
+                          <Text style={styles.addButtonText}>Add Friend</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   )}
                   contentContainerStyle={styles.resultListContainer}

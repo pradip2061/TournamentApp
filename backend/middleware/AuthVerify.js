@@ -1,36 +1,22 @@
+const promisify = require("util").promisify;
 const jwt = require("jsonwebtoken");
-const { promisify } = require("util");
 require("dotenv").config();
-
 const Authverify = async (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res
-        .status(401)
-        .json({ message: "Access denied. No token provided." });
-    }
-
-    const token = authHeader.split(" ")[1]; // Extract token after "Bearer"
-
+    const token = req.headers.authorization;
     const decoded = await promisify(jwt.verify)(token, process.env.secret_key);
-
     if (!decoded) {
-      return res
-        .status(401)
-        .json({ message: "Invalid or expired token. Please log in again." });
+      return res.status(400).send({
+        message: "you need to login again",
+      });
     }
 
-    console.log("Auth Verify Successful");
+    console.log("Auth Verify ");
     req.user = decoded.id;
     next();
-  } catch (error) {
-    console.error("JWT Verification Error:", error.message);
-
-    return res.status(401).json({
-      message: "Invalid or expired token. Please log in again.",
-    });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send({ message: "Invalid token" });
   }
 };
 

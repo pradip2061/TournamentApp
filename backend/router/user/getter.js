@@ -4,8 +4,9 @@ const router = express.Router();
 const { User } = require("../../model/schema");
 const ClashSquad = require("../../model/ClashSquadModel");
 const Authverify = require("../../middleware/AuthVerify");
-
+const mongoose = require("mongoose");
 // Route to send specific data only *****************************
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 router.get("/userRequest/:request", Authverify, async (req, res) => {
   console.log("Route request Active >>>>>>>>>>>>>>>>>>>>>>>>>>>");
@@ -14,14 +15,14 @@ router.get("/userRequest/:request", Authverify, async (req, res) => {
     const { request } = req.params;
     console.log("User data from auth middleware:", req.user);
 
-    // Ensure req.user is an ObjectId (convert if necessary)
-    if (!req.user) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: No user found in request" });
+    // Ensure req.user is a valid ObjectId
+    if (!req.user || !isValidObjectId(req.user)) {
+      return res.status(401).json({ message: "Unauthorized: Invalid user ID" });
     }
 
-    const user = await User.findById(req.user).lean(); // Use .lean() for faster queries if not modifying data
+    // Convert req.user to ObjectId
+    const userId = new mongoose.Types.ObjectId(req.user);
+    const user = await User.findById(userId).lean();
 
     if (!user) {
       console.log("User not Found ------->");
@@ -35,28 +36,35 @@ router.get("/userRequest/:request", Authverify, async (req, res) => {
 
       console.log("Fetching friend details...");
 
-      // Get friend IDs safely
-      const friendIds = user.friends.map((f) => f?.id).filter(Boolean); // Ensure IDs are valid
+      // Filter and validate friend IDs
+      const friendIds = user.friends
+        .map((f) =>
+          isValidObjectId(f?.id) ? new mongoose.Types.ObjectId(f.id) : null
+        )
+        .filter(Boolean);
+
+      if (friendIds.length === 0) {
+        return res.json({ message: "No valid friends found" });
+      }
 
       // Fetch all friends in parallel
       const friends = await User.find({ _id: { $in: friendIds } }).select(
-        "id username image"
+        "_id username image"
       );
 
       console.log("Friends fetched successfully!");
-
       return res.json(friends);
     }
 
     if (request === "user") {
-      return res.json(user);
+      return res.send(user);
     }
 
     // Validate request key
     if (!Object.prototype.hasOwnProperty.call(user, request)) {
       return res
         .status(400)
-        .json({ message: `Invalid request: ${request} not found` });
+        .json({ message: `Invalid request: '${request}' not found` });
     }
 
     console.log("Returned......... ", user[request]);

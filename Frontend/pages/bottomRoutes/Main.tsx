@@ -16,31 +16,8 @@ const Tab = createBottomTabNavigator();
 
 const ChatTabButton = props => {
   const navigation = useNavigation();
-
   const handleChatPress = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.error('No token found');
-        Alert.alert('token not found ! ');
-        return;
-      }
-      const response = await axios.get(
-        `${BASE_URL}/khelmela/userRequest/friends`,
-        {
-          headers: {Authorization: `${token}`},
-        },
-      );
-
-      if (!response.data) {
-        Alert.alert('Not Found', `Data not Found`);
-        return;
-      }
-
-      navigation.navigate('Chat', {friends: response.data});
-    } catch (error) {
-      console.error('Error fetching friends:', error.message);
-    }
+    navigation.navigate('Chat');
   };
 
   return <TouchableOpacity {...props} onPress={handleChatPress} />;
