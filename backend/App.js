@@ -11,6 +11,7 @@ const CheckResultRouter = require("./router/user/CheckResultRouter");
 const PubgRouter = require("./router/user/PubgRouter");
 const getter = require("./router/user/getter");
 const matchValidation = require("./router/admin/geminiVal");
+const DeleteCardRouter =require("./router/user/DeleteCardRouter")
 
 const {
   router: ChatRouter,
@@ -47,7 +48,8 @@ app.use(
   getter,
   addFriends,
   userMoney,
-  matchValidation
+  matchValidation,
+  DeleteCardRouter
 );
 
 app.use("/khelmela/admin", Admin);
