@@ -1,6 +1,13 @@
-import React, { useContext, useEffect, useState } from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity, Modal } from 'react-native';
-import { FlatList, TextInput } from 'react-native-gesture-handler';
+import React, {useContext, useEffect, useState} from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  TouchableOpacity,
+  Modal,
+} from 'react-native';
+import {FlatList, TextInput} from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -8,11 +15,11 @@ import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
 const img = require('../assets/image.png');
 const tdm = require('../assets/tdm.jpg');
-import { launchImageLibrary } from 'react-native-image-picker';
-import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
-import { BASE_URL } from '../env';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
+import {BASE_URL} from '../env';
 
-const MatchCard = ({ matches }) => {
+const MatchCard = ({matches, getmatches}) => {
   const [check, setCheck] = useState('');
   const [customId, setCustomId] = useState(0);
   const [customPassword, setCustomPassword] = useState(0);
@@ -25,22 +32,27 @@ const MatchCard = ({ matches }) => {
   const [notifyModel, setNotifyModel] = useState(false);
   const [result, setResult] = useState('');
   const [selectedImage, setSelectedImage] = useState(null);
-  const [boolean, setBoolean] = useState(null);
+  const [boolean, setBoolean] = useState<Boolean | null>(null);
   const [loading, setLoading] = useState(false);
   const [image, setImage] = useState(null);
   const [proof, setProof] = useState('');
+  const [deleteCardModel, setDeleteCardModel] = useState(false);
   const matchId = matches?._id;
-  console.log(matches);
-  const { setTrigger, trigger } = useContext(CheckAdminContext);
+  console.log(result);
+  const {setTrigger, trigger} = useContext(CheckAdminContext);
 
   useEffect(() => {
     const checkUserOrAdmin = async () => {
       const token = await AsyncStorage.getItem('token');
       await axios
-        .post(`${BASE_URL}/khelmela/checkUserOrAdmintdm`, { matchId }, {
-          headers: { Authorization: `${token}` },
-        })
-        .then((response) => {
+        .post(
+          `${BASE_URL}/khelmela/checkUserOrAdmintdm`,
+          {matchId},
+          {
+            headers: {Authorization: `${token}`},
+          },
+        )
+        .then(response => {
           setCheck(response.data.message);
         });
     };
@@ -52,12 +64,16 @@ const MatchCard = ({ matches }) => {
     setTimeout(() => setNotifyModel(false), 900);
   };
 
-  const customIdAndPassword = async (e) => {
+  const customIdAndPassword = async e => {
     e.preventDefault();
     try {
       await axios
-        .post(`${BASE_URL}/khelmela/setpasstdm`, { customId, customPassword, matchId })
-        .then((response) => {
+        .post(`${BASE_URL}/khelmela/setpasstdm`, {
+          customId,
+          customPassword,
+          matchId,
+        })
+        .then(response => {
           if (response.status === 200) setMessage(response.data.message);
         });
     } catch (error) {
@@ -71,11 +87,16 @@ const MatchCard = ({ matches }) => {
       setMessage('');
       const token = await AsyncStorage.getItem('token');
       await axios
-        .post(`${BASE_URL}/khelmela/joinuserPubgtdm`, { matchId }, { headers: { Authorization: `${token}` } })
-        .then((response) => {
+        .post(
+          `${BASE_URL}/khelmela/joinuserPubgtdm`,
+          {matchId},
+          {headers: {Authorization: `${token}`}},
+        )
+        .then(response => {
           if (response.status === 200) {
             setModalVisible(false);
             setMessage(response.data.message);
+            checkresult();
           } else {
             setModalVisible(true);
           }
@@ -91,9 +112,12 @@ const MatchCard = ({ matches }) => {
     const checkpublish = async () => {
       try {
         await axios
-          .post(`${BASE_URL}/khelmela/checkpublishtdm`, { matchId })
-          .then((response) => {
-            if (response.status === 200) setPublish(response.data.message);
+          .post(`${BASE_URL}/khelmela/checkpublishtdm`, {matchId})
+          .then(response => {
+            if (response.status === 200) {
+              setPublish(response.data.message);
+              getmatches();
+            }
           });
       } catch (error) {
         setError(error.response.data.message);
@@ -102,8 +126,25 @@ const MatchCard = ({ matches }) => {
     checkpublish();
   }, [message, trigger]);
 
-  const copyToClipboardId = () => Clipboard.setString(matches.customId.toString());
-  const copyToClipboardPass = () => Clipboard.setString(matches.customPassword.toString());
+  const copyToClipboardId = () => {
+    setError('');
+    if (!matches.customId) {
+      setError('no id here');
+      notify();
+      return;
+    }
+    Clipboard.setString(matches?.customId?.toString());
+  };
+
+  const copyToClipboardPass = () => {
+    setError('');
+    if (!matches.customPassword) {
+      setError('no password here');
+      notify();
+      return;
+    }
+    Clipboard.setString(matches?.customPassword?.toString());
+  };
 
   const reset = async () => {
     try {
@@ -113,10 +154,14 @@ const MatchCard = ({ matches }) => {
       console.log(customId);
       console.log(customPassword);
       await axios
-        .post(`${BASE_URL}/khelmela/changecustomtdm`, { matchId, customId, customPassword }, {
-          headers: { Authorization: `${token}` },
-        })
-        .then((response) => {
+        .post(
+          `${BASE_URL}/khelmela/changecustomtdm`,
+          {matchId, customId, customPassword},
+          {
+            headers: {Authorization: `${token}`},
+          },
+        )
+        .then(response => {
           if (response.status === 200) {
             setModalReset(false);
             setTrigger('done');
@@ -130,22 +175,26 @@ const MatchCard = ({ matches }) => {
   };
 
   useEffect(() => {
-    const checkresult = async () => {
-      try {
-        console.log(matchId);
-        const token = await AsyncStorage.getItem('token');
-        await axios
-          .post(`${BASE_URL}/khelmela/checkresulttdm`, { matchId }, {
-            headers: { Authorization: `${token}` },
-          })
-          .then((response) => setResult(response.data.message));
-      } catch (error) {
-        setError(error.response.data.message);
-        notify();
-      }
-    };
     checkresult();
   }, []);
+
+  const checkresult = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios
+        .post(
+          `${BASE_URL}/khelmela/checkresulttdm`,
+          {},
+          {
+            headers: {Authorization: `${token}`},
+          },
+        )
+        .then(response => setResult(response.data.message));
+    } catch (error) {
+      setError(error.response.data.message);
+      notify();
+    }
+  };
 
   const pickImage = () => {
     const options = {
@@ -166,71 +215,184 @@ const MatchCard = ({ matches }) => {
     });
   };
 
-  const uploadImage = async () => {
+  const handleDeposite = async image => {
+    setLoading(true);
     try {
-      setLoading(true);
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/upload/upload`,
-        { image: image, folderName: 'reporttdm', filename: '.jpg' },
-        { headers: { Authorization: `${token}` } }
-      );
-      console.log(response);
-      if (response.status === 200) {
-        setProof(response.data.url);
+      console.log(token);
+      if (!token) {
+        Alert.alert('Token not found');
+        return null; // Return null if token is missing
       }
+
+      if (!image) {
+        Alert.alert('Please upload an image');
+        return null;
+      }
+
+      // Generate a proper filename with extension
+      const timestamp = new Date().getTime();
+      const filename = `payment_proof_${timestamp}.jpg`;
+
+      const imageResponse = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: image,
+          folderName: 'proof',
+          filename: filename,
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
+      );
+
+      console.log('Image response:', imageResponse.data);
+
+      if (!imageResponse?.data?.url) {
+        Alert.alert('Image upload failed');
+        return null; // Return null on failure
+      }
+
+      const photoUrl = imageResponse.data.url;
+      return photoUrl; // ✅ Return the uploaded URL
     } catch (error) {
-      console.error('Upload Error:', error);
+      console.error('Error:', error.response);
+      Alert.alert(
+        'Error',
+        error.response?.data?.error || error.message || 'Something went wrong',
+      );
+      return null; // Return null on error
     }
   };
 
   const submitResult = async () => {
+    if (boolean === null) {
+      setError('Select Yes or No');
+      notify();
+      setLoading(false);
+      return;
+    }
+
     if (boolean === true) {
-      if (!image || typeof boolean !== 'boolean') {
-        setError("plz fill all field!");
+      if (!image) {
+        setError('Please upload an image!');
         notify();
         return;
       }
-      uploadImage();
-    }
-    try {
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/uploadprooftdm`,
-          { proof, matchId },
-          { headers: { Authorization: `${token}` } }
-        )
-        .then((response) => setMessage(response.data.message));
-    } catch (error) {
-      setError(error.response?.data.message);
-    }
-    try {
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
+
+      try {
+        // ✅ Get proof from handleDeposite
+        const uploadedProof = await handleDeposite(image);
+        if (!uploadedProof) {
+          setError('Image upload failed');
+          notify();
+          return;
+        }
+        proofsend(uploadedProof);
+      } catch (error) {
+        setError('Image upload failed');
+        notify();
+        return;
+      }
+    } else {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (!token) {
+          setError('Token not found');
+          return;
+        }
+
+        const response = await axios.post(
           `${BASE_URL}/khelmela/checkBooleantdm`,
-          { matchId, boolean },
-          { headers: { Authorization: `${token}` } }
-        )
-        .then((response) => setMessage(response.data.message));
+          {matchId, boolean},
+          {headers: {Authorization: `${token}`}},
+        );
+        setMessage(response.data.message);
+        checkresult();
+      } catch (error) {
+        setError(error.response?.data?.message || 'Submission failed');
+      } finally {
+        setModalDidYouWin(false);
+        notify();
+      }
+    }
+  };
+
+  const proofsend = async proof => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        setError('Token not found');
+        return;
+      }
+
+      if (!proof) {
+        console.log('No proof uploaded');
+        return;
+      }
+
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/checkBooleantdm`,
+        {matchId, boolean, proof},
+        {headers: {Authorization: `${token}`}},
+      );
+
+      setMessage(response.data.message);
+      checkresult();
     } catch (error) {
-      setError(error.response?.data.message);
+      setError(error.response?.data?.message || 'Submission failed');
     } finally {
       setModalDidYouWin(false);
       notify();
     }
   };
 
+  const deleteCard = async () => {
+    try {
+      setMessage('');
+      setError('');
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/deletecardtdm`,
+        {
+          matchId,
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
+      );
+      if (response.status === 200) {
+        setMessage(response?.data?.message);
+        getmatches();
+      }
+    } catch (error) {
+      setError(error?.response?.data?.message);
+    } finally {
+      notify();
+      setDeleteCardModel(false);
+    }
+  };
+
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
-        <LinearGradient colors={['#1e1b4b', '#3b3477', '#2a2957']} style={styles.gradient}>
+        <LinearGradient
+          colors={['#1e1b4b', '#3b3477', '#2a2957']}
+          style={styles.gradient}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.cardContent}>
               <View style={styles.titleContainer}>
                 <Image source={img} style={styles.gameIcon} />
                 <Text style={styles.titleText}>PUBG Team DeathMatch</Text>
+                {check === 'host' && (
+                  <TouchableOpacity onPress={() => setDeleteCardModel(true)}>
+                    <Text style={{color: 'red', fontSize: 25}}>x</Text>
+                  </TouchableOpacity>
+                )}
               </View>
               <View style={styles.infoContainer}>
                 <Text style={styles.mapText}>MAP: Warehouse</Text>
@@ -243,14 +405,17 @@ const MatchCard = ({ matches }) => {
               <View style={styles.footer}>
                 <Text style={styles.text}>👾 Opponent: Hello</Text>
                 <View style={styles.footerRow}>
-                  <Text style={styles.prizeText}>🏆 Prize: {matches.entryFee * 1.5}</Text>
+                  <Text style={styles.prizeText}>
+                    🏆 Prize: {matches.entryFee * 1.5}
+                  </Text>
                   {check === 'user' ? (
                     <TouchableOpacity
                       activeOpacity={1}
                       style={styles.entryButton}
-                      onPress={() => setModalVisible(true)}
-                    >
-                      <Text style={styles.entryText}>Entry: {matches.entryFee}</Text>
+                      onPress={() => setModalVisible(true)}>
+                      <Text style={styles.entryText}>
+                        Entry: {matches.entryFee}
+                      </Text>
                     </TouchableOpacity>
                   ) : check === 'userjoined' ? (
                     <TouchableOpacity style={styles.joinedButton}>
@@ -282,21 +447,23 @@ const MatchCard = ({ matches }) => {
                         <View style={styles.rightContainer}>
                           <TouchableOpacity
                             style={styles.button}
-                            onPress={() => setModalReset(true)}
-                          >
+                            onPress={() => setModalReset(true)}>
                             <Text style={styles.buttonText}>Reset</Text>
                           </TouchableOpacity>
                         </View>
                       </View>
                       <View>
                         {result === 'resultsubmit' ? (
-                          <Text style={styles.centerText}>Result Submitted</Text>
+                          <Text style={styles.centerText}>
+                            Result Submitted
+                          </Text>
                         ) : (
                           <TouchableOpacity
                             onPress={() => setModalDidYouWin(true)}
-                            style={styles.footerText}
-                          >
-                            <Text style={styles.submitTextRed}>Submit Your Result</Text>
+                            style={styles.footerText}>
+                            <Text style={styles.submitTextRed}>
+                              Submit Your Result
+                            </Text>
                           </TouchableOpacity>
                         )}
                       </View>
@@ -309,7 +476,7 @@ const MatchCard = ({ matches }) => {
                           placeholder="Custom ID"
                           keyboardType="numeric"
                           value={customId}
-                          onChangeText={(text) => setCustomId(text)}
+                          onChangeText={text => setCustomId(text)}
                           placeholderTextColor="#aaa"
                         />
                         <TextInput
@@ -317,12 +484,14 @@ const MatchCard = ({ matches }) => {
                           placeholder="Custom Password"
                           keyboardType="numeric"
                           value={customPassword}
-                          onChangeText={(text) => setCustomPassword(text)}
+                          onChangeText={text => setCustomPassword(text)}
                           placeholderTextColor="#aaa"
                         />
                       </View>
                       <View style={styles.rightContainer}>
-                        <TouchableOpacity style={styles.button} onPress={customIdAndPassword}>
+                        <TouchableOpacity
+                          style={styles.button}
+                          onPress={customIdAndPassword}>
                           <Text style={styles.buttonText}>Publish</Text>
                         </TouchableOpacity>
                       </View>
@@ -351,12 +520,17 @@ const MatchCard = ({ matches }) => {
                     {result === 'resultsubmit' ? (
                       <Text style={styles.centerText}>Result Submitted</Text>
                     ) : (
-                      <TouchableOpacity
-                        onPress={() => setModalDidYouWin(true)}
-                        style={styles.footerText}
-                      >
-                        <Text style={styles.submitTextRed}>Submit Your Result</Text>
-                      </TouchableOpacity>
+                      <View>
+                        {matches.customId && (
+                          <TouchableOpacity
+                            onPress={() => setModalDidYouWin(true)}
+                            style={styles.footerText}>
+                            <Text style={styles.submitTextRed}>
+                              Submit Your Result
+                            </Text>
+                          </TouchableOpacity>
+                        )}
+                      </View>
                     )}
                   </View>
                 </View>
@@ -373,11 +547,12 @@ const MatchCard = ({ matches }) => {
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
-                onPress={() => setModalVisible(false)}
-              >
+                onPress={() => setModalVisible(false)}>
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={[styles.button, styles.yesButton]} onPress={joinuser}>
+              <TouchableOpacity
+                style={[styles.button, styles.yesButton]}
+                onPress={joinuser}>
                 <Text style={styles.buttonText}>Yes</Text>
               </TouchableOpacity>
             </View>
@@ -385,36 +560,56 @@ const MatchCard = ({ matches }) => {
         </View>
       </Modal>
 
+      <Modal transparent animationType="slide" visible={deleteCardModel}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Are you sure?</Text>
+            <View style={styles.buttonContainer}>
+              <TouchableOpacity
+                style={[styles.button, styles.noButton]}
+                onPress={() => setDeleteCardModel(false)}>
+                <Text style={styles.buttonText}>No</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.button, styles.yesButton]}
+                onPress={deleteCard}>
+                <Text style={styles.buttonText}>Yes</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
       <Modal transparent animationType="slide" visible={modalDidYouWin}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
             <Text style={styles.modalText}>Did you Win Match?</Text>
             <TouchableOpacity
               onPress={() => setModalDidYouWin(false)}
-              style={styles.closeButton}
-            >
+              style={styles.closeButton}>
               <Text style={styles.closeText}>X</Text>
             </TouchableOpacity>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
-                onPress={() => setBoolean(false)}
-              >
+                onPress={() => setBoolean(false)}>
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.yesButton]}
-                onPress={() => setBoolean(true)}
-              >
+                onPress={() => setBoolean(true)}>
                 <Text style={styles.buttonText}>Yes</Text>
               </TouchableOpacity>
             </View>
             {boolean === true ? (
               <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadText}>Click here to upload proof</Text>
+                <Text style={styles.uploadText}>
+                  Click here to upload proof
+                </Text>
               </TouchableOpacity>
             ) : null}
-            <TouchableOpacity style={styles.submitButton} onPress={submitResult}>
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={submitResult}>
               <Text style={styles.buttonText}>Submit</Text>
             </TouchableOpacity>
           </View>
@@ -447,8 +642,7 @@ const MatchCard = ({ matches }) => {
               </TouchableOpacity>
               <TouchableOpacity
                 onPress={() => setModalReset(false)}
-                style={styles.noButton}
-              >
+                style={styles.noButton}>
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
             </View>
@@ -470,7 +664,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.25,
     shadowRadius: 5,
   },
@@ -653,7 +847,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
@@ -668,7 +862,7 @@ const styles = StyleSheet.create({
     gap: 100,
     width: '100%',
     justifyContent: 'center',
-    paddingBottom:5
+    paddingBottom: 5,
   },
   noButton: {
     backgroundColor: '#dc3545',
