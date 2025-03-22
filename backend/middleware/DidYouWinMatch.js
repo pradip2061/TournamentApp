@@ -36,14 +36,8 @@ const verifyDidYouWinMatch = async (req, res, next) => {
                 }else{
                     user.Loss.Freefire.push(matchId)
                 }
-                const findindex = user.matchId.FreefireClashId.findIndex((item)=>item === matchId)
-                const findindexhost = host.matchId.FreefireClashId.findIndex((item)=>item === matchId)
-                if (findindex !== -1) {
-                    user.matchId.FreefireClashId.splice(findindex); // Removes 1 item at the found index
-                  }
-                  if (findindexhost !== -1) {
-                    host.matchId.FreefireClashId.splice(findindexhost); // Removes 1 item at the found index
-                  }
+                    user.matchId.FreefireClashId.splice(0,   user.matchId.FreefireClashId.length); // Removes 1 item at the found index
+                    host.matchId.FreefireClashId.splice(0, host.matchId.FreefireClashId.length); // Removes 1 item at the found index
                host.isplaying=false
                user.isplaying=false
                match.status ='completed'
