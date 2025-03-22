@@ -25,12 +25,12 @@ import {BASE_URL} from '../../env';
 
 const ClashSquad = ({navigation}) => {
   const [page, setPage] = useState(1);
-  const [data, setData] = useState([]);
+  const [datas, setDatas] = useState([]);
   const [trigger, setTrigger] = useState('');
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const {getdata} = useContext(CheckAdminContext);
+  const {getdata,getProfile,data} = useContext(CheckAdminContext);
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
@@ -41,10 +41,9 @@ const ClashSquad = ({navigation}) => {
     round: 13,
     coin: 'Default',
     match: 'clashsquad',
-    gameName: '',
+    gameName:data?.gameName[0]?.freefire,
     betAmount: '',
   });
-
   const modal = messages => {
     setVisible(true);
     setMessage(String(messages));
@@ -102,7 +101,7 @@ const ClashSquad = ({navigation}) => {
         )
         .then(response => {
           modal(response.data.message);
-          setTrigger('done');
+         getMatches()
           setMatchDetails(prev => ({...prev, show: false}));
           matchidSend(response.data.newMatch._id);
         });
@@ -112,7 +111,7 @@ const ClashSquad = ({navigation}) => {
     }
   };
 
-  const matchidSend = async matchId => {
+  const matchidSend = async (matchId) => {
     try {
       const token = await AsyncStorage.getItem('token');
       await axios.post(
@@ -130,23 +129,23 @@ const ClashSquad = ({navigation}) => {
     }
   };
 
-  useEffect(() => {
-    try {
-      setLoading(true);
-      console.log(`${BASE_URL}/khelmela/get`);
+
+
+
       const getMatches = async () => {
         await axios.get(`${BASE_URL}/khelmela/get`).then(response => {
-          setData(response.data.card);
+          setDatas(response.data.card);
         });
       };
-      getMatches();
-    } catch (error) {
-      setMessage(error.response.data.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [getdata, trigger]);
 
+    useEffect(()=>{
+      getMatches();
+    },[])
+
+
+  const refreshData = () => {
+    getMatches();
+  };
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -176,37 +175,38 @@ const ClashSquad = ({navigation}) => {
           <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
 
-        <View style={{paddingBottom: 15}}>
-          <View>
-            {data.length !== 0 ? (
-              <FlatList
-                data={data}
-                scrollEnabled={false}
-                keyExtractor={(item, id) => id.toString()}
-                renderItem={({item}) => <MatchCard match={item} />}
-                contentContainerStyle={{gap: 20}}
-              />
-            ) : data === null || [] ? (
-              <Text>No Matches Right now.</Text>
-            ) : (
-              <ShimmerBox />
-            )}
-          </View>
-        </View>
-
+  <View style={{paddingBottom: 15}}>
+  <View>
+    {datas === null ? (
+      <ShimmerBox />
+    ) : datas.length !== 0 ? (
+      <FlatList
+        data={datas}
+        scrollEnabled={false}
+        keyExtractor={(item, id) => id.toString()}
+        renderItem={({ item }) => (
+          <MatchCard match={item} refreshData={refreshData} />
+        )}
+        contentContainerStyle={{ gap: 20 }}
+      />
+    ) : (
+      <Text>No Matches Right now.</Text>
+    )}
+  </View>
+</View>
         <Modal
           visible={matchDetails.show}
           transparent
           animationType="fade"
           onRequestClose={handleOutsidePress}>
+               <ScrollView
+                contentContainerStyle={styles.modalContentContainer}
+                nestedScrollEnabled={true}>
           <TouchableOpacity
             style={styles.modalOverlay}
             activeOpacity={1}
             onPress={handleOutsidePress}>
             <TouchableOpacity style={styles.modal} activeOpacity={1}>
-              <ScrollView
-                contentContainerStyle={styles.modalContentContainer}
-                nestedScrollEnabled={true}>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={handleOutsidePress}>
@@ -640,9 +640,9 @@ const ClashSquad = ({navigation}) => {
                     </View>
                   )}
                 </View>
-              </ScrollView>
             </TouchableOpacity>
           </TouchableOpacity>
+          </ScrollView>
         </Modal>
 
         <Modal animationType="fade" transparent={true} visible={visible}>
@@ -736,12 +736,11 @@ const styles = StyleSheet.create({
     width: '100%',
     maxHeight: '80%',
     backgroundColor: '#FFFFFF',
-    borderRadius: 20,
-    marginTop: 280, // Added to create space from bottom
+    marginTop: 280,
+    zIndex:100
   },
   modalContentContainer: {
-    paddingBottom: 20,
-    paddingTop: 10,
+    paddingBottom: 10,
   },
   modalHandle: {
     width: 40,
@@ -854,11 +853,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginTop: 30,
     marginBottom: 20,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   publishButtonText: {
     fontSize: 18,
