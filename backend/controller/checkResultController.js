@@ -5,69 +5,50 @@ const {User} = require("../model/schema");
 const tdm = require("../model/TdmModel");
 
 const checkResult = async (req, res) => {
-    const { matchId } = req.body;
     const userid = req.user;
-console.log(matchId)
-    // Check if match exists
+  
+    const userinfo =await User.findOne({_id:userid})
+    const matchId=userinfo?.matchId?.FreefireClashId?.[0]
     const match = await ClashSquad.findOne({ _id: matchId });
     if (!match) {
         return res.status(400).json({ message: "Invalid match data" });
     }
+if(!userinfo){
+    return res.status(400).json({ message: "user not found" });
+}
 
-    // Get opponent and host details
-    const result = await ClashSquad.findOne(
-        { 'teamopponent.userid': userid },
-        { 'teamopponent.$': 1 }
-    );
-    const resulthost = await ClashSquad.findOne(
-        { 'teamHost.userid': userid },
-        { 'teamHost.$': 1 }
-    );
-
-    // Determine result based on team2Status or teamHostStatus
-    if (result?.teamopponent?.[0]?.team2Status) {
-        return res.status(200).json({ message: "resultsubmit" });
-    }
-
-    if (resulthost?.teamHost?.[0]?.teamHostStatus) {
-        return res.status(200).json({ message: "resultsubmit" });
-    }
-
-    // If both checks fail, return a single response
+if(typeof match.teamHost[0].teamHostStatus === 'boolean'){
+    return res.status(200).json({ message: "resultsubmit" });
+}else if(typeof match.teamopponent[0].team2Status === 'boolean'){
+    return res.status(200).json({ message: "resultsubmit" });
+}else{
     return res.status(200).json({ message: "noresponse" });
+}
+  
 };
 
 const checkResulttdm = async (req, res) => {
-    const { matchId } = req.body;
     const userid = req.user;
 console.log(matchId)
     // Check if match exists
+    const userinfo =await User.findOne({_id:userid})
+    const matchId=userinfo?.matchId?.pubgTdmId?.[0]
     const match = await tdm.findOne({ _id: matchId });
     if (!match) {
         return res.status(400).json({ message: "Invalid match data" });
     }
 
-    // Get opponent and host details
-    const result = await tdm.findOne(
-        { 'teamopponent.userid': userid },
-        { 'teamopponent.$': 1 }
-    );
-    const resulthost = await tdm.findOne(
-        { 'teamHost.userid': userid },
-        { 'teamHost.$': 1 }
-    );
-
-    // Determine result based on team2Status or teamHostStatus
-    if (result?.teamopponent?.[0]?.team2Status) {
-        return res.status(200).json({ message: "resultsubmit" });
+    if(!userinfo){
+        return res.status(400).json({ message: "user not found" });
     }
-
-    if (resulthost?.teamHost?.[0]?.teamHostStatus) {
+    
+    if(typeof match.teamHost[0].teamHostStatus === 'boolean'){
         return res.status(200).json({ message: "resultsubmit" });
+    }else if(typeof match.teamopponent[0].team2Status === 'boolean'){
+        return res.status(200).json({ message: "resultsubmit" });
+    }else{
+        return res.status(200).json({ message: "noresponse" });
     }
-
-    // If both checks fail, return a single response
-    return res.status(200).json({ message: "noresponse" });
 };
 
 const checkuserJoinFF =async(req,res)=>{
