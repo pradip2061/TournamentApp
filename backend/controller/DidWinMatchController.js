@@ -3,7 +3,7 @@ const tdm = require("../model/TdmModel");
 
 const DidYouWinMatch = async (req, res) => {
     try {
-        const { boolean, matchId } = req.body;
+        const { boolean, matchId,proof} = req.body;
         const userid = req.user;
         console.log(userid)
         const match = await ClashSquad.findOne({ _id: matchId });
@@ -14,8 +14,18 @@ const DidYouWinMatch = async (req, res) => {
 
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
+            if(boolean === true){
+                match.hostProof = proof
+            }else{
+                console.log('might be no')
+            }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
+            if(boolean === true){
+                match.userProof= proof
+            }else{
+                console.log('might be no')
+            }
         } else {
             return res.status(403).json({ message: "You are not part of this match" });
         }
@@ -43,8 +53,18 @@ const DidYouWinMatchtdm = async (req, res) => {
 
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
+            if(boolean === true){
+                match.hostProof = proof
+            }else{
+                console.log('might be no')
+            }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
+            if(boolean === true){
+                match.userProof= proof
+            }else{
+                console.log('might be no')
+            }
         } else {
             return res.status(403).json({ message: "You are not part of this match" });
         }
