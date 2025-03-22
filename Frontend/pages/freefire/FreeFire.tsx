@@ -59,9 +59,12 @@ const FreeFire = ({navigation}) => {
         <FlatList
           data={card}
           scrollEnabled={false}
+          
           keyExtractor={(item, id) => id.toString()}
-          renderItem={({item}) => <Freefirefullmatchcard matches={item} />}
-        />
+          renderItem={({item}) => <Freefirefullmatchcard matches={item}  
+          /> }
+          contentContainerStyle={{gap:35,marginLeft:8}}
+        /> 
       ) : (
         <ShimmerBox />
       )}
