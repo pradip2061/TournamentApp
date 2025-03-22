@@ -89,18 +89,23 @@ const TDM = ({ navigation }) => {
   }
 
   useEffect(() => {
+   getMatches()
+  }, [getdata, trigger])
+
+  const getMatches = async () => {
     try {
-      const getMatches = async () => {
-        await axios.get(`${BASE_URL}/khelmela/gettdm`)
-          .then((response) => {
-            setDatas(response.data.data)
-          })
-      }
-      getMatches()
+    await axios.get(`${BASE_URL}/khelmela/gettdm`)
+      .then((response) => {
+        setDatas(response.data.data)
+      })
     } catch (error) {
       setMessage(error.response?.data?.message || 'Error fetching matches')
     }
-  }, [getdata, trigger])
+  }
+
+  const triggergettdm =()=>{
+    getMatches()
+  }
 
   return (
     <ScrollView>
@@ -136,7 +141,7 @@ const TDM = ({ navigation }) => {
                 data={datas}
                 scrollEnabled={false}
                 keyExtractor={(item, id) => id.toString()}
-                renderItem={({ item }) => <TdmCard matches={item} />}
+                renderItem={({ item }) => <TdmCard matches={item} getmatches={triggergettdm}/>}
                 ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
               />
             ) : (
