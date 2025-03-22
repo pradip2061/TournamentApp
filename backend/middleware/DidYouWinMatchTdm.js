@@ -37,14 +37,8 @@ const verifyDidYouWinMatchTdm = async (req, res, next) => {
                 }else{
                     user.Loss.pubg.push(matchId)
                 }
-                const findindex = user.matchId.pubgTdmId.findIndex((item)=>item === matchId)
-                const findindexhost = host.matchId.PubgTdmId.findIndex((item)=>item === matchId)
-                if (findindex !== -1) {
-                    user.matchId.pubgTdmId.splice(findindex); // Removes 1 item at the found index
-                  }
-                  if (findindexhost !== -1) {
-                    host.matchId.pubgTdmId.splice(findindexhost); // Removes 1 item at the found index
-                  }
+                    user.matchId.pubgTdmId.splice(0,user.matchId.pubgTdmId.length); // Removes 1 item at the found index
+                    host.matchId.pubgTdmId.splice(0,host.matchId.pubgTdmId.length); // Removes 1 item at the found index
                host.isplaying=false
                user.isplaying=false
                match.status ='completed'
