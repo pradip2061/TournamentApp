@@ -306,7 +306,7 @@ const PubgFullMatchCard = ({matches}) => {
 const styles = StyleSheet.create({
   container: {
     width: 340,
-    marginLeft: 30,
+    marginLeft:20,
     padding: 10,
     gap: 15,
     borderRadius: 25,

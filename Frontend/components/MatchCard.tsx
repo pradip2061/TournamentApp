@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -8,17 +8,17 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import {FlatList, TextInput} from 'react-native-gesture-handler';
+import { FlatList, TextInput } from 'react-native-gesture-handler';
 import LinearGradient from 'react-native-linear-gradient';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
-import {launchImageLibrary} from 'react-native-image-picker';
-import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
-import {BASE_URL} from '../env';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
+import { BASE_URL } from '../env';
 
-const MatchCard = ({match, refreshData}) => {
+const MatchCard = ({ match, refreshData }) => {
   const [check, setCheck] = useState('');
   const [customId, setCustomId] = useState(0);
   const [customPassword, setCustomPassword] = useState(0);
@@ -30,31 +30,27 @@ const MatchCard = ({match, refreshData}) => {
   const [modalDidYouWin, setModalDidYouWin] = useState(false);
   const [notifyModel, setNotifyModel] = useState(false);
   const [result, setResult] = useState('');
-  const [selectedImage, setSelectedImage] = useState(null);
-  const [boolean, setBoolean] = useState<boolean | null>(null);
+  const [winImage, setWinImage] = useState(null);
+  const [reportImage, setReportImage] = useState(null);
+  const [boolean, setBoolean] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [image, setImage] = useState(null);
   const [render, setRender] = useState('');
   const [deleteCardModel, setDeleteCardModel] = useState(false);
   const [reportMessage, setReportMessage] = useState('');
   const [reportModel, setReportModel] = useState(false);
-  const[checkReport,setCheckReport]=useState('')
-  console.log(image);
-  const [proof, setProof] = useState(null);
-  console.log(proof, 'proof ho hai');
+  const [checkReport, setCheckReport] = useState('');
+
   const matchId = match._id;
-  const {setTrigger, trigger} = useContext(CheckAdminContext);
-  console.log(result);
+  const { setTrigger, trigger } = useContext(CheckAdminContext);
+
   useEffect(() => {
     const checkUserOrAdmin = async () => {
       const token = await AsyncStorage.getItem('token');
       await axios
         .post(
           `${BASE_URL}/khelmela/checkUserOrAdmin`,
-          {matchId},
-          {
-            headers: {Authorization: `${token}`},
-          },
+          { matchId },
+          { headers: { Authorization: `${token}` } },
         )
         .then(response => {
           setCheck(response.data.message);
@@ -73,7 +69,7 @@ const MatchCard = ({match, refreshData}) => {
         .post(
           `${BASE_URL}/khelmela/check`,
           {},
-          {headers: {Authorization: `${token}`}},
+          { headers: { Authorization: `${token}` } },
         )
         .then(response => {
           if (response.status === 200) {
@@ -125,8 +121,8 @@ const MatchCard = ({match, refreshData}) => {
       await axios
         .post(
           `${BASE_URL}/khelmela/join`,
-          {matchId},
-          {headers: {Authorization: `${token}`}},
+          { matchId },
+          { headers: { Authorization: `${token}` } },
         )
         .then(response => {
           if (response.status === 200) {
@@ -148,7 +144,7 @@ const MatchCard = ({match, refreshData}) => {
     const checkpublish = async () => {
       try {
         await axios
-          .post(`${BASE_URL}/khelmela/checkpublish`, {matchId})
+          .post(`${BASE_URL}/khelmela/checkpublish`, { matchId })
           .then(response => {
             if (response.status === 200) setPublish(response.data.message);
           });
@@ -166,6 +162,7 @@ const MatchCard = ({match, refreshData}) => {
     }
     Clipboard.setString(match.customId.toString());
   };
+
   const copyToClipboardPass = () => {
     if (!match.customPassword) {
       setError('no customId here');
@@ -187,10 +184,8 @@ const MatchCard = ({match, refreshData}) => {
       await axios
         .post(
           `${BASE_URL}/khelmela/changecustom`,
-          {matchId, customId, customPassword},
-          {
-            headers: {Authorization: `${token}`},
-          },
+          { matchId, customId, customPassword },
+          { headers: { Authorization: `${token}` } },
         )
         .then(response => {
           if (response.status === 200) {
@@ -213,20 +208,19 @@ const MatchCard = ({match, refreshData}) => {
         .post(
           `${BASE_URL}/khelmela/checkresult`,
           {},
-          {
-            headers: {Authorization: `${token}`},
-          },
+          { headers: { Authorization: `${token}` } },
         )
         .then(response => setResult(response.data.message));
     } catch (error) {
       console.log(error);
     }
   };
+
   useEffect(() => {
     checkresult();
   }, [trigger, render]);
 
-  const pickImage = () => {
+  const pickWinImage = () => {
     const options = {
       mediaType: 'photo',
       maxWidth: 800,
@@ -240,7 +234,26 @@ const MatchCard = ({match, refreshData}) => {
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else {
-        setImage(response?.assets?.[0]?.base64);
+        setWinImage(response?.assets?.[0]?.base64);
+      }
+    });
+  };
+
+  const pickReportImage = () => {
+    const options = {
+      mediaType: 'photo',
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.3,
+      includeBase64: true,
+    };
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        setReportImage(response?.assets?.[0]?.base64);
       }
     });
   };
@@ -249,21 +262,16 @@ const MatchCard = ({match, refreshData}) => {
     setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
-      console.log(token);
       if (!token) {
         Alert.alert('Token not found');
-        return null; // Return null if token is missing
+        return null;
       }
-
       if (!image) {
         Alert.alert('Please upload an image');
         return null;
       }
-
-      // Generate a proper filename with extension
       const timestamp = new Date().getTime();
       const filename = `payment_proof_${timestamp}.jpg`;
-
       const imageResponse = await axios.post(
         `${BASE_URL}/khelmela/upload/upload`,
         {
@@ -271,29 +279,61 @@ const MatchCard = ({match, refreshData}) => {
           folderName: 'proof',
           filename: filename,
         },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
+        { headers: { Authorization: `${token}` } },
       );
-
-      console.log('Image response:', imageResponse.data);
-
       if (!imageResponse?.data?.url) {
         Alert.alert('Image upload failed');
-        return null; // Return null on failure
+        return null;
       }
-
-      const photoUrl = imageResponse.data.url;
-      return photoUrl; // ✅ Return the uploaded URL
+      return imageResponse.data.url;
     } catch (error) {
-      console.error('Error:', error.response);
       Alert.alert(
         'Error',
         error.response?.data?.error || error.message || 'Something went wrong',
       );
-      return null; // Return null on error
+      return null;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const reportImages = async image => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        Alert.alert('Token not found');
+        return null;
+      }
+      if (!image) {
+        setError('Please upload an image');
+        notify();
+        return null;
+      }
+      const timestamp = new Date().getTime();
+      const filename = `report_proof_${timestamp}.jpg`;
+      const imageResponse = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: image,
+          folderName: 'report',
+          filename: filename,
+        },
+        { headers: { Authorization: `${token}` } },
+      );
+      if (!imageResponse?.data?.url) {
+        Alert.alert('Image upload failed');
+        return null;
+      }
+      return imageResponse.data.url;
+    } catch (error) {
+      setError(
+        error.response?.data?.error || error.message || 'Something went wrong',
+      );
+      notify();
+      return null;
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -301,43 +341,42 @@ const MatchCard = ({match, refreshData}) => {
     if (boolean === null) {
       setError('Select Yes or No');
       notify();
-      setLoading(false);
       return;
     }
-
+    setLoading(true);
     if (boolean === true) {
-      if (!image) {
+      if (!winImage) {
         setError('Please upload an image!');
         notify();
+        setLoading(false);
         return;
       }
-
       try {
-        // ✅ Get proof from handleDeposite
-        const uploadedProof = await handleDeposite(image);
+        const uploadedProof = await handleDeposite(winImage);
         if (!uploadedProof) {
           setError('Image upload failed');
           notify();
+          setLoading(false);
           return;
         }
-        proofsend(uploadedProof);
+        await proofsend(uploadedProof);
       } catch (error) {
         setError('Image upload failed');
         notify();
-        return;
+        setLoading(false);
       }
     } else {
       try {
         const token = await AsyncStorage.getItem('token');
         if (!token) {
           setError('Token not found');
+          setLoading(false);
           return;
         }
-
         const response = await axios.post(
           `${BASE_URL}/khelmela/checkBoolean`,
-          {matchId, boolean},
-          {headers: {Authorization: `${token}`}},
+          { matchId, boolean },
+          { headers: { Authorization: `${token}` } },
         );
         setMessage(response.data.message);
         checkresult();
@@ -346,6 +385,7 @@ const MatchCard = ({match, refreshData}) => {
       } finally {
         setModalDidYouWin(false);
         notify();
+        setLoading(false);
       }
     }
   };
@@ -357,16 +397,14 @@ const MatchCard = ({match, refreshData}) => {
         setError('Token not found');
         return;
       }
-
       if (!proof) {
         console.log('No proof uploaded');
         return;
       }
-
       const response = await axios.post(
         `${BASE_URL}/khelmela/checkBoolean`,
-        {matchId, boolean, proof},
-        {headers: {Authorization: `${token}`}},
+        { matchId, boolean, proof },
+        { headers: { Authorization: `${token}` } },
       );
       setMessage(response.data.message);
       checkresult();
@@ -385,14 +423,8 @@ const MatchCard = ({match, refreshData}) => {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/deletecard`,
-        {
-          matchId,
-        },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
+        { matchId },
+        { headers: { Authorization: `${token}` } },
       );
       if (response.status === 200) {
         setMessage(response?.data?.message);
@@ -406,111 +438,49 @@ const MatchCard = ({match, refreshData}) => {
     }
   };
 
-  const pickImageReport = () => {
-    const options = {
-      mediaType: 'photo',
-      maxWidth: 800,
-      maxHeight: 800,
-      quality: 0.3,
-      includeBase64: true,
-    };
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
-        setImage(response?.assets?.[0]?.base64);
-      }
-    });
-  };
-
-  const reportImages = async image => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      console.log(token);
-      if (!token) {
-        Alert.alert('Token not found');
-        return null; // Return null if token is missing
-      }
-
-      if (!image) {
-        setError('Please upload an image');
-        notify()
-        return null;
-      }
-
-      // Generate a proper filename with extension
-      const timestamp = new Date().getTime();
-      const filename = `payment_proof_${timestamp}.jpg`;
-
-      const imageResponse = await axios.post(
-        `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'report',
-          filename: filename,
-        },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
-      );
-
-      console.log('Image response:', imageResponse.data);
-
-      if (!imageResponse?.data?.url) {
-        Alert.alert('Image upload failed');
-        return null; // Return null on failure
-      }
-
-      const photoUrl = imageResponse.data.url;
-      return photoUrl; // ✅ Return the uploaded URL
-    } catch (error) {
-      setError(
-        error.response?.data?.error || error.message || 'Something went wrong',
-      )
-      notify()
-      return null; // Return null on error
-    }
-  };
-
   const submitReport = async () => {
+    setLoading(true);
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {
         setError('Token not found');
         return;
       }
-      const uploadedProof = await reportImages(image);
+      if (!reportImage) {
+        setError('Please upload an image');
+        notify();
+        setLoading(false);
+        return;
+      }
+      const uploadedProof = await reportImages(reportImage);
       if (!uploadedProof) {
         setError('Image upload failed');
         notify();
+        setLoading(false);
         return;
       }
-
       if (!reportMessage) {
-        setError('All field are Required');
+        setError('All fields are Required');
         notify();
+        setLoading(false);
         return;
       }
-      console.log("hello frotend")
       const response = await axios.post(
         `${BASE_URL}/khelmela/reportClash`,
-        {reportMessage, uploadedProof},
-        {headers: {Authorization: `${token}`}},
+        { reportMessage, uploadedProof },
+        { headers: { Authorization: `${token}` } },
       );
       setMessage(response.data.message);
-      checkReportClash()
+      checkReportClash();
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     } finally {
-      setModalDidYouWin(false);
+      setReportModel(false);
       notify();
+      setLoading(false);
     }
   };
+
   const checkReportClash = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -521,29 +491,39 @@ const MatchCard = ({match, refreshData}) => {
       const response = await axios.post(
         `${BASE_URL}/khelmela/checkreportClash`,
         {},
-        {headers: {Authorization: `${token}`}},
+        { headers: { Authorization: `${token}` } },
       );
       setCheckReport(response.data.message);
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     }
-  }
+  };
 
-  useEffect(()=>{
-checkReportClash()
-  },[])
+  useEffect(() => {
+    checkReportClash();
+  }, [trigger, render, message]);
+
+  const handleReportMessageChange = text => {
+    const words = text.trim().split(/\s+/);
+    if (words.length <= 100) {
+      setReportMessage(text);
+    } else {
+      setError('Maximum 100 words allowed');
+      notify();
+    }
+  };
 
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
         <LinearGradient
-          colors={['#1e1b4b', '#3b3477', '#2a2957']}
+          colors={["#0f0c29", "#302b63", "#24243e"]}
           style={styles.gradient}>
           <FlatList
             data={match.matchDetails}
             scrollEnabled={false}
             keyExtractor={(item, id) => id.toString()}
-            renderItem={({item}) => (
+            renderItem={({ item }) => (
               <TouchableOpacity activeOpacity={1}>
                 <View style={styles.cardContent}>
                   <View style={styles.headerRow}>
@@ -555,7 +535,7 @@ checkReportClash()
                     {check === 'host' && (
                       <TouchableOpacity
                         onPress={() => setDeleteCardModel(true)}>
-                        <Text style={{color: 'red', fontSize: 25}}>x</Text>
+                        <Text style={{ color: 'red', fontSize: 25 }}>x</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -604,7 +584,7 @@ checkReportClash()
                     </View>
                   </View>
 
-                  {check === 'host' ? (
+                  {check === 'host' || check === 'userjoined' ? (
                     <View style={styles.container}>
                       {publish === 'publish' ? (
                         <>
@@ -627,79 +607,46 @@ checkReportClash()
                                 </View>
                               </TouchableOpacity>
                             </View>
-                            <View style={styles.rightContainer}>
-                              <TouchableOpacity
-                                style={styles.button}
-                                onPress={() => setModalReset(true)}>
-                                <Text style={styles.buttonText}>Reset</Text>
-                              </TouchableOpacity>
-                            </View>
+                            {check === 'host' && (
+                              <View style={styles.rightContainer}>
+                                <TouchableOpacity
+                                  style={styles.button}
+                                  onPress={() => setModalReset(true)}>
+                                  <Text style={styles.buttonText}>Reset</Text>
+                                </TouchableOpacity>
+                              </View>
+                            )}
                           </View>
                           <View>
-                            {result === 'resultsubmit'||checkReport === 'report' ? (
+                            {checkReport === 'report' ? (
                               <Text style={styles.centerText}>
-                                Response submitted
+                                Report Submitted
+                              </Text>
+                            ) : result === 'resultsubmit' ? (
+                              <Text style={styles.centerText}>
+                                Result Submitted
                               </Text>
                             ) : (
-                              <View>
+                              <View style={styles.actionContainer}>
                                 <TouchableOpacity
                                   onPress={() => setModalDidYouWin(true)}
-                                  style={styles.footerText}>
-                                  <Text style={styles.submitTextRed}>
+                                  style={styles.actionButton}>
+                                  <Text style={styles.actionText}>
                                     Submit Your Result
                                   </Text>
                                 </TouchableOpacity>
-                                <>
-                                   <TouchableOpacity
-                                  onPress={() => setReportModel(true)}>
-                                  <Text
-                                    style={{
-                                      color: 'white',
-                                      marginLeft: 100,
-                                      marginTop: 20,
-                                      paddingBottom: 10,
-                                    }}>
+                                <TouchableOpacity
+                                  onPress={() => setReportModel(true)}
+                                  style={styles.actionButton}>
+                                  <Text style={styles.actionText}>
                                     Report Match
                                   </Text>
                                 </TouchableOpacity>
-                                {reportModel && (
-                                  <View style={{alignItems: 'center'}}>
-                                    <TextInput
-                                      placeholder="enter the messages"
-                                      style={styles.input}
-                                      value={reportMessage}
-                                      onChangeText={(text)=>setReportMessage(text)}
-                                    />
-                                    <TouchableOpacity onPress={pickImageReport}>
-                                      <Text>Upload</Text>
-                                    </TouchableOpacity>
-                                    <View
-                                      style={{
-                                        flex: 1,
-                                        flexDirection: 'row',
-                                        gap: 50,
-                                        marginTop: 20,
-                                        alignItems: 'center',
-                                      }}>
-                                        <TouchableOpacity
-                                        onPress={() => setReportModel(false)}
-                                        style={styles.button}>
-                                        <Text>cancel</Text>
-                                      </TouchableOpacity>
-                                      <TouchableOpacity
-                                        onPress={submitReport}
-                                        style={styles.button}>
-                                        <Text>submit</Text>
-                                      </TouchableOpacity>
-                                    </View>
-                                  </View>
-                                )}
-                                  </>
                               </View>
                             )}
                           </View>
                         </>
-                      ) : (
+                      ) : check === 'host' ? (
                         <View style={styles.publishInputRow}>
                           <View style={styles.leftContainer}>
                             <TextInput
@@ -727,93 +674,7 @@ checkReportClash()
                             </TouchableOpacity>
                           </View>
                         </View>
-                      )}
-                    </View>
-                  ) : check === 'userjoined' ? (
-                    <View>
-                      <View style={styles.publishRow}>
-                        <View style={styles.leftContainer}>
-                          <TouchableOpacity onPress={copyToClipboardId}>
-                            <Text style={styles.label}>Custom ID:</Text>
-                            <View style={styles.inputs}>
-                              <Text style={styles.inputText}>
-                                {match.customId}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                          <TouchableOpacity onPress={copyToClipboardPass}>
-                            <Text style={styles.label}>Custom Pass:</Text>
-                            <View style={styles.inputs}>
-                              <Text style={styles.inputText}>
-                                {match.customPassword}
-                              </Text>
-                            </View>
-                          </TouchableOpacity>
-                        </View>
-                      </View>
-                      <View>
-                      {result === 'resultsubmit'||checkReport === 'report' ? (
-                              <Text style={styles.centerText}>
-                                Response submitted
-                              </Text>
-                            ) : (
-                              <View>
-                                <TouchableOpacity
-                                  onPress={() => setModalDidYouWin(true)}
-                                  style={styles.footerText}>
-                                  <Text style={styles.submitTextRed}>
-                                    Submit Your Result
-                                  </Text>
-                                </TouchableOpacity>
-                                <>
-                                   <TouchableOpacity
-                                  onPress={() => setReportModel(true)}>
-                                  <Text
-                                    style={{
-                                      color: 'white',
-                                      marginLeft: 100,
-                                      marginTop: 20,
-                                      paddingBottom: 10,
-                                    }}>
-                                    Report Match
-                                  </Text>
-                                </TouchableOpacity>
-                                {reportModel && (
-                                  <View style={{alignItems: 'center'}}>
-                                    <TextInput
-                                      placeholder="enter the messages"
-                                      style={styles.input}
-                                      value={reportMessage}
-                                      onChangeText={(text)=>setReportMessage(text)}
-                                    />
-                                    <TouchableOpacity onPress={pickImageReport}>
-                                      <Text>Upload</Text>
-                                    </TouchableOpacity>
-                                    <View
-                                      style={{
-                                        flex: 1,
-                                        flexDirection: 'row',
-                                        gap: 50,
-                                        marginTop: 20,
-                                        alignItems: 'center',
-                                      }}>
-                                        <TouchableOpacity
-                                        onPress={() => setReportModel(false)}
-                                        style={styles.button}>
-                                        <Text>cancel</Text>
-                                      </TouchableOpacity>
-                                      <TouchableOpacity
-                                        onPress={submitReport}
-                                        style={styles.button}>
-                                        <Text>submit</Text>
-                                      </TouchableOpacity>
-                                    </View>
-                                  </View>
-                                )}
-                                  </>
-                              </View>
-                            )}
-                      </View>
+                      ) : null}
                     </View>
                   ) : null}
                 </View>
@@ -866,36 +727,103 @@ checkReportClash()
       <Modal transparent animationType="slide" visible={modalDidYouWin}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Did you Win Match?</Text>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalText}>Did You Win?</Text>
+              <TouchableOpacity
+                onPress={() => setModalDidYouWin(false)}
+                style={styles.closeButton}>
+                <Text style={styles.closeText}>X</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={styles.optionContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  boolean === true && styles.selectedYes,
+                ]}
+                onPress={() => setBoolean(true)}>
+                <Text style={styles.optionText}>Yes</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[
+                  styles.optionButton,
+                  boolean === false && styles.selectedNo,
+                ]}
+                onPress={() => setBoolean(false)}>
+                <Text style={styles.optionText}>No</Text>
+              </TouchableOpacity>
+            </View>
+            {boolean === true && (
+              <View style={styles.uploadContainer}>
+                <TouchableOpacity
+                  style={styles.uploadButton}
+                  onPress={pickWinImage}>
+                  <Text style={styles.uploadText}>
+                    Upload Winning Proof
+                  </Text>
+                </TouchableOpacity>
+                {winImage && (
+                  <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
+                )}
+              </View>
+            )}
             <TouchableOpacity
-              onPress={() => setModalDidYouWin(false)}
+              style={[styles.submitButton, loading && styles.disabledButton]}
+              onPress={submitResult}
+              disabled={loading}>
+              <Text style={styles.buttonText}>
+                {loading ? 'Submitting...' : 'Submit Result'}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
+      <Modal transparent animationType="slide" visible={reportModel}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalText}>Report Match</Text>
+            <TouchableOpacity
+              onPress={() => setReportModel(false)}
               style={styles.closeButton}>
               <Text style={styles.closeText}>X</Text>
             </TouchableOpacity>
+            <TextInput
+              placeholder="Enter your message (max 100 words)"
+              style={styles.inputModal}
+              value={reportMessage}
+              onChangeText={handleReportMessageChange}
+              placeholderTextColor="#aaa"
+              multiline
+              textAlignVertical="top"
+            />
+            <View style={styles.uploadContainer}>
+              <TouchableOpacity
+                style={styles.uploadButton}
+                onPress={pickReportImage}>
+                <Text style={styles.uploadText}>
+                  Click here to upload proof
+                </Text>
+              </TouchableOpacity>
+              {reportImage && (
+                <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
+              )}
+            </View>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
-                onPress={() => setBoolean(false)}>
-                <Text style={styles.buttonText}>No</Text>
+                onPress={() => setReportModel(false)}>
+                <Text style={styles.buttonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.yesButton]}
-                onPress={() => setBoolean(true)}>
-                <Text style={styles.buttonText}>Yes</Text>
-              </TouchableOpacity>
-            </View>
-            {boolean === true ? (
-              <TouchableOpacity style={styles.uploadButton} onPress={pickImage}>
-                <Text style={styles.uploadText}>
-                  Click here to upload proof{' '}
+                onPress={submitReport}
+                disabled={loading}>
+                <Text style={styles.buttonText}>
+                  {loading ? 'Submitting...' : 'Submit'}
                 </Text>
               </TouchableOpacity>
-            ) : null}
-            <TouchableOpacity
-              style={styles.submitButton}
-              onPress={submitResult}>
-              <Text style={styles.buttonText}>Submit</Text>
-            </TouchableOpacity>
+            </View>
           </View>
         </View>
       </Modal>
@@ -948,7 +876,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 3},
+    shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.25,
     shadowRadius: 5,
   },
@@ -1035,6 +963,20 @@ const styles = StyleSheet.create({
   container: {
     padding: 12,
   },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 10,
+  },
+  actionButton: {
+    padding: 8,
+  },
+  actionText: {
+    color: '#ff4444',
+    fontSize: 15,
+    fontWeight: '500',
+    textDecorationLine: 'underline',
+  },
   publishRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -1059,25 +1001,25 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   input: {
-    width: 136, // Fixed width to match inputs
-    height: 40, // Fixed height to match inputs
-    backgroundColor: '#fff', // White background as requested
-    color: '#000', // Black text as requested
+    width: 136,
+    height: 40,
+    backgroundColor: '#fff',
+    color: '#000',
     borderRadius: 5,
     paddingHorizontal: 10,
     fontSize: 14,
     marginBottom: 10,
   },
   inputs: {
-    width: 136, // Same width as input
-    height: 40, // Same height as input
-    backgroundColor: '#fff', // White background to maintain consistency
+    width: 136,
+    height: 40,
+    backgroundColor: '#fff',
     borderRadius: 5,
     paddingHorizontal: 10,
     justifyContent: 'center',
   },
   inputText: {
-    color: '#000', // Black text to match input
+    color: '#000',
     fontSize: 14,
   },
   button: {
@@ -1098,15 +1040,6 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '500',
   },
-  submitTextRed: {
-    color: '#ff4444',
-    textDecorationLine: 'underline',
-    fontSize: 15,
-    textAlign: 'center',
-  },
-  footerText: {
-    alignItems: 'center',
-  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -1121,21 +1054,28 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 20,
   },
   modalText: {
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 16,
     color: '#333',
   },
   buttonContainer: {
     flexDirection: 'row',
-    gap: 90,
+    gap: 20,
     width: '100%',
     justifyContent: 'center',
+    marginTop: 10,
   },
   noButton: {
     backgroundColor: '#dc3545',
@@ -1150,34 +1090,72 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   closeButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
+    padding: 5,
   },
   closeText: {
     fontSize: 20,
     fontWeight: '700',
     color: '#333',
   },
-  uploadButton: {
-    backgroundColor: 'lightblue',
-    paddingVertical: 1,
-    paddingHorizontal: 16,
+  optionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    width: '100%',
+    marginBottom: 20,
+  },
+  optionButton: {
+    backgroundColor: '#f0f0f0',
+    paddingVertical: 10,
+    paddingHorizontal: 30,
     borderRadius: 8,
-    marginTop: 12,
-    paddingBottom: 8,
+    width: '40%',
+    alignItems: 'center',
+  },
+  selectedNo: {
+    backgroundColor: '#ff0000',
+  },
+  selectedYes: {
+    backgroundColor: '#00ff00',
+  },
+  optionText: {
+    color: '#333',
+    fontWeight: '600',
+    fontSize: 16,
+  },
+  uploadContainer: {
+    alignItems: 'center',
+    marginVertical: 15,
+    width: '100%',
+  },
+  uploadButton: {
+    backgroundColor: '#87CEEB',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    width: '80%',
+    alignItems: 'center',
   },
   uploadText: {
-    color: 'black',
+    color: '#333',
     fontSize: 14,
     fontWeight: '500',
   },
+  checkMark: {
+    color: '#00FF00',
+    fontSize: 14,
+    marginTop: 8,
+    fontWeight: 'bold',
+  },
   submitButton: {
-    backgroundColor: 'blue',
-    paddingVertical: 10,
+    backgroundColor: '#007bff',
+    paddingVertical: 12,
     paddingHorizontal: 30,
-    borderRadius: 29,
-    marginTop: 12,
+    borderRadius: 25,
+    width: '80%',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: '#cccccc',
   },
   inputModal: {
     width: '100%',
@@ -1187,6 +1165,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     fontSize: 14,
     color: '#333',
+    minHeight: 50,
+    maxHeight: 150,
   },
 });
 

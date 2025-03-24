@@ -138,7 +138,7 @@ useEffect(()=>{
           <Entypo name="game-controller" size={24} color="#333" />
           <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
-        <View>
+        <View style={{backgroundColor:'red'}}>
         { joinMatch?.length !== 0 ? (
       <FlatList
         data={joinMatch}

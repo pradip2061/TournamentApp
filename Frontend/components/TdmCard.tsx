@@ -62,6 +62,7 @@ const TdmCard = ({matches, getmatches}) => {
     checkUserOrAdmin();
   }, [check, message, trigger]);
 
+  console.log(matches)
   const notify = () => {
     setNotifyModel(true);
     setTimeout(() => setNotifyModel(false), 900);
@@ -508,7 +509,7 @@ const TdmCard = ({matches, getmatches}) => {
     <View style={styles.cardContainer}>
       <View style={styles.card}>
         <LinearGradient
-          colors={['#1e1b4b', '#3b3477', '#2a2957']}
+          colors={["#0f0c29", "#302b63", "#24243e"]}
           style={styles.gradient}>
           <TouchableOpacity activeOpacity={1}>
             <View style={styles.cardContent}>
@@ -908,7 +909,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   titleText: {
-    fontSize: 20,
+    fontSize: 18,
     fontWeight: '700',
     color: '#fff',
     letterSpacing: 0.5,

@@ -275,6 +275,7 @@ const Freefirefullmatchcard = ({ matches }) => {
 const styles = StyleSheet.create({
   container: {
     width: 340,
+    marginVertical: 12,
     marginLeft: 20,
     padding: 10,
     gap: 15,

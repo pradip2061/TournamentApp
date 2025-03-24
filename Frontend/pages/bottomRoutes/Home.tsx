@@ -67,8 +67,8 @@ const Home = ({navigation}) => {
           <TouchableOpacity
             style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
             onPress={() => navigation.navigate('Transcation')}>
-            <Doller name="circle-dollar-to-slot" size={32} color="#fff" />
-            <Text style={{color: 'gold'}}>{data?.balance}</Text>
+            <Doller name="circle-dollar-to-slot" size={32} color="gold" />
+            <Text style={{color: 'white', fontSize:17,fontWeight:'bold'}}>{data?.balance} +</Text>
           </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity
@@ -78,8 +78,8 @@ const Home = ({navigation}) => {
             <TouchableOpacity>
               <Gamepad
                 name="menu"
-                size={32}
-                color="#fff"
+                size={34}
+                color="grey"
                 onPress={() => navigation.navigate('Setting')}
               />
             </TouchableOpacity>
@@ -157,18 +157,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingTop: 15,
-    gap: 160,
+    paddingTop: 13,
+    gap: 180,
+    marginLeft:21
   },
   headerIcons: {
     flexDirection: 'row',
     gap: 40,
+    marginRight:15
   },
   topGamesText: {
     width: 180,
     height: 40,
     backgroundColor: '#fff',
-    borderRadius: 10, // Increased border radius
+    borderRadius: 25, // Increased border radius
     fontSize: 22,
     fontWeight: '900',
     textAlign: 'center',

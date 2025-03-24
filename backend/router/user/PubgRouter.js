@@ -10,7 +10,7 @@ router4.post('/checkuserPubgtdm',Authverify,checkuserJoinPubgtdm)
 router4.post('/creatematch',Authverify,createPubgMatch)
 router4.post('/creatematchtdm',Authverify,createtdm)
 router4.get('/getpubg',getpubgMatch)
-router4.get('/gettdm',gettdm)
+router4.get('/gettdm',Authverify,gettdm)
 router4.post('/addName',Authverify,addName)
 router4.post('/addNametdm',Authverify,addNametdm)
 module.exports = router4
