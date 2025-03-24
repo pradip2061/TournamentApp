@@ -29,7 +29,6 @@ if(typeof match.teamHost[0].teamHostStatus === 'boolean'){
 
 const checkResulttdm = async (req, res) => {
     const userid = req.user;
-console.log(matchId)
     // Check if match exists
     const userinfo =await User.findOne({_id:userid})
     const matchId=userinfo?.matchId?.pubgTdmId?.[0]
@@ -180,7 +179,71 @@ const getchampions = async (req, res) => {
     }
 };
 
+const checkReportClash=async(req,res)=>{
+    const userid = req.user;
+  
+    const userinfo =await User.findOne({_id:userid})
+    const matchId=userinfo?.matchId?.FreefireClashId?.[0]
+    const match = await ClashSquad.findOne({ _id: matchId });
+    if (!match) {
+        return res.status(400).json({ message: "Invalid match data" });
+    }
+if(!userinfo){
+    return res.status(400).json({ message: "user not found" });
+}
+
+if( match.teamHost[0].userid === userid){
+    if(match.teamHost[0].reportMessage){
+        return res.status(200).json({ message: "report" });
+    }else{
+        return res.status(200).json({ message: "noreport" });
+    }
+    
+}else if( match.teamopponent[0].userid === userid){
+    if(match.teamopponent[0].reportMessage){
+        return res.status(200).json({ message: "report" });
+    }else{
+        return res.status(200).json({ message: "noreport" });
+    }
+}else{
+    return res.status(200).json({ message: "no user found" });
+}
+  
+}
+
+const checkReportTdm=async(req,res)=>{
+    const userid = req.user;
+  
+    const userinfo =await User.findOne({_id:userid})
+    const matchId=userinfo?.matchId?.pubgTdmId?.[0]
+    const match = await tdm.findOne({ _id: matchId });
+    if (!match) {
+        return res.status(400).json({ message: "Invalid match data" });
+    }
+if(!userinfo){
+    return res.status(400).json({ message: "user not found" });
+}
+
+if( match.teamHost[0].userid === userid){
+    if(match.teamHost[0].reportMessage){
+        return res.status(200).json({ message: "report" });
+    }else{
+        return res.status(200).json({ message: "noreport" });
+    }
+    
+}else if( match.teamopponent[0].userid === userid){
+    if(match.teamopponent[0].reportMessage){
+        return res.status(200).json({ message: "report" });
+    }else{
+        return res.status(200).json({ message: "noreport" });
+    }
+}else{
+    return res.status(200).json({ message: "no user found" });
+}
+  
+}
 
 
 
-module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions};
+
+module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions,checkReportClash,checkReportTdm};
