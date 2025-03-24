@@ -1,57 +1,25 @@
-const express = require("express");
-const router1 = express.Router();
-const {
-  createCs,
-  getCsData,
-  playingmatch,
-  joinuser,
-  trackusermodel,
-  checkUserOrAdmin,
-  checkisplaying,
-  createFF,
-  getFFmatch,
-  joinuserff,
-  addName,
-  EnrollMatch,
-  trackusermodeltdm,
-  checkUserOrAdmintdm,
-  createFreeFireFullMap,
-} = require("../../controller/CreateMatchCsController");
-const userRateLimiter = require("../../middleware/reactLimit");
-const Authverify = require("../../middleware/AuthVerify");
-const checkSlot = require("../../middleware/checkSlotFullOrNotMiddleware");
-const verifyDidYouWinMatch = require("../../middleware/DidYouWinMatch");
-const {
-  DidYouWinMatch,
-  DidYouWinMatchtdm,
-} = require("../../controller/DidWinMatchController");
-const { createPubgMatch } = require("../../controller/PubgJoinUserController");
-// const hideMatch = require("../../controller/hideMachController");
-
-router1.post("/create", Authverify, userRateLimiter, createCs);
-router1.get("/get", getCsData);
-router1.get("/getsingle", playingmatch);
-router1.get("/getff", getFFmatch);
-router1.get("/enrollmatch", Authverify, EnrollMatch);
-router1.post("/createff", Authverify, createFF);
-router1.post("/createpubg-FM", Authverify, createPubgMatch);
-router1.post("/createFFfullmap", Authverify, createFreeFireFullMap);
-
-// router1.post("/hideMatch", Authverify, hideMatch);
-
-router1.post("/addNameff", Authverify, addName);
-router1.post("/addinhost", Authverify, trackusermodel);
-router1.post("/addinhosttdm", Authverify, trackusermodeltdm);
-router1.post("/checkUserOrAdmin", Authverify, checkUserOrAdmin);
-router1.post("/checkUserOrAdmintdm", Authverify, checkUserOrAdmintdm);
-router1.post("/join", Authverify, userRateLimiter, checkSlot, joinuser);
-router1.post("/check", Authverify, checkisplaying);
-router1.post("/joinff", Authverify, joinuserff);
-router1.post("/checkBoolean", Authverify, verifyDidYouWinMatch, DidYouWinMatch);
-router1.post(
-  "/checkBooleantdm",
-  Authverify,
-  verifyDidYouWinMatch,
-  DidYouWinMatchtdm
-);
-module.exports = router1;
+const express =require('express')
+const router1 = express.Router()
+const {createCs,getCsData, playingmatch,  joinuser, trackusermodel, checkUserOrAdmin, checkisplaying, createFF, getFFmatch, joinuserff, addName, EnrollMatch, trackusermodeltdm, checkUserOrAdmintdm} = require('../../controller/CreateMatchCsController')
+const userRateLimiter = require('../../middleware/reactLimit')
+const Authverify = require('../../middleware/AuthVerify')
+const checkSlot = require('../../middleware/checkSlotFullOrNotMiddleware')
+const verifyDidYouWinMatch = require('../../middleware/DidYouWinMatch')
+const {DidYouWinMatch, DidYouWinMatchtdm}= require('../../controller/DidWinMatchController')
+router1.post('/create',Authverify, userRateLimiter,createCs)
+router1.get('/get',Authverify,getCsData)
+router1.get('/getsingle',playingmatch)
+router1.get('/getff',getFFmatch)
+router1.get('/enrollmatch',Authverify,EnrollMatch)
+router1.post('/createff',createFF)
+router1.post('/addNameff',Authverify,addName)
+router1.post('/addinhost',Authverify,trackusermodel)
+router1.post('/addinhosttdm',Authverify,trackusermodeltdm)
+router1.post('/checkUserOrAdmin',Authverify,checkUserOrAdmin)
+router1.post('/checkUserOrAdmintdm',Authverify,checkUserOrAdmintdm)
+router1.post('/join',Authverify,userRateLimiter,checkSlot,joinuser)
+router1.post('/check',Authverify,checkisplaying)
+router1.post('/joinff',Authverify,joinuserff)
+router1.post('/checkBoolean',Authverify,verifyDidYouWinMatch,DidYouWinMatch)
+router1.post('/checkBooleantdm',Authverify,verifyDidYouWinMatch,DidYouWinMatchtdm)
+module.exports = router1

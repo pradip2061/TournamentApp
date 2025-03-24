@@ -26,6 +26,7 @@ const TDM = ({ navigation }) => {
     gameName: data?.gameName?.[0]?.pubg || '',
     betAmount: '',
   });
+    const[joinMatch,setJoinMatch]=useState([])
 
   console.log(matchDetails.match)
   
@@ -88,20 +89,24 @@ const TDM = ({ navigation }) => {
     }
   }
 
-  useEffect(() => {
-   getMatches()
-  }, [getdata, trigger])
-
   const getMatches = async () => {
-    try {
-    await axios.get(`${BASE_URL}/khelmela/gettdm`)
-      .then((response) => {
-        setDatas(response.data.data)
-      })
-    } catch (error) {
-      setMessage(error.response?.data?.message || 'Error fetching matches')
-    }
-  }
+    const token=await AsyncStorage.getItem('token')
+    await axios.get(`${BASE_URL}/khelmela/gettdm`,{
+      headers:{
+        Authorization:`${token}`
+      }
+    }).then(response => {
+      setDatas(response.data.card);
+      setJoinMatch(response.data.matchjoin)
+      console.log(response)
+    });
+  };
+
+useEffect(()=>{
+  getMatches();
+},[])
+
+
 
   const triggergettdm =()=>{
     getMatches()
@@ -133,7 +138,21 @@ const TDM = ({ navigation }) => {
           <Entypo name="game-controller" size={24} color="#333" />
           <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
-
+        <View>
+        { joinMatch?.length !== 0 ? (
+      <FlatList
+        data={joinMatch}
+        scrollEnabled={false}
+        keyExtractor={(item, id) => id.toString()}
+        renderItem={({ item }) => (
+          <TdmCard matches={item} getmatches={triggergettdm}/>
+        )}
+        contentContainerStyle={{ gap: 20 }}
+      />
+    ) : (
+      <Text>No join Matches Right now.</Text>
+    )}
+        </View>
         <View style={{ paddingBottom: 300 }}>
           <View>
             {datas?.length ? (

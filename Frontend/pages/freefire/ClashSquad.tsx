@@ -26,11 +26,11 @@ import {BASE_URL} from '../../env';
 const ClashSquad = ({navigation}) => {
   const [page, setPage] = useState(1);
   const [datas, setDatas] = useState([]);
-  const [trigger, setTrigger] = useState('');
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const {getdata,getProfile,data} = useContext(CheckAdminContext);
+  const {getProfile,data} = useContext(CheckAdminContext);
+  const[joinMatch,setJoinMatch]=useState([])
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
@@ -133,8 +133,15 @@ const ClashSquad = ({navigation}) => {
 
 
       const getMatches = async () => {
-        await axios.get(`${BASE_URL}/khelmela/get`).then(response => {
+        const token=await AsyncStorage.getItem('token')
+        await axios.get(`${BASE_URL}/khelmela/get`,{
+          headers:{
+            Authorization:`${token}`
+          }
+        }).then(response => {
           setDatas(response.data.card);
+          setJoinMatch(response.data.matchjoin)
+          console.log(response)
         });
       };
 
@@ -174,8 +181,23 @@ const ClashSquad = ({navigation}) => {
           <Entypo name="game-controller" size={24} color="#333" />
           <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
+        <View>
+        { joinMatch?.length !== 0 ? (
+      <FlatList
+        data={joinMatch}
+        scrollEnabled={false}
+        keyExtractor={(item, id) => id.toString()}
+        renderItem={({ item }) => (
+          <MatchCard match={item} refreshData={refreshData} />
+        )}
+        contentContainerStyle={{ gap: 20 }}
+      />
+    ) : (
+      <Text>No join Matches Right now.</Text>
+    )}
+        </View>
 
-  <View style={{paddingBottom: 15}}>
+  <View style={{paddingBottom: 15,backgroundColor:'red'}}>
   <View>
     {datas === null ? (
       <ShimmerBox />

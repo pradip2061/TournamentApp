@@ -23,21 +23,20 @@ const deleteOldMatchCards = async () => {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
         const userinfo = await User.findOne({ _id: userId });
-        const findindex = userinfo.matchId.FreefireClashId.findIndex((item)=>item === matchCards._id)
-        if (findindex !== -1) {
-            userinfo.matchId.FreefireClashId.splice(findindex); // Removes 1 item at the found index
-          }
-        if (userinfo) {
-          userinfo.isplaying = false;
-          userinfo.balance += Number(match.matchDetails[0]?.betAmount || 0); // Convert betAmount to Number safely
-          await userinfo.save();
+        if (!userinfo) {
+          return res.status(404).json({message:'user not found'})
         }
+        userinfo.matchId.FreefireClashId.splice(0, userinfo.matchId.FreefireClashId.length);
+        // Removes 1 item at the found index
+        userinfo.isplaying = false;
+          userinfo.balance += Number(match?.matchDetails?.[0]?.betAmount || 0); // Convert betAmount to Number safely
+        await userinfo.save();
       }
     }
 
     // Delete match cards after processing
     const deleted = await ClashSquad.deleteMany({
-      _id: { $in: matchCards.map(match => match._id) }
+      _id: { $in: matchCards?.map(match => match._id) }
     });
 
     console.log(`Deleted ${deleted.deletedCount} expired match cards.`);
@@ -65,21 +64,21 @@ const deleteOldMatchCard = async () => {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
         const userinfo = await User.findOne({ _id: userId });
-        const findindex = userinfo.matchId.pubgTdmId.findIndex((item)=>item === matchCards._id)
-        if (findindex !== -1) {
-            userinfo.matchId.pubgTdmId.splice(findindex); // Removes 1 item at the found index
-          }
-        if (userinfo) {
-          userinfo.isplaying = false;
-          userinfo.balance += Number(match.matchDetails[0]?.betAmount || 0); // Convert betAmount to Number safely
-          await userinfo.save();
+        if (!userinfo) {
+        return res.status(404).json({
+          message:'user not found'
+        })
         }
+        userinfo.matchId.pubgTdmId.splice(0,userinfo.matchId.pubgTdmId.length); // Removes 1 item at the found index
+        userinfo.isplaying = false;
+        userinfo.balance += Number(match?.entryFee || 0); // Convert betAmount to Number safely
+        await userinfo.save();
       }
     }
 
     // Delete match cards after processing
-    const deleted = await ClashSquad.deleteMany({
-      _id: { $in: matchCards.map(match => match._id) }
+    const deleted = await tdm.deleteMany({
+      _id: { $in: matchCards?.map(match => match._id) }
     });
 
     console.log(`Deleted ${deleted.deletedCount} expired match cards.`);

@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, {useContext, useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -13,29 +13,38 @@ import {
   Modal,
 } from 'react-native';
 import ModalNotify from '../../components/ModalNotify';
-import {launchImageLibrary} from 'react-native-image-picker';
+import { launchImageLibrary } from 'react-native-image-picker';
 import { CheckAdminContext } from '../ContextApi/ContextApi';
-import{BASE_URL} from '../../env'
+import { BASE_URL } from '../../env';
+
 const Profile = () => {
   const [username, setUsername] = useState('');
   const [freefireName, setFreefireName] = useState('');
   const [freefireUid, setFreefireUid] = useState('');
   const [pubgName, setPubgName] = useState('');
   const [pubgUid, setPubgUid] = useState('');
-  // const [data, setData] = useState({});
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const[image,setImage]=useState(null)
-  const[loading,setLoading]=useState(false)
-  const{trigger,setTrigger,getProfile,data}=useContext(CheckAdminContext)
+  const [loading, setLoading] = useState(false);
+  const { getProfile, data } = useContext(CheckAdminContext); // Use only getProfile and data
+
   // Popup notification handler
   const popup = () => {
     setVisible(true);
     setTimeout(() => setVisible(false), 1000);
   };
 
-  // Update profile username
+  // Reset input fields to server data
+  const resetFields = () => {
+    setUsername(data?.username || '');
+    setFreefireName(data?.gameName?.[0]?.freefire || '');
+    setFreefireUid(data?.uid?.[0]?.freefire || '');
+    setPubgName(data?.gameName?.[0]?.pubg || '');
+    setPubgUid(data?.uid?.[0]?.pubg || '');
+  };
+
+  // Update profile username and refresh data
   const updateProfile = async () => {
     if (!username) {
       setError('Username cannot be empty');
@@ -44,186 +53,151 @@ const Profile = () => {
     }
     setError('');
     setMessage('');
-    setLoading(true)
+    setLoading(true);
+
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/updateprofile`,
-        {username}, // Ensure the payload matches API expectations
-        {
-          headers: {
-            Authorization: `${token}`,
-            'Content-Type': 'application/json', // Explicitly set content type
-          },
-        },
+        { username },
+        { headers: { Authorization: `${token}`, 'Content-Type': 'application/json' } },
       );
       setMessage(response.data.message || 'Username updated successfully');
-      // setData(prev => ({...prev, username})); // Update local state
+      await getProfile(); // Fetch latest data from server
     } catch (error) {
-      console.log(
-        'Update profile error:',
-        error.response?.data || error.message,
-      );
+      console.log('Update profile error:', error.response?.data || error.message);
       setError(error.response?.data?.message || 'Failed to update username');
     } finally {
-      setLoading(false)
+      setLoading(false);
       popup();
     }
   };
 
-  useEffect(()=>{
-    getProfile()
-    setFreefireName(data?.gameName?.[0]?.freefire)
-    setFreefireUid(data?.uid?.[0]?.freefire)
-    setUsername(data?.username)
-    setPubgName(data?.gameName?.[0]?.pubg)
-    setPubgUid(data?.uid?.[0]?.pubg)
-  },[trigger])
-  // Update PUBG name and UID
+  // Update PUBG name and UID and refresh data
   const pubgNameUpdate = async () => {
     setError('');
     setMessage('');
-    setLoading(true)
+    setLoading(true);
+
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/pubgname`,
-        {pubgName, pubgUid},
-        {headers: {Authorization: `${token}`}},
+        { pubgName, pubgUid },
+        { headers: { Authorization: `${token}` } },
       );
       setMessage(response.data.message || 'PUBG details updated');
-      // setData(prev => ({
-      //   ...prev,
-      //   gameName: [{...prev.gameName?.[0], pubg: pubgName}],
-      //   uid: [{...prev.uid?.[0], pubg: pubgUid}],
-      // }));
+      await getProfile(); // Fetch latest data from server
     } catch (error) {
+      console.log('PUBG update error:', error.response?.data || error.message);
       setError(error.response?.data?.message || 'PUBG update failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
       popup();
     }
   };
 
-  // Update Freefire name and UID
+  // Update Freefire name and UID and refresh data
   const freefireNameUpdate = async () => {
     setError('');
     setMessage('');
-    setLoading(true)
+    setLoading(true);
+
     try {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/freefirename`,
-        {freefireName, freefireUid},
-        {headers: {Authorization: `${token}`}},
+        { freefireName, freefireUid },
+        { headers: { Authorization: `${token}` } },
       );
       setMessage(response.data.message || 'Freefire details updated');
-      // setData(prev => ({
-      //   ...prev,
-      //   gameName: [{...prev.gameName?.[0], freefire: freefireName}],
-      //   uid: [{...prev.uid?.[0], freefire: freefireUid}],
-      // }));
+      await getProfile(); // Fetch latest data from server
     } catch (error) {
+      console.log('Freefire update error:', error.response?.data || error.message);
       setError(error.response?.data?.message || 'Freefire update failed');
     } finally {
-      setLoading(false)
+      setLoading(false);
       popup();
     }
   };
-  const isUsernameChanged =
-  (username ?? '').trim() !== '' &&
-  (username ?? '').trim() !== (data?.username ?? '').trim();
 
-const isFreefireChanged =
-  ((freefireName ?? '').trim() !== '' || (freefireUid ?? '').trim() !== '') && // ✅ Ensures at least one input has a value
-  ((freefireName ?? '').trim() !== (data?.gameName?.[0]?.freefire ?? '').trim() ||
-   (freefireUid ?? '').trim() !== (data?.uid?.[0]?.freefire ?? '').trim());
+  // Fetch initial profile data on mount
+  useEffect(() => {
+    getProfile(); // Fetch profile data once on mount
+  }, []);
 
-const isPubgChanged =
-  ((pubgName ?? '').trim() !== '' || (pubgUid ?? '').trim() !== '') && // ✅ Ensures at least one input has a value
-  ((pubgName ?? '').trim() !== (data?.gameName?.[0]?.pubg ?? '').trim() ||
-   (pubgUid ?? '').trim() !== (data?.uid?.[0]?.pubg ?? '').trim());
+  // Sync input fields with server data when it changes
+  useEffect(() => {
+    resetFields();
+  }, [data]);
 
-
-
-
-
+  // Image picker and upload with refresh
   const pickImage = () => {
     const options = {
       mediaType: 'photo',
-      maxWidth: 800, // Set max width to reduce size
-      maxHeight: 800, // Set max height to reduce size
-      quality: 0.3, // Adjust compression quality (0.1 - 1)
-      includeBase64: true, // Convert image to base64
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.3,
+      includeBase64: true,
     };
 
-    launchImageLibrary(options, response => {
+    launchImageLibrary(options, async (response) => {
       if (response.didCancel) {
         console.log('User cancelled image picker');
       } else if (response.errorMessage) {
         console.log('ImagePicker Error: ', response.errorMessage);
       } else {
-        uploadImage(response?.assets?.[0]?.base64);
-        // setImage(response?.assets?.[0]?.uri)
+        const base64Image = response?.assets?.[0]?.base64;
+        setLoading(true);
+
+        try {
+          const token = await AsyncStorage.getItem('token');
+          const uploadResponse = await axios.post(
+            `${BASE_URL}/khelmela/upload/upload`,
+            { image: base64Image, folderName: 'users', filename: '.jpg' },
+            { headers: { Authorization: `${token}` } },
+          );
+
+          if (uploadResponse.status === 200) {
+            const imageUrl = uploadResponse.data.url;
+            await axios.post(
+              `${BASE_URL}/khelmela/imageset`,
+              { image: imageUrl },
+              { headers: { Authorization: `${token}` } },
+            );
+            setMessage('Image updated successfully');
+            await getProfile(); // Fetch latest data from server
+          }
+        } catch (error) {
+          console.error('Image update error:', error);
+          setError(error.response?.data?.message || 'Failed to update image');
+        } finally {
+          setLoading(false);
+          popup();
+        }
       }
     });
   };
-  const uploadImage = async (image) => {
-    try {
-      setLoading(true)
-      const token = await AsyncStorage.getItem('token');
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'users',
-          filename: '.jpg',
-        },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
-      );
-      console.log(response)
-      if(response.status == 200){
-        imageset(response.data.url)
-      }
-    } catch (error) {
-      console.error('Upload Error:', error);
-    }
-  };
 
-  const imageset =async(image)=>{
-    try {
-      setTrigger('')
-      const token = await AsyncStorage.getItem('token')
-      console.log(token)
-     const response = await axios.post(`${BASE_URL}/khelmela/imageset`,{image},{
-        headers:{
-       Authorization:`${token}`
-        }
-      })
-      setMessage(response.data.message)
-      setTrigger('done')
-    } catch (error) {
-      setError(error.response.data.message)
-    }finally{
-      setLoading(false)
-      popup()
-    }
-  }
+  const isUsernameChanged = username.trim() !== (data?.username ?? '').trim();
+  const isFreefireChanged =
+    freefireName.trim() !== (data?.gameName?.[0]?.freefire ?? '').trim() ||
+    freefireUid.trim() !== (data?.uid?.[0]?.freefire ?? '').trim();
+  const isPubgChanged =
+    pubgName.trim() !== (data?.gameName?.[0]?.pubg ?? '').trim() ||
+    pubgUid.trim() !== (data?.uid?.[0]?.pubg ?? '').trim();
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.header}>Profile</Text>
 
       {/* Profile Section */}
       <View style={styles.card}>
-        <TouchableOpacity
-          style={styles.profileImageContainer}
-          onPress={pickImage}>
+        <TouchableOpacity style={styles.profileImageContainer} onPress={pickImage}>
           <Image
-            source={{uri:data?.image || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}}
+            source={{
+              uri: data?.image || 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+            }}
             style={styles.profileImage}
           />
           <Text style={styles.plusIcon}>+</Text>
@@ -238,9 +212,10 @@ const isPubgChanged =
           onChangeText={setUsername}
         />
         <TouchableOpacity
-          style={[styles.saveButton, {opacity: isUsernameChanged ? 1 : 0.5}]}
-          onPress={ updateProfile}
-          disabled={!isUsernameChanged}>
+          style={[styles.saveButton, { opacity: isUsernameChanged ? 1 : 0.5 }]}
+          onPress={updateProfile}
+          disabled={!isUsernameChanged}
+        >
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
@@ -252,14 +227,9 @@ const isPubgChanged =
 
       {/* Freefire Section */}
       <View style={styles.card}>
-        <Image
-          source={require('../../assets/freefire.jpeg')}
-          style={styles.gameIcon}
-        />
+        <Image source={require('../../assets/freefire.jpeg')} style={styles.gameIcon} />
         <Text style={styles.gameTitle}>Freefire</Text>
-        <Text style={styles.label}>
-          Ingame Name: {data?.gameName?.[0]?.freefire}
-        </Text>
+        <Text style={styles.label}>Ingame Name: {data?.gameName?.[0]?.freefire}</Text>
         <TextInput
           style={styles.input}
           placeholder="example: raiden"
@@ -277,23 +247,19 @@ const isPubgChanged =
           keyboardType="numeric"
         />
         <TouchableOpacity
-          style={[styles.saveButton, {opacity: isFreefireChanged? 1 : 0.5}]}
+          style={[styles.saveButton, { opacity: isFreefireChanged ? 1 : 0.5 }]}
           onPress={freefireNameUpdate}
-          disabled={!isFreefireChanged}>
+          disabled={!isFreefireChanged}
+        >
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
 
       {/* PUBG Section */}
       <View style={styles.card}>
-        <Image
-          source={require('../../assets/image.png')}
-          style={styles.gameIcon}
-        />
+        <Image source={require('../../assets/image.png')} style={styles.gameIcon} />
         <Text style={styles.gameTitle}>PUBG</Text>
-        <Text style={styles.label}>
-          Ingame Name: {data?.gameName?.[0]?.pubg}
-        </Text>
+        <Text style={styles.label}>Ingame Name: {data?.gameName?.[0]?.pubg}</Text>
         <TextInput
           style={styles.input}
           placeholder="example: raiden"
@@ -311,19 +277,22 @@ const isPubgChanged =
           keyboardType="numeric"
         />
         <TouchableOpacity
-          style={[styles.saveButton, {opacity: isPubgChanged? 1 : 0.5}]}
+          style={[styles.saveButton, { opacity: isPubgChanged ? 1 : 0.5 }]}
           onPress={pubgNameUpdate}
-          disabled={!isPubgChanged}>
+          disabled={!isPubgChanged}
+        >
           <Text style={styles.saveButtonText}>Save</Text>
         </TouchableOpacity>
       </View>
+
       <Modal visible={loading} transparent>
-      <ActivityIndicator size={30} style={{marginTop:380}}/>
+        <ActivityIndicator size={30} style={{ marginTop: 380 }} />
       </Modal>
     </ScrollView>
   );
 };
 
+// Styles remain unchanged
 const styles = StyleSheet.create({
   container: {
     padding: 20,
@@ -395,7 +364,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 8,
     alignItems: 'center',
-    width: '100%', // Consistent size across all sections
+    width: '100%',
   },
   saveButtonText: {
     color: '#FFF',
