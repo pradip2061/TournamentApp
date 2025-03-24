@@ -19,7 +19,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
 import {BASE_URL} from '../env';
 
-const MatchCard = ({matches, getmatches}) => {
+const TdmCard = ({matches, getmatches}) => {
   const [check, setCheck] = useState('');
   const [customId, setCustomId] = useState(0);
   const [customPassword, setCustomPassword] = useState(0);
@@ -38,6 +38,9 @@ const MatchCard = ({matches, getmatches}) => {
   const [proof, setProof] = useState('');
   const [deleteCardModel, setDeleteCardModel] = useState(false);
   const matchId = matches?._id;
+  const [reportMessage, setReportMessage] = useState('');
+  const [reportModel, setReportModel] = useState(false);
+  const [checkReport, setCheckReport] = useState('');
   console.log(result);
   const {setTrigger, trigger} = useContext(CheckAdminContext);
 
@@ -108,21 +111,21 @@ const MatchCard = ({matches, getmatches}) => {
     }
   };
 
+  const checkpublish = async () => {
+    try {
+      await axios
+        .post(`${BASE_URL}/khelmela/checkpublishtdm`, {matchId})
+        .then(response => {
+          if (response.status === 200) {
+            setPublish(response.data.message);
+            getmatches();
+          }
+        });
+    } catch (error) {
+      setError(error.response.data.message);
+    }
+  };
   useEffect(() => {
-    const checkpublish = async () => {
-      try {
-        await axios
-          .post(`${BASE_URL}/khelmela/checkpublishtdm`, {matchId})
-          .then(response => {
-            if (response.status === 200) {
-              setPublish(response.data.message);
-              getmatches();
-            }
-          });
-      } catch (error) {
-        setError(error.response.data.message);
-      }
-    };
     checkpublish();
   }, [message, trigger]);
 
@@ -174,10 +177,6 @@ const MatchCard = ({matches, getmatches}) => {
     }
   };
 
-  useEffect(() => {
-    checkresult();
-  }, []);
-
   const checkresult = async () => {
     try {
       const token = await AsyncStorage.getItem('token');
@@ -192,9 +191,12 @@ const MatchCard = ({matches, getmatches}) => {
         .then(response => setResult(response.data.message));
     } catch (error) {
       setError(error.response.data.message);
-      notify();
     }
   };
+
+  useEffect(() => {
+    checkresult();
+  }, [trigger]);
 
   const pickImage = () => {
     const options = {
@@ -377,6 +379,131 @@ const MatchCard = ({matches, getmatches}) => {
     }
   };
 
+  const pickImageReport = () => {
+    const options = {
+      mediaType: 'photo',
+      maxWidth: 800,
+      maxHeight: 800,
+      quality: 0.3,
+      includeBase64: true,
+    };
+    launchImageLibrary(options, response => {
+      if (response.didCancel) {
+        console.log('User cancelled image picker');
+      } else if (response.errorMessage) {
+        console.log('ImagePicker Error: ', response.errorMessage);
+      } else {
+        setImage(response?.assets?.[0]?.base64);
+      }
+    });
+  };
+
+  const reportImages = async image => {
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      console.log(token);
+      if (!token) {
+        Alert.alert('Token not found');
+        return null; // Return null if token is missing
+      }
+
+      if (!image) {
+        setError('Please upload an image');
+        notify();
+        return null;
+      }
+
+      // Generate a proper filename with extension
+      const timestamp = new Date().getTime();
+      const filename = `payment_proof_${timestamp}.jpg`;
+
+      const imageResponse = await axios.post(
+        `${BASE_URL}/khelmela/upload/upload`,
+        {
+          image: image,
+          folderName: 'report',
+          filename: filename,
+        },
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
+      );
+
+      console.log('Image response:', imageResponse.data);
+
+      if (!imageResponse?.data?.url) {
+        Alert.alert('Image upload failed');
+        return null; // Return null on failure
+      }
+
+      const photoUrl = imageResponse.data.url;
+      return photoUrl; // ✅ Return the uploaded URL
+    } catch (error) {
+      setError(
+        error.response?.data?.error || error.message || 'Something went wrong',
+      );
+      notify();
+      return null; // Return null on error
+    }
+  };
+
+  const submitReport = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        setError('Token not found');
+        return;
+      }
+      const uploadedProof = await reportImages(image);
+      if (!uploadedProof) {
+        setError('Image upload failed');
+        notify();
+        return;
+      }
+
+      if (!reportMessage) {
+        setError('All field are Required');
+        notify();
+        return;
+      }
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/reportTdm`,
+        {reportMessage, uploadedProof},
+        {headers: {Authorization: `${token}`}},
+      );
+      setMessage(response.data.message);
+      checkReportClash();
+    } catch (error) {
+      setError(error.response?.data?.message || 'Submission failed');
+    } finally {
+      setModalDidYouWin(false);
+      notify();
+    }
+  };
+  const checkReportClash = async () => {
+    try {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        setError('Token not found');
+        return;
+      }
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/checkreportTdm`,
+        {},
+        {headers: {Authorization: `${token}`}},
+      );
+      setCheckReport(response.data.message);
+    } catch (error) {
+      setError(error.response?.data?.message || 'Submission failed');
+    }
+  };
+
+  useEffect(() => {
+    checkReportClash();
+  }, []);
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
@@ -453,18 +580,69 @@ const MatchCard = ({matches, getmatches}) => {
                         </View>
                       </View>
                       <View>
-                        {result === 'resultsubmit' ? (
+                        {result === 'resultsubmit' ||
+                        checkReport === 'report' ? (
                           <Text style={styles.centerText}>
-                            Result Submitted
+                            Response submitted
                           </Text>
                         ) : (
-                          <TouchableOpacity
-                            onPress={() => setModalDidYouWin(true)}
-                            style={styles.footerText}>
-                            <Text style={styles.submitTextRed}>
-                              Submit Your Result
-                            </Text>
-                          </TouchableOpacity>
+                          <View>
+                            <TouchableOpacity
+                              onPress={() => setModalDidYouWin(true)}
+                              style={styles.footerText}>
+                              <Text style={styles.submitTextRed}>
+                                Submit Your Result
+                              </Text>
+                            </TouchableOpacity>
+                            <>
+                              <TouchableOpacity
+                                onPress={() => setReportModel(true)}>
+                                <Text
+                                  style={{
+                                    color: 'white',
+                                    marginLeft: 100,
+                                    marginTop: 20,
+                                    paddingBottom: 10,
+                                  }}>
+                                  Report Match
+                                </Text>
+                              </TouchableOpacity>
+                              {reportModel && (
+                                <View style={{alignItems: 'center'}}>
+                                  <TextInput
+                                    placeholder="enter the messages"
+                                    style={styles.input}
+                                    value={reportMessage}
+                                    onChangeText={text =>
+                                      setReportMessage(text)
+                                    }
+                                  />
+                                  <TouchableOpacity onPress={pickImageReport}>
+                                    <Text>Upload</Text>
+                                  </TouchableOpacity>
+                                  <View
+                                    style={{
+                                      flex: 1,
+                                      flexDirection: 'row',
+                                      gap: 50,
+                                      marginTop: 20,
+                                      alignItems: 'center',
+                                    }}>
+                                    <TouchableOpacity
+                                      onPress={() => setReportModel(false)}
+                                      style={styles.button}>
+                                      <Text>cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                      onPress={submitReport}
+                                      style={styles.button}>
+                                      <Text>submit</Text>
+                                    </TouchableOpacity>
+                                  </View>
+                                </View>
+                              )}
+                            </>
+                          </View>
                         )}
                       </View>
                     </>
@@ -517,19 +695,63 @@ const MatchCard = ({matches, getmatches}) => {
                     </View>
                   </View>
                   <View>
-                    {result === 'resultsubmit' ? (
-                      <Text style={styles.centerText}>Result Submitted</Text>
+                    {result === 'resultsubmit' || checkReport === 'report' ? (
+                      <Text style={styles.centerText}>Response submitted</Text>
                     ) : (
                       <View>
-                        {matches.customId && (
+                        <TouchableOpacity
+                          onPress={() => setModalDidYouWin(true)}
+                          style={styles.footerText}>
+                          <Text style={styles.submitTextRed}>
+                            Submit Your Result
+                          </Text>
+                        </TouchableOpacity>
+                        <>
                           <TouchableOpacity
-                            onPress={() => setModalDidYouWin(true)}
-                            style={styles.footerText}>
-                            <Text style={styles.submitTextRed}>
-                              Submit Your Result
+                            onPress={() => setReportModel(true)}>
+                            <Text
+                              style={{
+                                color: 'white',
+                                marginLeft: 100,
+                                marginTop: 20,
+                                paddingBottom: 10,
+                              }}>
+                              Report Match
                             </Text>
                           </TouchableOpacity>
-                        )}
+                          {reportModel && (
+                            <View style={{alignItems: 'center'}}>
+                              <TextInput
+                                placeholder="enter the messages"
+                                style={styles.input}
+                                value={reportMessage}
+                                onChangeText={text => setReportMessage(text)}
+                              />
+                              <TouchableOpacity onPress={pickImageReport}>
+                                <Text>Upload</Text>
+                              </TouchableOpacity>
+                              <View
+                                style={{
+                                  flex: 1,
+                                  flexDirection: 'row',
+                                  gap: 50,
+                                  marginTop: 20,
+                                  alignItems: 'center',
+                                }}>
+                                <TouchableOpacity
+                                  onPress={() => setReportModel(false)}
+                                  style={styles.button}>
+                                  <Text>cancel</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                  onPress={submitReport}
+                                  style={styles.button}>
+                                  <Text>submit</Text>
+                                </TouchableOpacity>
+                              </View>
+                            </View>
+                          )}
+                        </>
                       </View>
                     )}
                   </View>
@@ -916,4 +1138,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MatchCard;
+export default TdmCard;
