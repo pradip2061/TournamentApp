@@ -47,5 +47,92 @@ const deleteCardtdm =async(req,res)=>{
         console.log(error)
     }
     }
+    const reportClashSquad =async(req,res)=>{
+        try {
+            const userid =req.user
+            const{reportMessage,uploadedProof}=req.body
+            console.log(reportMessage)
+        if(!userid){
+            return res.status(404).json({
+                message:"userid not found"
+            })
+        }
+        const userinfo=await User.findOne({_id:userid})
+        if(!userinfo){
+            return res.status(404).json({
+                message:"user not found"
+            })
+        }
+        const matchId = userinfo?.matchId?.FreefireClashId?.[0]
+        const match = await ClashSquad.findOne({_id:matchId})
+        if(!match){
+            return res.status(404).json({
+                message:'matchCard not found'
+            })
+        }
+        if(match.teamHost[0].userid === userid){
+            match.teamHost[0].reportImage=uploadedProof
+            match.teamHost[0].reportMessage=reportMessage
+            match.save()
+        }else if(match.teamopponent[0].userid === userid){
+            match.teamopponent[0].reportImage=uploadedProof
+            match.teamopponent[0].reportMessage=reportMessage
+            match.save()
+        }else{
+            console.log("userid not match")
+            return
+        }
 
-module.exports ={deleteCard,deleteCardtdm}
+        res.status(200).json({
+            message:"report submit successfully"
+        })
+        } catch (error) {
+            
+        }
+    }
+
+    const reportTdm =async(req,res)=>{
+        try {
+            const userid =req.user
+            const{reportMessage,uploadedProof}=req.body
+        if(!userid){
+            return res.status(404).json({
+                message:"userid not found"
+            })
+        }
+        console.log("report route")
+        const userinfo=await User.findOne({_id:userid})
+        if(!userinfo){
+            return res.status(404).json({
+                message:"user not found"
+            })
+        }
+        const matchId = userinfo?.matchId?.pubgTdmId?.[0]
+        const match = await tdm.findOne({_id:matchId})
+        if(!match){
+            return res.status(404).json({
+                message:'matchCard not found'
+            })
+        }
+        if(match.teamHost[0].userid === userid){
+            match.teamHost[0].reportImage=uploadedProof
+            match.teamHost[0].reportMessage=reportMessage
+            match.save()
+        }else if(match.teamopponent.userid === userid){
+            match.teamopponent[0].reportImage=uploadedProof
+            match.teamopponent[0].reportMessage=reportMessage
+            match.save()
+        }else{
+            console.log("userid not match")
+            return
+        }
+
+        res.status(200).json({
+            message:"report submit successfully"
+        })
+        } catch (error) {
+            
+        }
+    }
+
+module.exports ={deleteCard,deleteCardtdm,reportClashSquad,reportTdm}
