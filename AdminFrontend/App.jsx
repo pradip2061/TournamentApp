@@ -7,7 +7,7 @@ import UploadPhoto from './pages/Match_watcher/UploadPhoto';
 import LandingChat from './pages/Chat/LandingChat';
 import Authenticate from './pages/Authentication/Authenticate';
 import PrivateChat from './pages/Chat/PrivateChat';
-import FirstPage from './pages/Authentication/first';
+
 import AdminHome from './pages/Transaction/AdminHome';
 import Withdraw from './pages/components/Withdraw';
 import GamePannel from './pages/Tournament/GamePannel';
@@ -17,12 +17,8 @@ const Stack = createStackNavigator();
 const App = () => {
   return (
     <NavigationContainer>
-      <Stack.Navigator initialRouteName="firstPage">
-        <Stack.Screen
-          name="firstPage"
-          component={FirstPage}
-          options={{headerShown: false}}
-        />
+      <Stack.Navigator initialRouteName="Authenticate">
+        
         <Stack.Screen
           name="Authenticate"
           component={Authenticate}

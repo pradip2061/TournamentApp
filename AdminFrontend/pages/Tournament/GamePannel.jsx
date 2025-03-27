@@ -32,7 +32,7 @@ const AdminHome = () => {
         }
 
         const response = await axios.get(
-          'http://10.216.74.109:3000/khelmela/userRequest/user', // Ensure this URL matches your running backend
+          'http://192.168.171.123:3000/khelmela/userRequest/user', // Ensure this URL matches your running backend
           {
             headers: {Authorization: `Bearer ${token}`},
           },
