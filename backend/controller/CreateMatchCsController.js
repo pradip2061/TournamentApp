@@ -118,6 +118,7 @@ userinfo.balance -= match.matchDetails[0].betAmount
  await userinfo.save()
 match.teamopponent[0].userid=userid
 match.TotalPlayers +=1
+match.opponentName = user.gameName[0].freefire
  await match.save()
   res.status(200).json({
     message:'join successfully'
