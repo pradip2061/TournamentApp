@@ -12,6 +12,12 @@ if(!match){
         message:'matchCard not found'
     })
 }
+
+if(match.teamopponent[0].userid){
+    return res.status(400).json({
+        message:"player has been joined match cannot be deleted"
+    })
+}
 const userinfo =await User.findOne({_id:userid})
 userinfo.balance += Number(match.matchDetails[0].betAmount)
 userinfo.isplaying =false
