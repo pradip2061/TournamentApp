@@ -12,6 +12,7 @@ import { navigationRef } from './pages/NavigationRef';
 import { ContextApi } from './pages/ContextApi/ContextApi';
 import Orientation from 'react-native-orientation-locker';
 import Withdraw from './pages/transaction/Withdraw';
+import NetworkStatus from './NetworkStatus';
 const App = () => {
   const Stack = createStackNavigator();
   useEffect(() => {
@@ -22,6 +23,7 @@ const App = () => {
     };
   }, []);
   return (
+     <NetworkStatus>
     <ContextApi>
     <NavigationContainer ref={navigationRef}>
       <TokenCheck/>
@@ -52,6 +54,7 @@ const App = () => {
       </Stack.Navigator>
     </NavigationContainer>
     </ContextApi>
+     </NetworkStatus>
   );
 };
 
