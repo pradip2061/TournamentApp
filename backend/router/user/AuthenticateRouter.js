@@ -30,5 +30,4 @@ router.post('/freefirename',Authverify,freefireprofile)
 router.post('/pubgname',Authverify,pubgprofile)
 router.post('/forgetpassword',resetPassword)
 router.post('/verifyforgetpassword',resetOtpVerify)
-router.post()
 module.exports=router
