@@ -59,6 +59,98 @@ res.status(200).json({
     message:'this is user info',
     data:userinfo
 })
-
 }
-module.exports ={Login,getprofile}
+const victory = async (req, res) => {
+    try {
+      const userid = req.user;
+      if (!userid) {
+        return res.status(400).json({ message: "User not found!" });
+      }
+  
+      const userinfo = await User.findOne({ _id: userid });
+      if (!userinfo) {
+        return res.status(400).json({ message: "User not found!" });
+      }
+  
+      const matchIdsclash = userinfo.victory.pubgTdm;
+      const matchesclash = await tdm.find({
+        _id: { $in: matchIdsclash },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      const matchIdff = userinfo.victory.FreefireFull;
+      const matchesff = await FFfreefire.find({
+        _id: { $in: matchIdff },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      const matchIdspubg = userinfo.victory.pubgFull;
+      const matchespubg = await PubgFull.find({
+        _id: { $in: matchIdspubg },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      const matchIdstdm = userinfo.victory.FreefireClash;
+      const matchestdm = await Clashsqaud.find({
+        _id: { $in: matchIdstdm },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      res.status(200).json({
+        matchesclash,
+        matchesff,
+        matchespubg,
+        matchestdm,
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message || error });
+    }
+  };
+  const loss = async (req, res) => {
+    try {
+      const userid = req.user;
+      if (!userid) {
+        return res.status(400).json({ message: "User not found!" });
+      }
+  
+      const userinfo = await User.findOne({ _id: userid });
+      if (!userinfo) {
+        return res.status(400).json({ message: "User not found!" });
+      }
+  
+      const matchIdsclash = userinfo.loss.pubgTdm;
+      const matchesclash = await tdm.find({
+        _id: { $in: matchIdsclash },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      const matchIdff = userinfo.loss.FreefireFull;
+      const matchesff = await FFfreefire.find({
+        _id: { $in: matchIdff },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      const matchIdspubg = userinfo.loss.pubgFull;
+      const matchespubg = await PubgFull.find({
+        _id: { $in: matchIdspubg },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      const matchIdstdm = userinfo.loss.FreefireClash;
+      const matchestdm = await Clashsqaud.find({
+        _id: { $in: matchIdstdm },
+        status: { $in: ["pending", "running"] },
+      });
+  
+      res.status(200).json({
+        matchesclash,
+        matchesff,
+        matchespubg,
+        matchestdm,
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message || error });
+    }
+  };
+
+module.exports ={Login,getprofile,victory,loss}
