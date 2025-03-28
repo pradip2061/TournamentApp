@@ -6,7 +6,6 @@ const deleteCard =async(req,res)=>{
 try {
     const{matchId}=req.body
 const userid =req.user
-const match = await ClashSquad.findByIdAndDelete({_id:matchId})
 if(!match){
     return res.status(404).json({
         message:'matchCard not found'
@@ -18,6 +17,7 @@ if(match.teamopponent[0].userid){
         message:"player has been joined match cannot be deleted"
     })
 }
+    const match = await ClashSquad.findByIdAndDelete({_id:matchId})
 const userinfo =await User.findOne({_id:userid})
 userinfo.balance += Number(match.matchDetails[0].betAmount)
 userinfo.isplaying =false
