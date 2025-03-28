@@ -95,13 +95,17 @@ const verifyOtpanduser = async (req, res) => {
         codId: [],
       },
       Loss: {
-        pubg: [],
-        Freefire: [],
+        pubgFull: [],
+        pubgTdm: [],
+        FreefireFull: [],
+        FreefireClash: [],
         cod: [],
       },
       victory: {
-        pubg: [],
-        Freefire: [],
+        pubgFull: [],
+        pubgTdm: [],
+        FreefireFull: [],
+        FreefireClash: [],
         cod: [],
       },
       gameName: [
