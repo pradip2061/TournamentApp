@@ -17,6 +17,7 @@ import ModalNotify from './ModalNotify';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
 import { BASE_URL } from '../env';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const MatchCard = ({ match, refreshData }) => {
   const [check, setCheck] = useState('');
@@ -495,7 +496,7 @@ const MatchCard = ({ match, refreshData }) => {
       );
       setCheckReport(response.data.message);
     } catch (error) {
-      setError(error.response?.data?.message || 'Submission failed');
+      console.log(error.response?.data?.message || 'Submission failed');
     }
   };
 
@@ -560,9 +561,16 @@ const MatchCard = ({ match, refreshData }) => {
                   </View>
                   <View style={styles.divider} />
                   <View style={styles.footer}>
-                    <Text style={styles.text}>
+                    {
+                      check === 'host'? <Text style={styles.text}>
+                      👾 Opponent: {item.opponentName}
+                    </Text>: check === 'userjoined'? <Text style={styles.text}>
+                      👾 Opponent: {item.gameName}
+                    </Text>: <Text style={styles.text}>
                       👾 Opponent: {item.gameName}
                     </Text>
+                    }
+                   
                     <View style={styles.footerRow}>
                       <Text style={styles.prizeText}>
                         🏆 Prize: {item.betAmount * 1.5}
@@ -674,7 +682,7 @@ const MatchCard = ({ match, refreshData }) => {
                             </TouchableOpacity>
                           </View>
                         </View>
-                      ) : null}
+                      ) : <Text style ={{color:'grey', fontSize:15,marginLeft:7,marginTop:5}}>id and pass will provided by host in 5 min</Text>}
                     </View>
                   ) : null}
                 </View>
