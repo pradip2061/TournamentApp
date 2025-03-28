@@ -22,7 +22,9 @@ const DidYouWinMatch = async (req, res) => {
                 user.isplaying =false
                 user.matchId.FreefireClashId=[]
             }else{
-                console.log('might be no')
+                user.loss.FreefireClash.push(matchId);
+                user.isplaying =false
+                user.matchId.FreefireClashId=[]
             }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
@@ -33,14 +35,16 @@ const DidYouWinMatch = async (req, res) => {
                 user.isplaying =false
                 user.matchId.FreefireClashId=[]
             }else{
-                console.log('might be no')
+                user.loss.FreefireClash.push(matchId);
+                user.isplaying =false
+                user.matchId.FreefireClashId=[]
             }
         } else {
             return res.status(403).json({ message: "You are not part of this match" });
         }
 
         await match.save();
-
+        await user.save()
         return res.status(200).json({ message: "Added successfully!",match });
     } catch (error) {
         console.error("Error in DidYouWinMatch:", error);
