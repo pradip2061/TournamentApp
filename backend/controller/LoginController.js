@@ -1,3 +1,4 @@
+const ClashSquad = require("../model/ClashSquadModel")
 const {User} = require("../model/schema")
 const generateTokens = require('../token/generateToken')
 const bcrypt = require('bcrypt')
@@ -91,7 +92,7 @@ const victory = async (req, res) => {
       });
   
       const matchIdstdm = userinfo.victory.FreefireClash;
-      const matchestdm = await Clashsqaud.find({
+      const matchestdm = await ClashSquad.find({
         _id: { $in: matchIdstdm },
         status: { $in: ["pending", "running"] },
       });
@@ -137,7 +138,7 @@ const victory = async (req, res) => {
       });
   
       const matchIdstdm = userinfo.loss.FreefireClash;
-      const matchestdm = await Clashsqaud.find({
+      const matchestdm = await ClashSquad.find({
         _id: { $in: matchIdstdm },
         status: { $in: ["pending", "running"] },
       });
