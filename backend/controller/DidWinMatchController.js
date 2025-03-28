@@ -1,4 +1,5 @@
 const ClashSquad = require("../model/ClashSquadModel");
+const { User } = require("../model/schema");
 const tdm = require("../model/TdmModel");
 
 const DidYouWinMatch = async (req, res) => {
@@ -7,7 +8,7 @@ const DidYouWinMatch = async (req, res) => {
         const userid = req.user;
         console.log(userid)
         const match = await ClashSquad.findOne({ _id: matchId });
-
+        const user = await User.findOne({_id:userid})
         if (!match) {
             return res.status(404).json({ message: "Match not found" });
         }
@@ -15,7 +16,11 @@ const DidYouWinMatch = async (req, res) => {
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
             if(boolean === true){
-                match.hostProof = proof
+                match.hostProof = proofuser
+                user.balance += 25;
+                user.victory.FreefireClash.push(matchId);
+                user.isplaying =false
+                user.matchId.FreefireClashId=[]
             }else{
                 console.log('might be no')
             }
@@ -23,6 +28,10 @@ const DidYouWinMatch = async (req, res) => {
             match.teamopponent[0].team2Status = boolean;
             if(boolean === true){
                 match.userProof= proof
+                user.balance += 25;
+                user.victory.FreefireClash.push(matchId);
+                user.isplaying =false
+                user.matchId.FreefireClashId=[]
             }else{
                 console.log('might be no')
             }

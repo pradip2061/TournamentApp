@@ -63,13 +63,17 @@ const Userschema = new mongoose.Schema(
       codId: [String],
     },
     victory: {
-      pubg: [String],
-      Freefire: [String],
+      pubgFull: [String],
+      pubgTdm: [String],
+      FreefireFull: [String],
+      FreefireClash: [String],
       cod: [String],
     },
     Loss: {
-      pubg: [String],
-      Freefire: [String],
+      pubgFull: [String],
+      pubgTdm: [String],
+      FreefireFull: [String],
+      FreefireClash: [String],
       cod: [String],
     },
     balance: {
