@@ -37,6 +37,7 @@ const createCs = async (req, res) => {
       TotalPlayers:1,
       userProof:"",
       hostProof:"",
+      opponentName:""
     });
 
     await newMatch.save();
@@ -90,13 +91,12 @@ const playingmatch = async(req,res)=>{
 const joinuser = async(req,res)=>{
   const userid = req.user
   const {matchId}=req.body
-  const user = await User.findOne({_id:userid})
-  if(!user){
+const userinfo = await User.findOne({_id:userid})
+  if(!userinfo){
     res.status(404).json({
       message:'user not found'
     })
   }
-const userinfo = await User.findOne({_id:userid})
 const match = await ClashSquad.findOne(
   { _id: matchId}, // Find where userid is null
 );
@@ -110,16 +110,14 @@ if(!userinfo.gameName[0].freefire){
     message:'add pubgGameName in your profile'
   })
 }
-user.matchId.FreefireClashId.push(matchId)
-user.isplaying=true
-user.save()
-
+userinfo.matchId.FreefireClashId.push(matchId)
+userinfo.isplaying=true
 userinfo.balance -= match.matchDetails[0].betAmount
- await userinfo.save()
 match.teamopponent[0].userid=userid
 match.TotalPlayers +=1
-match.opponentName = user.gameName[0].freefire
+match.opponentName = userinfo.gameName[0].freefire
  await match.save()
+ await userinfo.save()
   res.status(200).json({
     message:'join successfully'
   })
@@ -134,7 +132,6 @@ const trackusermodel = async(req,res)=>{
     })
   }
 const match = await User.findOne({_id:userid})
-
 match.matchId.FreefireClashId.push(matchId)
 await match.save()
 res.status(200).json({
