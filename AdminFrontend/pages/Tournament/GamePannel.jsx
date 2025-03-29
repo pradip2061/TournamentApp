@@ -11,7 +11,7 @@ import Pubg from '../pubg/Pubg';
 import MatchTypeModal from '../../components/CreateModal';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import {baseUrl} from '../../env';
+import {BASE_URL, baseUrl} from '../../env';
 const AdminHome = () => {
   const [toggle, setToggle] = useState('FreeFire');
   const [modalVisible, setModalVisible] = useState(false);
@@ -32,9 +32,9 @@ const AdminHome = () => {
         }
 
         const response = await axios.get(
-          'http://192.168.171.123:3000/khelmela/userRequest/user', // Ensure this URL matches your running backend
+          `${BASE_URL}/khelmela/userRequest/user`,
           {
-            headers: {Authorization: `Bearer ${token}`},
+            headers: {Authorization: `${token}`},
           },
         );
 

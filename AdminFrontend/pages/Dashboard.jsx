@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -8,12 +8,12 @@ import {
   Modal,
   Alert,
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import {useNavigation} from '@react-navigation/native';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL } from '../env';
+import {BASE_URL} from '../env';
 
-const Dashboard = ({ navigation }) => {
+const Dashboard = ({navigation}) => {
   const [userdata, setUserdata] = useState({});
   const [modalVisible, setModalVisible] = useState(false); // State for modal visibility
 
@@ -29,7 +29,7 @@ const Dashboard = ({ navigation }) => {
       const response = await axios.get(
         `${BASE_URL}/khelmela/userRequest/user`,
         {
-          headers: { Authorization: `${token}` },
+          headers: {Authorization: `${token}`},
         },
       );
       setUserdata(response.data);
@@ -42,23 +42,7 @@ const Dashboard = ({ navigation }) => {
   };
 
   const handleChatPress = async () => {
-    console.log('Chat Press...........');
-    const token = await AsyncStorage.getItem('token');
-    const response = await axios.get(
-      `${BASE_URL}/khelmela/userRequest/friends`,
-      {
-        headers: { Authorization: `${token}` },
-      },
-    );
-
-    console.log(response);
-    navigation.navigate('LandingChat', { friends: response.data });
-  };
-
-  const handleLogout = async () => {
-    await AsyncStorage.clear();
-    setModalVisible(false); // Close modal
-    navigation.navigate('Authenticate');
+    navigation.navigate('LandingChat');
   };
 
   return (
@@ -73,7 +57,7 @@ const Dashboard = ({ navigation }) => {
       </View>
 
       <View style={styles.adminInfo}>
-        <Image source={{ uri: userdata.image }} style={styles.profileImage} />
+        <Image source={{uri: userdata.image}} style={styles.profileImage} />
         <View>
           <Text style={styles.infoText}>Username: {userdata?.username} </Text>
           <Text style={styles.infoText}>Email: {userdata?.email} </Text>
@@ -191,7 +175,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     borderRadius: 12,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
@@ -201,7 +185,6 @@ const styles = StyleSheet.create({
   icon: {
     width: 45,
     height: 45,
-   
   },
   adminInfo: {
     flexDirection: 'row',
@@ -211,7 +194,7 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 5,
   },
@@ -260,7 +243,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     elevation: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {width: 0, height: 4},
     shadowOpacity: 0.3,
     shadowRadius: 6,
   },
@@ -283,8 +266,8 @@ const styles = StyleSheet.create({
   homeIcon: {
     width: 50,
     height: 50,
-   
-  marginTop:-30,
+
+    marginTop: -30,
     borderRadius: 25,
     padding: 10,
     elevation: 5,
@@ -304,7 +287,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 10,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },

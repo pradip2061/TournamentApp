@@ -1,5 +1,5 @@
 import axios from 'axios';
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
   Text,
   TextInput,
@@ -7,9 +7,13 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
+  Image,
 } from 'react-native';
-import {baseUrl} from '../env';
+import {baseUrl} from '../../env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {jwtDecode} from 'jwt-decode';
+import AccountHistoryModal from '../../components/AccountHistory';
 
 const PowerRoom = () => {
   const [id, setId] = useState('');
@@ -21,6 +25,9 @@ const PowerRoom = () => {
   const [matchMessage, setMatchMessage] = useState('Search Match ');
   const [matchId, setMatchId] = useState('');
   const [match, setMatch] = useState({});
+  const [token, setToken] = useState('');
+  const [historyVisible, setHistoryVisible] = useState(false);
+  let user1;
 
   const item = {
     gunAttribute: 'true',
@@ -30,15 +37,32 @@ const PowerRoom = () => {
     headshot: 'yes',
   };
 
+  useEffect(() => {
+    const getToken = async () => {
+      const token = await AsyncStorage.getItem('token');
+      if (!token) {
+        setMessage('Please login first');
+        return;
+      }
+      setToken(token);
+      const adminId = await jwtDecode(token).id;
+      console.log('admin___id: ', adminId);
+    };
+    getToken();
+  }, []);
+
   const getUser = async id => {
     if (!id) {
       setMessage('Please enter a valid ID');
       return;
     }
     try {
-      console.log(`Fetching user: ${baseUrl}/khelmela/user/${id}`);
-      const response = await axios.get(`${baseUrl}/khelmela/user/${id}`);
+      const response = await axios.get(`${baseUrl}/khelmela/userRequest/user`, {
+        headers: {Authorization: `${token}`},
+      });
       setUser(response.data);
+      user1 = response.data;
+
       setBalance(response.data.balance?.toString() || '');
       setTrophy(response.data.trophy?.toString() || '');
     } catch (error) {
@@ -49,7 +73,7 @@ const PowerRoom = () => {
 
   const searchMatch = async matchId => {
     try {
-      console.log(`${baseUrl}/khelmela/getMatch/${matchId}`);
+      console.log(`${baseUrl}/khelmela/get`);
       const response = await axios.get(
         `${baseUrl}/khelmela/getMatch/${matchId}`,
       );
@@ -61,13 +85,6 @@ const PowerRoom = () => {
   };
 
   const updateUser = async () => {
-    const adminId = '67c51b3e4dc5c2c8ab9f4137';
-
-    if (!id) {
-      setMessage('Please enter a valid user ID');
-      return;
-    }
-
     try {
       const updatedData = {
         balance: Number(balance) || 0,
@@ -92,6 +109,9 @@ const PowerRoom = () => {
     <View style={styles.container}>
       <ScrollView>
         <Text style={styles.header}>Power Room</Text>
+
+        {/* User box  */}
+
         <View style={styles.box}>
           <Text style={styles.header}>Search for User</Text>
           <View style={styles.itemwrapper}>
@@ -106,6 +126,12 @@ const PowerRoom = () => {
               <Text>Search</Text>
             </TouchableOpacity>
           </View>
+
+          {user?.image && (
+            <View style={styles.imageContainer}>
+              <Image source={{uri: user.image}} style={styles.userImage} />
+            </View>
+          )}
 
           <Text style={styles.info}>ID: {user?._id || 'N/A'}</Text>
           <Text style={styles.info}>Email: {user?.email || 'N/A'}</Text>
@@ -132,7 +158,20 @@ const PowerRoom = () => {
           </View>
 
           <View style={styles.itemwrapper}>
-            <TouchableOpacity style={styles.button}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => {
+                console.log('User from power room: ', user);
+                if (!user.username) {
+                  Alert.alert(
+                    'User not Found !',
+                    'Please search for a user first',
+                  );
+                  return;
+                } else {
+                  setHistoryVisible(true);
+                }
+              }}>
               <Text style={{color: 'white'}}>History</Text>
             </TouchableOpacity>
             <TouchableOpacity
@@ -144,6 +183,14 @@ const PowerRoom = () => {
               <Text style={{color: 'white'}}>Update</Text>
             </TouchableOpacity>
           </View>
+
+          <AccountHistoryModal
+            visible={historyVisible}
+            user={user}
+            onClose={() => {
+              setHistoryVisible(false);
+            }}
+          />
 
           <View style={styles.messagebox}>
             <Text style={styles.messagetext}>{message}</Text>
@@ -257,6 +304,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 10,
     marginLeft: 10,
+  },
+
+  imageContainer: {
+    alignItems: 'center',
+    marginTop: 10,
+    marginBottom: 10,
+  },
+  userImage: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
   },
 });
 

@@ -1,182 +1,222 @@
-import { View, Text, TouchableOpacity, TextInput, StyleSheet, Alert, ActivityIndicator, BackHandler, Keyboard } from 'react-native'
-import React, { useCallback, useEffect, useState } from 'react'
-import Icon from 'react-native-vector-icons/AntDesign'
-import Lock from 'react-native-vector-icons/AntDesign'
-import Email from 'react-native-vector-icons/MaterialCommunityIcons'
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  TextInput,
+  StyleSheet,
+  Alert,
+  ActivityIndicator,
+  BackHandler,
+  Keyboard,
+} from 'react-native';
+import React, {useCallback, useEffect, useState} from 'react';
+import Icon from 'react-native-vector-icons/AntDesign';
+import Lock from 'react-native-vector-icons/AntDesign';
+import Email from 'react-native-vector-icons/MaterialCommunityIcons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import axios from 'axios'
-import Modal from "react-native-modal";
-import { useFocusEffect } from '@react-navigation/native'
-import LinearGradient from 'react-native-linear-gradient'
-import{BASE_URL} from '../../env'
-const Authenticate = ({ navigation }) => {
-  const [show, setShow] = useState(true)
-  const [value, setValue] = useState('Signup')
-  const [username, setUsername] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [token, setToken] = useState('')
-  const [error, setError] = useState('')
-  const [otp, setOtp] = useState("")
-  const [otpmodel, setOtpmodel] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const[resetModal,setResetModal]=useState(false)
-  const[verifyModal,setVerifyModal]=useState(false)
-  const[confirmPassword,setConfirmPassword]=useState('')
-  const[newPassword,setNewPassword]=useState('')
+import axios from 'axios';
+import Modal from 'react-native-modal';
+import {useFocusEffect} from '@react-navigation/native';
+import LinearGradient from 'react-native-linear-gradient';
+import {BASE_URL} from '../../env';
+import GoogleSignInScreen from './googleAuth';
+const Authenticate = ({navigation}) => {
+  const [show, setShow] = useState(true);
+  const [value, setValue] = useState('Signup');
+  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [token, setToken] = useState('');
+  const [error, setError] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpmodel, setOtpmodel] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [resetModal, setResetModal] = useState(false);
+  const [verifyModal, setVerifyModal] = useState(false);
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
 
   const shows = () => {
-    show ? setShow(false) : setShow(true)
-    show ? setValue('Login') : setValue('Signup')
-  }
+    show ? setShow(false) : setShow(true);
+    show ? setValue('Login') : setValue('Signup');
+  };
 
   const settoken = async () => {
     const expiresIn = 24 * 60 * 60 * 1000;
     const expiryTime = Date.now() + expiresIn;
-    await AsyncStorage.setItem('token', token)
-    await AsyncStorage.setItem('tokenExpiry', expiryTime.toString())
-  }
+    await AsyncStorage.setItem('token', token);
+    await AsyncStorage.setItem('tokenExpiry', expiryTime.toString());
+  };
 
   useEffect(() => {
-    settoken()
-  }, [token])
+    settoken();
+  }, [token]);
 
-  const login = async (e) => {
+  const login = async e => {
     try {
-      e.preventDefault()
+      e.preventDefault();
       if (!email || !password) {
-        return
+        return;
       }
-      Keyboard.dismiss() // Dismiss keyboard before login
-      setLoading(true)
-      await axios.post(`${BASE_URL}/khelmela/login`, { email, password }, {
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-        .then((response) => {
-          Alert.alert(response.data.message)
-          setEmail('')
-          setPassword('')
-          setToken(response.data.data)
-          navigation.navigate('Main')
-        })
+      Keyboard.dismiss(); // Dismiss keyboard before login
+      setLoading(true);
+      await axios
+        .post(
+          `${BASE_URL}/khelmela/login`,
+          {email, password},
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+        .then(response => {
+          Alert.alert(response.data.message);
+          setEmail('');
+          setPassword('');
+          setToken(response.data.data);
+          navigation.navigate('Main');
+        });
     } catch (error) {
-      setError(error?.response?.data?.message || "An unexpected error occurred")
+      setError(
+        error?.response?.data?.message || 'An unexpected error occurred',
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const sendOtp = async () => {
     try {
-      Keyboard.dismiss() // Dismiss keyboard before sending OTP
-      setLoading(true)
-      await axios.post(`${BASE_URL}/khelmela/verifyotp`, { otp, username, email, password })
-        .then((response) => {
-          Alert.alert(response.data.message)
-          setEmail('')
-          setPassword('')
-          setUsername('')
-          setOtp('')
-          setError('')
-          if (response.status == 200) {
-            setOtpmodel(false)
-            setShow((prev) => !prev)
-          }
+      Keyboard.dismiss(); // Dismiss keyboard before sending OTP
+      setLoading(true);
+      await axios
+        .post(`${BASE_URL}/khelmela/verifyotp`, {
+          otp,
+          username,
+          email,
+          password,
         })
+        .then(response => {
+          Alert.alert(response.data.message);
+          setEmail('');
+          setPassword('');
+          setUsername('');
+          setOtp('');
+          setError('');
+          if (response.status == 200) {
+            setOtpmodel(false);
+            setShow(prev => !prev);
+          }
+        });
     } catch (error) {
-      setError(error?.response?.data?.message || "An unexpected error occurred")
+      setError(
+        error?.response?.data?.message || 'An unexpected error occurred',
+      );
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const signin = async (e) => {
+  const signin = async e => {
     try {
-      e.preventDefault()
-      console.log('hello')
+      e.preventDefault();
+      console.log('hello');
       if (!username || !email || !password) {
-        return
+        return;
       }
-      
-      Keyboard.dismiss() // Dismiss keyboard before signup
-      setLoading(true)
-      await axios.post(`${BASE_URL}/khelmela/sendOtp`, { username, email, password }, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-        .then((response) => {
+
+      Keyboard.dismiss(); // Dismiss keyboard before signup
+      setLoading(true);
+      await axios
+        .post(
+          `${BASE_URL}/khelmela/sendOtp`,
+          {username, email, password},
+          {
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          },
+        )
+        .then(response => {
           if (response.status == 200) {
-            setError('')
-            setOtpmodel(true)
+            setError('');
+            setOtpmodel(true);
           }
-        })
+        });
     } catch (error) {
-      setError(error.response.data.message)
-      console.log(error.response.data.message)
+      setError(error.response.data.message);
+      console.log(error.response.data.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {
-        Alert.alert("Hold on!", "Are you sure you want to exit?", [
-          { text: "Cancel", onPress: () => null, style: "cancel" },
-          { text: "YES", onPress: () => BackHandler.exitApp() },
+        Alert.alert('Hold on!', 'Are you sure you want to exit?', [
+          {text: 'Cancel', onPress: () => null, style: 'cancel'},
+          {text: 'YES', onPress: () => BackHandler.exitApp()},
         ]);
         return true;
       };
-      const backHandler = BackHandler.addEventListener("hardwareBackPress", backAction);
+      const backHandler = BackHandler.addEventListener(
+        'hardwareBackPress',
+        backAction,
+      );
       return () => backHandler.remove();
-    }, [])
+    }, []),
   );
 
   const resetPassword = async () => {
-    Keyboard.dismiss() // Dismiss keyboard before reset
-    setLoading(true)
+    Keyboard.dismiss(); // Dismiss keyboard before reset
+    setLoading(true);
     try {
-      const response = await axios.post(`${BASE_URL}/khelmela/forgetpassword`, { email })
+      const response = await axios.post(`${BASE_URL}/khelmela/forgetpassword`, {
+        email,
+      });
       if (response.status == 200) {
-        setResetModal(false)
-        setVerifyModal(true)
+        setResetModal(false);
+        setVerifyModal(true);
       }
     } catch (error) {
-      setError(error.response.data.message)
+      setError(error.response.data.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const verifyforgetpassword = async () => {
-    Keyboard.dismiss() // Dismiss keyboard before verify
-    setLoading(true)
+    Keyboard.dismiss(); // Dismiss keyboard before verify
+    setLoading(true);
     try {
-      const response = await axios.post(`${BASE_URL}/khelmela/verifyforgetpassword`, { email, otp, newPassword, confirmPassword })
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/verifyforgetpassword`,
+        {email, otp, newPassword, confirmPassword},
+      );
       if (response.status == 200) {
-        Alert.alert('password changed!!')
-        setVerifyModal(false)
-        setShow((prev) => !prev)
-        setValue((prev) => "Login")
-        setError('')
+        Alert.alert('password changed!!');
+        setVerifyModal(false);
+        setShow(prev => !prev);
+        setValue(prev => 'Login');
+        setError('');
       }
     } catch (error) {
-      setError(error.response.data.message)
+      setError(error.response.data.message);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <LinearGradient
-      colors={["#0f0c29", "#302b63", "#24243e"]}
-      style={styles.container}
-    >
+      colors={['#0f0c29', '#302b63', '#24243e']}
+      style={styles.container}>
       <View style={styles.mainContent}>
-        <TouchableOpacity onPress={() => navigation.navigate('First')} style={styles.backButton}>
+        <TouchableOpacity
+          onPress={() => navigation.navigate('First')}
+          style={styles.backButton}>
           <Icon name="arrowleft" size={30} color="#FFFFFF" />
         </TouchableOpacity>
 
@@ -184,71 +224,103 @@ const Authenticate = ({ navigation }) => {
           <View style={styles.formContainer}>
             <Text style={styles.title}>Log In</Text>
             <View style={styles.inputWrapper}>
-              <Email name="email-outline" size={24} color="#666" style={styles.inputIcon} />
-              <TextInput 
-                placeholder="Enter your email" 
-                style={styles.input} 
-                placeholderTextColor="#999999" 
-                value={email} 
-                onChangeText={setEmail} 
+              <Email
+                name="email-outline"
+                size={24}
+                color="#666"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                placeholder="Enter your email"
+                style={styles.input}
+                placeholderTextColor="#999999"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
             <View style={styles.inputWrapper}>
-              <Lock name="lock1" size={24} color="#666" style={styles.inputIcon} />
-              <TextInput 
-                placeholder="Enter your password" 
-                secureTextEntry 
-                style={styles.input} 
-                placeholderTextColor="#999999" 
-                value={password} 
-                onChangeText={setPassword} 
+              <Lock
+                name="lock1"
+                size={24}
+                color="#666"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                placeholder="Enter your password"
+                secureTextEntry
+                style={styles.input}
+                placeholderTextColor="#999999"
+                value={password}
+                onChangeText={setPassword}
               />
             </View>
             <Text style={styles.errorText}>{error}</Text>
             <TouchableOpacity onPress={() => setResetModal(true)}>
               <Text style={styles.forgotPassword}>Forgot Password?</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.actionButton} onPress={login} disabled={loading}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={login}
+              disabled={loading}>
               <Text style={styles.buttonText}>Login</Text>
             </TouchableOpacity>
             <Text style={styles.orText}>OR</Text>
+            <GoogleSignInScreen />
           </View>
         ) : (
           <View style={styles.formContainer}>
             <Text style={styles.title}>Sign Up</Text>
             <View style={styles.inputWrapper}>
-              <Icon name="user" size={24} color="#666" style={styles.inputIcon} />
-              <TextInput 
-                placeholder="Enter your username" 
-                style={styles.input} 
-                placeholderTextColor="#999999" 
-                value={username} 
-                onChangeText={setUsername} 
+              <Icon
+                name="user"
+                size={24}
+                color="#666"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                placeholder="Enter your username"
+                style={styles.input}
+                placeholderTextColor="#999999"
+                value={username}
+                onChangeText={setUsername}
               />
             </View>
             <View style={styles.inputWrapper}>
-              <Email name="email-outline" size={24} color="#666" style={styles.inputIcon} />
-              <TextInput 
-                placeholder="Enter your email" 
-                style={styles.input} 
-                placeholderTextColor="#999999" 
-                value={email} 
-                onChangeText={setEmail} 
+              <Email
+                name="email-outline"
+                size={24}
+                color="#666"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                placeholder="Enter your email"
+                style={styles.input}
+                placeholderTextColor="#999999"
+                value={email}
+                onChangeText={setEmail}
               />
             </View>
             <View style={styles.inputWrapper}>
-              <Lock name="lock1" size={24} color="#666" style={styles.inputIcon} />
-              <TextInput 
-                placeholder="Enter your password" 
-                secureTextEntry 
-                style={styles.input} 
-                placeholderTextColor="#999999" 
-                value={password} 
-                onChangeText={setPassword} 
+              <Lock
+                name="lock1"
+                size={24}
+                color="#666"
+                style={styles.inputIcon}
+              />
+              <TextInput
+                placeholder="Enter your password"
+                secureTextEntry
+                style={styles.input}
+                placeholderTextColor="#999999"
+                value={password}
+                onChangeText={setPassword}
               />
             </View>
             <Text style={styles.errorText}>{error}</Text>
-            <TouchableOpacity style={styles.actionButton} onPress={signin} disabled={loading}>
+            <TouchableOpacity
+              style={styles.actionButton}
+              onPress={signin}
+              disabled={loading}>
               <Text style={styles.buttonText}>Sign Up</Text>
             </TouchableOpacity>
             <Text style={styles.orText}>OR</Text>
@@ -257,7 +329,9 @@ const Authenticate = ({ navigation }) => {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            {value === "Login" ? "Already have an account? " : "Don't have an account? "}
+            {value === 'Login'
+              ? 'Already have an account? '
+              : "Don't have an account? "}
           </Text>
           <TouchableOpacity onPress={shows}>
             <Text style={styles.footerLink}>{value}</Text>
@@ -271,9 +345,14 @@ const Authenticate = ({ navigation }) => {
         )}
 
         {/* OTP Modal */}
-        <Modal isVisible={otpmodel} animationIn="slideInUp" animationOut="slideOutDown">
+        <Modal
+          isVisible={otpmodel}
+          animationIn="slideInUp"
+          animationOut="slideOutDown">
           <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setOtpmodel(false)}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setOtpmodel(false)}>
               <Icon name="close" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Enter OTP</Text>
@@ -294,16 +373,26 @@ const Authenticate = ({ navigation }) => {
               onChangeText={setOtp}
             />
             <Text style={styles.modalError}>{error}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={sendOtp} disabled={loading}>
-              <Text style={styles.modalButtonText}>{loading ? 'Loading...' : 'Send'}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={sendOtp}
+              disabled={loading}>
+              <Text style={styles.modalButtonText}>
+                {loading ? 'Loading...' : 'Send'}
+              </Text>
             </TouchableOpacity>
           </View>
         </Modal>
 
         {/* Reset Password Modal */}
-        <Modal isVisible={resetModal} animationIn="slideInUp" animationOut="slideOutDown">
+        <Modal
+          isVisible={resetModal}
+          animationIn="slideInUp"
+          animationOut="slideOutDown">
           <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setResetModal(false)}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setResetModal(false)}>
               <Icon name="close" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Reset Password</Text>
@@ -316,16 +405,26 @@ const Authenticate = ({ navigation }) => {
               onChangeText={setEmail}
             />
             <Text style={styles.modalError}>{error}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={resetPassword} disabled={loading}>
-              <Text style={styles.modalButtonText}>{loading ? 'Loading...' : 'Send'}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={resetPassword}
+              disabled={loading}>
+              <Text style={styles.modalButtonText}>
+                {loading ? 'Loading...' : 'Send'}
+              </Text>
             </TouchableOpacity>
           </View>
         </Modal>
 
         {/* Verify Password Modal */}
-        <Modal isVisible={verifyModal} animationIn="slideInUp" animationOut="slideOutDown">
+        <Modal
+          isVisible={verifyModal}
+          animationIn="slideInUp"
+          animationOut="slideOutDown">
           <View style={styles.modalContent}>
-            <TouchableOpacity style={styles.closeButton} onPress={() => setVerifyModal(false)}>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setVerifyModal(false)}>
               <Icon name="close" size={24} color="#333" />
             </TouchableOpacity>
             <Text style={styles.modalTitle}>Verify New Password</Text>
@@ -362,15 +461,20 @@ const Authenticate = ({ navigation }) => {
               onChangeText={setConfirmPassword}
             />
             <Text style={styles.modalError}>{error}</Text>
-            <TouchableOpacity style={styles.modalButton} onPress={verifyforgetpassword} disabled={loading}>
-              <Text style={styles.modalButtonText}>{loading ? 'Loading...' : 'Verify'}</Text>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={verifyforgetpassword}
+              disabled={loading}>
+              <Text style={styles.modalButtonText}>
+                {loading ? 'Loading...' : 'Verify'}
+              </Text>
             </TouchableOpacity>
           </View>
         </Modal>
       </View>
     </LinearGradient>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -412,7 +516,6 @@ const styles = StyleSheet.create({
     color: '#333',
     borderWidth: 2,
     borderColor: '#E0E0E0',
-    
   },
   inputIcon: {
     position: 'absolute',
@@ -430,9 +533,8 @@ const styles = StyleSheet.create({
     color: '#FF6666',
     fontSize: 14,
     marginTop: 10,
-    marginLeft:210,
-    paddingBottom:5
-    
+    marginLeft: 210,
+    paddingBottom: 5,
   },
   actionButton: {
     width: 200,
@@ -524,6 +626,6 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
   },
-})
+});
 
-export default Authenticate
+export default Authenticate;

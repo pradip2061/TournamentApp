@@ -1,25 +1,24 @@
 import {
   View,
-  Text,
-  StyleSheet,
-  Pressable,
-  TextInput,
-  Modal,
-  TouchableOpacity,
   ScrollView,
-  Animated,
+  FlatList,
+  StyleSheet,
+  TouchableOpacity,
+  Text,
+  TextInput,
 } from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
+import React, {useEffect, useState, useContext} from 'react';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import axios from 'axios';
-import {FlatList} from 'react-native-gesture-handler';
 import PubgFullMatchCard from '../../components/PubgFullMatchCard';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
 import {BASE_URL} from '../../env';
+import ShimmerBox from '../../components/ShimmerBox';
 
 const Pubg = ({navigation}) => {
   const [data, setData] = useState([]);
+  const [showHidden, setShowHidden] = useState(false);
   const {checkrole, checkadmin} = useContext(CheckAdminContext);
 
   useEffect(() => {
@@ -27,18 +26,22 @@ const Pubg = ({navigation}) => {
   }, []);
 
   useEffect(() => {
-    const getmatchCard = () => {
-      axios.get(`${BASE_URL}/khelmela/getpubg`).then(response => {
+    const getMatchCard = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/khelmela/getpubg`);
         setData(response.data.data);
-        console.log(data);
-      });
+      } catch (error) {
+        console.error(error);
+      }
     };
-    getmatchCard();
+    getMatchCard();
   }, []);
 
+  // Modified to match FreeFire logic: showHidden shows all matches, otherwise filter out hidden ones
+  const filteredMatches = showHidden ? data : data.filter(item => !item.hidden);
+
   return (
-    <ScrollView style={styles.container}>
-      {/* Search Bar */}
+    <View style={styles.container}>
       <View style={styles.searchContainer}>
         <Ionicons name="menu-outline" size={24} color="black" />
         <TextInput
@@ -50,56 +53,84 @@ const Pubg = ({navigation}) => {
       </View>
 
       <Text style={styles.note}>
-        Note: All matches are made by the admin everyday in same time
+        Note: All matches are made by the admin every day at the same time
       </Text>
 
-      {checkadmin === 'admin' ? (
-        <TouchableOpacity>
-          <Text>admin</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity
+          style={[
+            styles.button,
+            {backgroundColor: showHidden ? '#dc3545' : '#28a745'},
+          ]}
+          onPress={() => setShowHidden(!showHidden)}>
+          <Text style={styles.buttonText}>
+            {showHidden ? 'Hide Hidden Matches' : 'Show All Matches'}
+          </Text>
         </TouchableOpacity>
-      ) : (
-        <Text></Text>
-      )}
+      </View>
 
-      <FlatList
-        data={data}
-        keyExtractor={item => item._id}
-        renderItem={({item}) => (
-          <PubgFullMatchCard matches={item} key={item._id} />
+      <ScrollView style={styles.matchList}>
+        {data.length > 0 ? (
+          <FlatList
+            data={filteredMatches}
+            keyExtractor={item => item._id}
+            renderItem={({item}) => (
+              <PubgFullMatchCard matches={item} key={item._id} />
+            )}
+            contentContainerStyle={{gap: 20, paddingBottom: 20}}
+            scrollEnabled={false}
+          />
+        ) : (
+          <ShimmerBox />
         )}
-        contentContainerStyle={{gap: 20, paddingBottom: 20}}
-        scrollEnabled={false}
-      />
-    </ScrollView>
+      </ScrollView>
+    </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#F2F2F2', // Light gray background
-    flex: 1, // Simplified height to flex
+    backgroundColor: '#F2F2F2',
+    flex: 1,
+    padding: 10,
   },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'white',
-    borderRadius: 20, // Slightly smaller radius
-    paddingHorizontal: 15, // Reduced padding
-    height: 45, // Slightly shorter
-    marginTop: 20, // Simplified margins
-    marginHorizontal: 20, // Centered with equal margins
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    height: 45,
+    marginTop: 10,
+    marginBottom: 10,
     borderWidth: 1,
   },
   searchInput: {
     flex: 1,
-    marginHorizontal: 10, // Reduced margin
+    marginHorizontal: 10,
     fontSize: 16,
   },
   note: {
-    color: '#555', //te
-    fontSize: 14, // Smaller font
-    marginVertical: 10, // Simplified margin
-    marginLeft: 20, // Consistent left margin
+    color: '#555',
+    fontSize: 14,
+    marginVertical: 10,
+  },
+  buttonContainer: {
+    alignItems: 'flex-end',
+    marginBottom: 10,
+  },
+  button: {
+    padding: 8,
+    borderRadius: 5,
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: 'bold',
+  },
+  matchList: {
+    flex: 1,
   },
 });
 

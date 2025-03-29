@@ -18,6 +18,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL} from '../../env';
 import {jwtDecode} from 'jwt-decode';
+import io from 'socket.io-client';
 
 const LandingChat = ({navigation}) => {
   // Remove initialFriends from route.params destructuring
@@ -33,6 +34,7 @@ const LandingChat = ({navigation}) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [token, setToken] = useState('');
+  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -210,6 +212,66 @@ const LandingChat = ({navigation}) => {
     </View>
   );
 
+  // Socket connection setup
+  useEffect(() => {
+    const setupSocket = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const newSocket = io(BASE_URL, {
+            auth: {
+              token: token,
+            },
+          });
+
+          newSocket.on('connect', () => {
+            console.log('Socket connected');
+          });
+
+          newSocket.on('newMessage', handleNewMessage);
+
+          setSocket(newSocket);
+
+          return () => {
+            newSocket.off('newMessage');
+            newSocket.disconnect();
+          };
+        }
+      } catch (error) {
+        console.error('Socket connection error:', error);
+      }
+    };
+
+    setupSocket();
+  }, []);
+
+  // Handle new message received via socket
+  const handleNewMessage = useCallback(messageData => {
+    setFriends(prevFriends => {
+      // Find the friend who sent the message
+      const friendIndex = prevFriends.findIndex(
+        f => f._id === messageData.senderId || f._id === messageData.receiverId,
+      );
+
+      if (friendIndex === -1) return prevFriends;
+
+      // Move the friend to the top of the list
+      const updatedFriends = [...prevFriends];
+      const [friend] = updatedFriends.splice(friendIndex, 1);
+
+      // Update friend's last message if needed
+      friend.lastMessage = messageData.message;
+      friend.lastMessageTime = new Date().toISOString();
+
+      return [friend, ...updatedFriends];
+    });
+  }, []);
+
+  // Update filteredFriends whenever friends change
+  useEffect(() => {
+    setFilteredFriends(friends);
+  }, [friends]);
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <StatusBar backgroundColor="#417D80" barStyle="light-content" />
@@ -263,10 +325,25 @@ const LandingChat = ({navigation}) => {
                   <Text style={styles.friendName}>
                     {item.username || item.name}
                   </Text>
-                  <Text style={styles.lastMessage}>Tap to start chatting</Text>
+                  <Text style={styles.lastMessage} numberOfLines={1}>
+                    {item.lastMessage || 'Tap to start chatting'}
+                  </Text>
                 </View>
                 <View style={styles.lastSeenContainer}>
-                  <View style={styles.onlineIndicator} />
+                  {item.lastMessageTime && (
+                    <Text style={styles.timeStamp}>
+                      {new Date(item.lastMessageTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </Text>
+                  )}
+                  <View
+                    style={[
+                      styles.onlineIndicator,
+                      item.online && styles.online,
+                    ]}
+                  />
                 </View>
               </TouchableOpacity>
             )}
@@ -458,13 +535,23 @@ const styles = StyleSheet.create({
   },
   lastSeenContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: 10,
+  },
+  timeStamp: {
+    fontSize: 12,
+    color: '#777',
+    marginBottom: 8,
   },
   onlineIndicator: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#4CD964',
+    backgroundColor: '#ccc',
     marginBottom: 4,
+  },
+  online: {
+    backgroundColor: '#4CD964',
   },
   emptyContainer: {
     flex: 1,

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "43642509681",
+    "project_id": "khelmela-98",
+    "storage_bucket": "khelmela-98.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:43642509681:android:de70e1834c84653317fed0",
+        "android_client_info": {
+          "package_name": "com.frontend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyASf7igsHnmmCEgVtF5nhkh71RYObc4HyU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

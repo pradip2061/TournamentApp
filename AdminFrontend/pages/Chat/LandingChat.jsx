@@ -18,79 +18,82 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL} from '../../env';
 import {jwtDecode} from 'jwt-decode';
+import io from 'socket.io-client';
 
-const LandingChat = ({navigation, route}) => {
-  const {friends: initialFriends} = route.params;
+const LandingChat = ({navigation}) => {
+  // Remove initialFriends from route.params destructuring
   const [user, setUser] = useState('admin');
   const [re, setRe] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
-  const [friends, setFriends] = useState(initialFriends);
-  const [filteredFriends, setFilteredFriends] = useState(initialFriends);
+  const [clicked, setClicked] = useState(false);
+  // Initialize as empty arrays instead of using route.params
+  const [friends, setFriends] = useState([]);
+  const [filteredFriends, setFilteredFriends] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [token, setToken] = useState('');
+  const [socket, setSocket] = useState(null);
 
-  // Function to fetch updated friends list
-  const fetchFriends = useCallback(async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) return;
-
-      console.log('token from callback', token);
-
-      const response = await axios.get(
-        `${BASE_URL}/khelmela/userRequest/friends`,
-        {
-          headers: {Authorization: `${token}`},
-        },
-      );
-
-      if (response.data && response.data.friends) {
-        setFriends(response.data.friends);
-        setFilteredFriends(response.data.friends);
+  useEffect(() => {
+    const getUser = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        setToken(token); // Fetch friends data after getting the token
+        fetchFriends(token);
+      } catch (error) {
+        console.error('Error retrieving token:', error);
       }
-    } catch (error) {
-      console.error('Error fetching friends:', error);
-    }
+    };
+
+    getUser();
   }, []);
 
-  // Pull-to-refresh handler
+  // Modify the fetchFriends function to accept a token parameter
+  const fetchFriends = useCallback(
+    async (currentToken = null) => {
+      try {
+        // Use the passed token or get it from storage
+        const tokenToUse =
+          currentToken || token || (await AsyncStorage.getItem('token'));
+        if (!tokenToUse) {
+          Alert.alert('token Problem ');
+
+          return;
+        }
+
+        setLoading(true);
+
+        const response = await axios.get(
+          `${BASE_URL}/khelmela/userRequest/friends`,
+          {
+            headers: {Authorization: `${tokenToUse}`},
+          },
+        );
+
+        console.log(response.data[0]._id);
+
+        if (response.data && response.data) {
+          setFriends(response.data);
+          setFilteredFriends(response.data);
+        }
+      } catch (error) {
+        console.error('Error fetching friends:', error);
+        Alert.alert('Error', 'Failed to load friends');
+      } finally {
+        setLoading(false);
+      }
+    },
+    [token],
+  );
+
+  // Update onRefresh to use the current token
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchFriends();
     setRefreshing(false);
   }, [fetchFriends]);
-
-  const searchPeople = async () => {
-    if (!searchTerm.trim()) {
-      Alert.alert('Error', 'Please enter a name to search');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/search-users`,
-        {
-          name: searchTerm,
-        },
-        {
-          headers: {Authorization: `${token}`},
-        },
-      );
-
-      setSearchResults(response.data.users || []);
-      console.log(response.data.users);
-
-      setShowSearchResults(true);
-    } catch (error) {
-      console.error('Error searching users:', error);
-      Alert.alert('Error', 'Failed to search users');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const addFriend = async userToAdd => {
     try {
@@ -106,8 +109,14 @@ const LandingChat = ({navigation, route}) => {
           },
         },
       );
+      setClicked(true);
 
       Alert.alert('Success', response.data?.message || 'Friend  added !');
+      setTimeout(() => {
+        setShowSearchResults(false);
+        setClicked(false);
+      }, 900);
+
       // Refresh friends list after adding a friend
       fetchFriends();
     } catch (error) {
@@ -119,10 +128,53 @@ const LandingChat = ({navigation, route}) => {
     }
   };
 
+  const searchPeople = async () => {
+    if (!searchTerm.trim()) {
+      Alert.alert('Error', 'Please enter a name to search');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const tokenToUse = token || (await AsyncStorage.getItem('token'));
+      if (!tokenToUse) {
+        Alert.alert('Error', 'Authentication required');
+        return;
+      }
+
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/search-users`,
+        {
+          name: searchTerm,
+        },
+        {
+          headers: {Authorization: `${tokenToUse}`},
+        },
+      );
+
+      if (response.data && response.data.users) {
+        setSearchResults(response.data.users);
+        setShowSearchResults(true);
+      } else {
+        // Handle empty response
+        setSearchResults([]);
+        setShowSearchResults(true);
+      }
+    } catch (error) {
+      console.error('Error searching users:', error.message);
+      Alert.alert(
+        'Error',
+        error.response?.data?.message || 'Failed to search users',
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleOnpress = item => {
     navigation.navigate('PrivateChat', {
       userId: user,
-      FriendId: item.id,
+      FriendId: item._id,
       photoUrl: item.image || item.photoUrl,
       name: item.username || item.name,
     });
@@ -155,6 +207,66 @@ const LandingChat = ({navigation, route}) => {
       </TouchableOpacity>
     </View>
   );
+
+  // Socket connection setup
+  useEffect(() => {
+    const setupSocket = async () => {
+      try {
+        const token = await AsyncStorage.getItem('token');
+        if (token) {
+          const newSocket = io(BASE_URL, {
+            auth: {
+              token: token,
+            },
+          });
+
+          newSocket.on('connect', () => {
+            console.log('Socket connected');
+          });
+
+          newSocket.on('newMessage', handleNewMessage);
+
+          setSocket(newSocket);
+
+          return () => {
+            newSocket.off('newMessage');
+            newSocket.disconnect();
+          };
+        }
+      } catch (error) {
+        console.error('Socket connection error:', error);
+      }
+    };
+
+    setupSocket();
+  }, []);
+
+  // Handle new message received via socket
+  const handleNewMessage = useCallback(messageData => {
+    setFriends(prevFriends => {
+      // Find the friend who sent the message
+      const friendIndex = prevFriends.findIndex(
+        f => f._id === messageData.senderId || f._id === messageData.receiverId,
+      );
+
+      if (friendIndex === -1) return prevFriends;
+
+      // Move the friend to the top of the list
+      const updatedFriends = [...prevFriends];
+      const [friend] = updatedFriends.splice(friendIndex, 1);
+
+      // Update friend's last message if needed
+      friend.lastMessage = messageData.message;
+      friend.lastMessageTime = new Date().toISOString();
+
+      return [friend, ...updatedFriends];
+    });
+  }, []);
+
+  // Update filteredFriends whenever friends change
+  useEffect(() => {
+    setFilteredFriends(friends);
+  }, [friends]);
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -190,7 +302,7 @@ const LandingChat = ({navigation, route}) => {
           <Text style={styles.sectionTitle}>Recent Chats</Text>
           <FlatList
             data={filteredFriends}
-            keyExtractor={item => item.id}
+            keyExtractor={item => item._id.toString()}
             renderItem={({item}) => (
               <TouchableOpacity
                 style={styles.friendCard}
@@ -209,10 +321,25 @@ const LandingChat = ({navigation, route}) => {
                   <Text style={styles.friendName}>
                     {item.username || item.name}
                   </Text>
-                  <Text style={styles.lastMessage}>Tap to start chatting</Text>
+                  <Text style={styles.lastMessage} numberOfLines={1}>
+                    {item.lastMessage || 'Tap to start chatting'}
+                  </Text>
                 </View>
                 <View style={styles.lastSeenContainer}>
-                  <View style={styles.onlineIndicator} />
+                  {item.lastMessageTime && (
+                    <Text style={styles.timeStamp}>
+                      {new Date(item.lastMessageTime).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </Text>
+                  )}
+                  <View
+                    style={[
+                      styles.onlineIndicator,
+                      item.online && styles.online,
+                    ]}
+                  />
                 </View>
               </TouchableOpacity>
             )}
@@ -271,11 +398,13 @@ const LandingChat = ({navigation, route}) => {
                           <Text style={styles.resultSubtext}>Tap to chat</Text>
                         </View>
                       </TouchableOpacity>
-                      <TouchableOpacity
-                        style={styles.addButton}
-                        onPress={() => addFriend(item)}>
-                        <Text style={styles.addButtonText}>Add Friend</Text>
-                      </TouchableOpacity>
+                      {!clicked && (
+                        <TouchableOpacity
+                          style={styles.addButton}
+                          onPress={() => addFriend(item)}>
+                          <Text style={styles.addButtonText}>Add Friend</Text>
+                        </TouchableOpacity>
+                      )}
                     </View>
                   )}
                   contentContainerStyle={styles.resultListContainer}
@@ -402,13 +531,23 @@ const styles = StyleSheet.create({
   },
   lastSeenContainer: {
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingLeft: 10,
+  },
+  timeStamp: {
+    fontSize: 12,
+    color: '#777',
+    marginBottom: 8,
   },
   onlineIndicator: {
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: '#4CD964',
+    backgroundColor: '#ccc',
     marginBottom: 4,
+  },
+  online: {
+    backgroundColor: '#4CD964',
   },
   emptyContainer: {
     flex: 1,

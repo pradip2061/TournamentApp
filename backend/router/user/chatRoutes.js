@@ -41,10 +41,12 @@ const setupChatSocket = (io) => {
           senderID: message.senderID,
           message: message.message,
           time: message.time,
+          isRead: message.isRead || false,
           fileUrl: message.fileUrl || null, // Save file URL if available
         });
         await chat.save();
         console.log("Message saved to DB");
+        console.log(chat.isRead);
         socket.to(room).emit("message", message);
       } catch (err) {
         console.error("DB error:", err);

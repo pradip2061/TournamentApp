@@ -97,6 +97,10 @@ const ChatSchema = new mongoose.Schema({
   senderID: String,
   message: String,
   type: String,
+  isRead: {
+    type: Boolean,
+    default: false,
+  },
   time: { type: Date, default: Date.now() },
 });
 const User = new mongoose.model("user", Userschema);

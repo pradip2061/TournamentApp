@@ -60,8 +60,9 @@ const MatchTypeModal = ({visible, onClose}) => {
 
     if (matchType === 'FreeFire') {
       console.log('creating for free fire .....> ');
+      console.log('BaseUrl -----', baseUrl);
       const response = await axios.post(
-        `${baseUrl}/khelmela/admin/createFFfullmap`,
+        `${baseUrl}/khelmela/createFFfullmap`,
         data,
         {
           headers: {Authorization: ` ${token}`},
