@@ -35,9 +35,15 @@ const Home = ({navigation}) => {
   const [toggle, setToggle] = useState('freefire');
   const {checkadmin, data, getProfile} = useContext(CheckAdminContext);
 
-  useEffect(() => {
-    getProfile();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+        console.log("Tab Screen Mounted");
+        getProfile()
+        return () => {
+            console.log("Tab Screen Unmounted");
+        };
+    }, [])
+);
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {
