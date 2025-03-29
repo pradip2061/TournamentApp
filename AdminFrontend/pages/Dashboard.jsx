@@ -61,7 +61,6 @@ const Dashboard = ({navigation}) => {
         <View>
           <Text style={styles.infoText}>Username: {userdata?.username} </Text>
           <Text style={styles.infoText}>Email: {userdata?.email} </Text>
-          <Text style={styles.infoText}>Contact No: {userdata?.number}</Text>
         </View>
       </View>
 
@@ -70,7 +69,7 @@ const Dashboard = ({navigation}) => {
       <Text style={styles.dashboardTitle}>Dashboard</Text>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.box} onPress={handleDeposite}>
+        <TouchableOpacity style={styles.box} onPress={Button}>
           <Image
             source={require('../assets/deposit.png')}
             style={styles.boxImage}
