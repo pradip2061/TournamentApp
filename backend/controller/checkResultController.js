@@ -5,27 +5,49 @@ const {User} = require("../model/schema");
 const tdm = require("../model/TdmModel");
 
 const checkResult = async (req, res) => {
-    const userid = req.user;
-  
-    const userinfo =await User.findOne({_id:userid})
-    const matchId=userinfo?.matchId?.FreefireClashId?.[0]
-    const match = await ClashSquad.findOne({ _id: matchId });
-    if (!match) {
-        return res.status(400).json({ message: "Invalid match data" });
-    }
-if(!userinfo){
-    return res.status(400).json({ message: "user not found" });
-}
+    try {
+        const userid = req.user;
 
-if(typeof match.teamHost[0].teamHostStatus === 'boolean'){
-    return res.status(200).json({ message: "resultsubmit" });
-}else if(typeof match.teamopponent[0].team2Status === 'boolean'){
-    return res.status(200).json({ message: "resultsubmit" });
-}else{
-    return res.status(200).json({ message: "noresponse" });
-}
-  
+        // Check if user exists first
+        const userinfo = await User.findOne({ _id: userid });
+        if (!userinfo) {
+            return res.status(400).json({ message: "User not found" });
+        }
+
+        // Ensure matchId exists
+        const matchId = userinfo.matchId?.FreefireClashId?.[0];
+        if (!matchId) {
+            return res.status(400).json({ message: "No match associated with user" });
+        }
+
+        // Find match
+        const match = await ClashSquad.findOne({ _id: matchId });
+        if (!match) {
+            return res.status(400).json({ message: "Invalid match data" });
+        }
+
+        // Check team host status
+        if (match.teamHost[0]?.userid === userid) {
+            if (typeof match.teamHost[0].teamHostStatus === "boolean") {
+                return res.status(200).json({ message: "resultsubmit" });
+            }
+        }
+
+        // Check opponent status
+        if (match.teamopponent[0]?.userid === userid) {
+            if (typeof match.teamopponent[0].team2Status === "boolean") {
+                return res.status(200).json({ message: "resultsubmit" });
+            }
+        }
+
+        // Default response
+        return res.status(200).json({ message: "noresponse" });
+    } catch (error) {
+        console.error("Error checking match result:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
 };
+
 
 const checkResulttdm = async (req, res) => {
     const userid = req.user;
