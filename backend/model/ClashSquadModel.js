@@ -64,6 +64,9 @@ const schema = new mongoose.Schema(
     customPassword:{
       type:Number || null
     },
+    opponentName:{
+      type:String
+    },
     status:{
       type: String ,
       enum: ["running", "pending","completed"],
