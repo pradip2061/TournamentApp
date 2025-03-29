@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import {
   View,
   Text,
@@ -18,27 +18,34 @@ const Champions = () => {
   const [userData, setUserData] = useState([]);
   console.log(userData);
   const [index, setIndex] = useState(0);
-  useFocusEffect(() => {
-    try {
-      const getMatches = async () => {
-        const token = await AsyncStorage.getItem('token');
-        await axios
-          .get(`${BASE_URL}/khelmela/getchampions`, {
-            headers: {
-              Authorization: `${token}`,
-            },
-          })
-          .then(response => {
-            setData(response.data.userinfo);
-            setUserData(response.data.userdata);
-            setIndex(response.data.index);
-          });
-      };
-      getMatches();
-    } catch (error) {
-      console.log(error);
-    }
-  });
+  
+    useFocusEffect(
+      useCallback(() => {
+          console.log("Tab Screen Mounted");
+          try {
+            const getMatches = async () => {
+              const token = await AsyncStorage.getItem('token');
+              await axios
+                .get(`${BASE_URL}/khelmela/getchampions`, {
+                  headers: {
+                    Authorization: `${token}`,
+                  },
+                })
+                .then(response => {
+                  setData(response.data.userinfo);
+                  setUserData(response.data.userdata);
+                  setIndex(response.data.index);
+                });
+            };
+            getMatches();
+          } catch (error) {
+            console.log(error);
+          }
+          return () => {
+              console.log("Tab Screen Unmounted");
+          };
+      }, [])
+  );
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Leaderboard</Text>
