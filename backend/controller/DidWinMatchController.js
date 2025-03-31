@@ -1,5 +1,4 @@
 const ClashSquad = require("../model/ClashSquadModel");
-const { User } = require("../model/schema");
 const tdm = require("../model/TdmModel");
 
 const DidYouWinMatch = async (req, res) => {
@@ -8,44 +7,24 @@ const DidYouWinMatch = async (req, res) => {
         const userid = req.user;
         console.log(userid)
         const match = await ClashSquad.findOne({ _id: matchId });
-        const user = await User.findOne({_id:userid})
+
         if (!match) {
             return res.status(404).json({ message: "Match not found" });
         }
 
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
-            if(boolean === true){
-                match.hostProof = proofuser
-                user.balance += 25;
-                user.victory.FreefireClash.push(matchId);
-                user.isplaying =false
-                user.matchId.FreefireClashId=[]
-            }else{
-                user.loss.FreefireClash.push(matchId);
-                user.isplaying =false
-                user.matchId.FreefireClashId=[]
-            }
+            match.hostProof=proof
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
-            if(boolean === true){
-                match.userProof= proof
-                user.balance += 25;
-                user.victory.FreefireClash.push(matchId);
-                user.isplaying =false
-                user.matchId.FreefireClashId=[]
-            }else{
-                user.loss.FreefireClash.push(matchId);
-                user.isplaying =false
-                user.matchId.FreefireClashId=[]
-            }
+            match.userProof=proof
         } else {
             return res.status(403).json({ message: "You are not part of this match" });
         }
 
         await match.save();
-        await user.save()
-        return res.status(200).json({ message: "Added successfully!",match });
+
+        return res.status(200).json({ message: "Added successfully!",match:match._id });
     } catch (error) {
         console.error("Error in DidYouWinMatch:", error);
         return res.status(500).json({ message: "Internal Server Error" });
@@ -66,18 +45,8 @@ const DidYouWinMatchtdm = async (req, res) => {
 
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
-            if(boolean === true){
-                match.hostProof = proof
-            }else{
-                console.log('might be no')
-            }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
-            if(boolean === true){
-                match.userProof= proof
-            }else{
-                console.log('might be no')
-            }
         } else {
             return res.status(403).json({ message: "You are not part of this match" });
         }
