@@ -265,7 +265,66 @@ if( match.teamHost[0].userid === userid){
   
 }
 
+const divideMoney = async (req, res) => {
+    try {
+        const { matchId } = req.body;
+
+        const matchinfo = await ClashSquad.findById(matchId);
+        if (!matchinfo) {
+            return res.status(404).json({ message: "Match not found" });
+        }
+
+        if (!matchinfo.teamHost?.[0] || !matchinfo.teamopponent?.[0]) {
+            return res.status(400).json({ message: "Invalid match data" });
+        }
+
+        const betAmount = Number(matchinfo.matchDetails?.[0]?.betAmount || 0);
+        const host = await User.findById(matchinfo.teamHost[0].userid);
+        const user = await User.findById(matchinfo.teamopponent[0].userid);
+
+        if (!host || !user) {
+            return res.status(404).json({ message: "User(s) not found" });
+        }
+
+        const hostStatus = matchinfo.teamHost[0].teamHostStatus;
+        const opponentStatus = matchinfo.teamopponent[0].team2Status;
+
+        if (typeof hostStatus !== "boolean" || typeof opponentStatus !== "boolean") {
+            return res.status(200).json({ message: "Match result is not yet determined" });
+        }
+
+        // Update Host
+        host.isplaying = false;
+        if (hostStatus) {
+            host.balance += betAmount;
+            host.victory.FreefireClash.push(matchId);
+        } else {
+            host.loss.FreefireClash.push(matchId);
+        }
+
+        // Update Opponent
+        user.isplaying = false;
+        if (opponentStatus) {
+            user.balance += betAmount;
+            user.victory.FreefireClash.push(matchId);
+        } else {
+            user.loss.FreefireClash.push(matchId);
+        }
+
+        // Mark match as completed
+        matchinfo.status = "completed";
+
+        // Save all changes in parallel
+        await Promise.all([host.save(), user.save(), matchinfo.save()]);
+
+        return res.status(200).json({ message: "Money submitted successfully" });
+
+    } catch (error) {
+        console.error("Error in divideMoney:", error);
+        return res.status(500).json({ message: "Internal Server Error" });
+    }
+};
 
 
 
-module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions,checkReportClash,checkReportTdm};
+module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions,checkReportClash,checkReportTdm,divideMoney};
