@@ -305,8 +305,10 @@ const divideMoney = async (req, res) => {
         if (hostStatus) {
             host.balance += betAmount;
             host.victory.FreefireClash.push(matchId);
+            host.matchId.FreefireClashId=[]
         } else {
             host.loss.FreefireClash.push(matchId);
+            host.matchId.FreefireClashId=[]
         }
 
         // Update Opponent
@@ -314,8 +316,10 @@ const divideMoney = async (req, res) => {
         if (opponentStatus) {
             user.balance += betAmount;
             user.victory.FreefireClash.push(matchId);
+            user.matchId.FreefireClashId=[]
         } else {
             user.loss.FreefireClash.push(matchId);
+            user.matchId.FreefireClashId=[]
         }
 
         // Mark match as completed
