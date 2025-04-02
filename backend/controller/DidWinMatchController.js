@@ -1,5 +1,6 @@
 const ClashSquad = require("../model/ClashSquadModel");
 const tdm = require("../model/TdmModel");
+const { User } = require("../model/schema");
 
 const DidYouWinMatch = async (req, res) => {
     try {
