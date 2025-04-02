@@ -48,7 +48,6 @@ const deleteOldMatchCards = async () => {
 const deleteOldMatchCard = async () => {
   try {
     const now = new Date();
-
     // Find match cards that need to be deleted
     const matchCards = await tdm.find({
       createdAt: { $lte: now }, // Match cards older than now
@@ -86,12 +85,34 @@ const deleteOldMatchCard = async () => {
     console.error("Error deleting expired match cards:", error);
   }
 };
+ 
+const deleteifNoPasswordClashSquad=async()=>{
+ try {
+  const now = new Date();
+  const matchCards = await ClashSquad.find({
+    createdAtid: { $lte: now }, // Match cards older than now
+    TotalPlayers: 1
+  });
+  if (matchCards.length === 0) {
+    console.log("No idpass found clashsquad.");
+    return;
+  }
+  const deleted = await ClashSquad.deleteMany({
+    _id: { $in: matchCards?.map(match => match._id) }
+  });
+  console.log(`Deleted ${deleted.deletedCount} expiredidpass match cards.`);
+ } catch (error) {
+  console.error("Error deleting expired match cards:", error);
+ }
+
+}
 
 // Schedule the cron job to run every minute
 cron.schedule("* * * * *", () => {
   console.log("Running cron job: Deleting old match cards...");
   deleteOldMatchCards();
   deleteOldMatchCard();
+  deleteifNoPasswordClashSquad()
 });
 
 module.exports = cron;
