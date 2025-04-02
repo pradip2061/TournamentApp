@@ -303,7 +303,7 @@ const divideMoney = async (req, res) => {
         // Update Host
         host.isplaying = false;
         if (hostStatus) {
-            host.balance += betAmount;
+            host.balance += betAmount*1.9;
             host.victory.FreefireClash.push(matchId);
             host.matchId.FreefireClashId=[]
         } else {
@@ -314,7 +314,7 @@ const divideMoney = async (req, res) => {
         // Update Opponent
         user.isplaying = false;
         if (opponentStatus) {
-            user.balance += betAmount;
+            user.balance += betAmount*1.9;
             user.victory.FreefireClash.push(matchId);
             user.matchId.FreefireClashId=[]
         } else {
