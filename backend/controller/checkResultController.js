@@ -3,11 +3,10 @@ const FFfreefire = require("../model/FullMatchFFModel");
 const PubgFull = require("../model/PubgFullMatchModel");
 const {User} = require("../model/schema");
 const tdm = require("../model/TdmModel");
-
+const mongoose = require("mongoose");
 const checkResult = async (req, res) => {
     try {
         const userid = req.user;
-
         // Check if user exists first
         const userinfo = await User.findOne({ _id: userid });
         if (!userinfo) {
@@ -208,7 +207,7 @@ const checkReportClash=async(req,res)=>{
     const matchId=userinfo?.matchId?.FreefireClashId?.[0]
     const match = await ClashSquad.findOne({ _id: matchId });
     if (!match) {
-        return res.status(400).json({ message: "Invalid match data" });
+        return res.status(400).json({ message: "Invalid match data " });
     }
 if(!userinfo){
     return res.status(400).json({ message: "user not found" });
@@ -265,11 +264,13 @@ if( match.teamHost[0].userid === userid){
   
 }
 
+
+
 const divideMoney = async (req, res) => {
     try {
         const { matchId } = req.body;
         console.log("backend bata divide money", matchId);
-        
+
         const matchinfo = await ClashSquad.findById(matchId);
         if (!matchinfo) {
             return res.status(404).json({ message: "Match not found" });
@@ -280,8 +281,16 @@ const divideMoney = async (req, res) => {
         }
 
         const betAmount = Number(matchinfo.matchDetails?.[0]?.betAmount || 0);
-        const host = await User.findById(matchinfo.teamHost[0].userid);
-        const user = await User.findById(matchinfo.teamopponent[0].userid);
+        const hostId = matchinfo.teamHost[0].userid;
+        const opponentId = matchinfo.teamopponent[0].userid;
+
+        // Validate ObjectId before querying
+        if (!mongoose.Types.ObjectId.isValid(hostId) || !mongoose.Types.ObjectId.isValid(opponentId)) {
+            return res.status(400).json({ message: "Invalid user ID format" });
+        }
+
+        const host = await User.findById(hostId);
+        const user = await User.findById(opponentId);
 
         if (!host || !user) {
             return res.status(404).json({ message: "User(s) not found" });
@@ -302,19 +311,13 @@ const divideMoney = async (req, res) => {
 
         // Update Host
         if (hostStatus) {
-            host.balance += betAmount*1.9;
-            host.victory.FreefireClash.push(matchId);
-        } else {
-            host.loss.FreefireClash.push(matchId);
+            host.balance += betAmount;
         }
 
         // Update Opponent
         if (opponentStatus) {
-            user.balance += betAmount*1.9;
-            user.victory.FreefireClash.push(matchId);
-        } else {
-            user.loss.FreefireClash.push(matchId);
-        }
+            user.balance += betAmount;
+        } 
 
         // Mark match as completed
         matchinfo.status = "completed";
