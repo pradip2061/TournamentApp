@@ -7,17 +7,25 @@ const DidYouWinMatch = async (req, res) => {
         const userid = req.user;
         console.log(userid)
         const match = await ClashSquad.findOne({ _id: matchId });
-
+        const userinfo = await User.findOne({_id:userid});
         if (!match) {
             return res.status(404).json({ message: "Match not found" });
         }
 
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
-            match.hostProof=proof
+            userinfo.isplaying=false
+            userinfo.matchId.FreefireClashId=[]
+            if(boolean === true){
+                match.hostProof=proof
+            }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
-            match.userProof=proof
+            userinfo.isplaying=false
+            userinfo.matchId.FreefireClashId=[]
+            if(boolean === true){
+                match.userProof=proof
+            }
         } else {
             return res.status(403).json({ message: "You are not part of this match" });
         }
