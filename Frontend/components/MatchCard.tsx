@@ -381,6 +381,7 @@ const MatchCard = ({ match, refreshData }) => {
         );
         setMessage(response.data.message);
         checkresult();
+        divideMoney(matchId)
       } catch (error) {
         setError(error.response?.data?.message || 'Submission failed');
       } finally {
@@ -409,6 +410,7 @@ const MatchCard = ({ match, refreshData }) => {
       );
       setMessage(response.data.message);
       checkresult();
+      divideMoney(matchId)
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     } finally {
@@ -514,6 +516,13 @@ const MatchCard = ({ match, refreshData }) => {
     }
   };
 
+  const divideMoney=async(matchId)=>{
+try {
+ await axios.post(`${BASE_URL}/khelmela/dividemoney`,{matchId})
+} catch (error) {
+  console.log(error)
+}
+  }
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
@@ -563,7 +572,7 @@ const MatchCard = ({ match, refreshData }) => {
                   <View style={styles.footer}>
                     {
                       check === 'host'? <Text style={styles.text}>
-                      👾 Opponent: {item.opponentName}
+                      👾 Opponent: {item.opponentName||"no one has join yet"}
                     </Text>: check === 'userjoined'? <Text style={styles.text}>
                       👾 Opponent: {item.gameName}
                     </Text>: <Text style={styles.text}>
