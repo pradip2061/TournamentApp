@@ -21,12 +21,10 @@ import {jwtDecode} from 'jwt-decode';
 import io from 'socket.io-client';
 
 const LandingChat = ({navigation}) => {
-  // Remove initialFriends from route.params destructuring
   const [user, setUser] = useState('');
   const [re, setRe] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [clicked, setClicked] = useState(false);
-  // Initialize as empty arrays instead of using route.params
   const [friends, setFriends] = useState([]);
   const [filteredFriends, setFilteredFriends] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
@@ -40,12 +38,12 @@ const LandingChat = ({navigation}) => {
     const getUser = async () => {
       try {
         const token = await AsyncStorage.getItem('token');
-        const decoded = jwtDecode(token);
-        setToken(token);
-        setUser(decoded.id);
-
-        // Fetch friends data after getting the token
-        fetchFriends(token);
+        if (token) {
+          const decoded = jwtDecode(token);
+          setToken(token);
+          setUser(decoded?.id);
+          fetchFriends(token);
+        }
       } catch (error) {
         console.error('Error retrieving token:', error);
       }
@@ -54,16 +52,30 @@ const LandingChat = ({navigation}) => {
     getUser();
   }, []);
 
+  // Directly sort by timestamp in latestMessage.time
+  const sortByLatestMessage = data => {
+    return [...data].sort((a, b) => {
+      // Extract timestamps or use a very old date if missing
+      const timeA = a?.latestMessage?.time
+        ? new Date(a.latestMessage.time).getTime()
+        : 0;
+      const timeB = b?.latestMessage?.time
+        ? new Date(b.latestMessage.time).getTime()
+        : 0;
+
+      // Sort in descending order (newest first)
+      return timeB - timeA;
+    });
+  };
+
   // Modify the fetchFriends function to accept a token parameter
   const fetchFriends = useCallback(
     async (currentToken = null) => {
       try {
-        // Use the passed token or get it from storage
         const tokenToUse =
           currentToken || token || (await AsyncStorage.getItem('token'));
         if (!tokenToUse) {
-          Alert.alert('token Problem ');
-
+          Alert.alert('Token Problem');
           return;
         }
 
@@ -76,11 +88,31 @@ const LandingChat = ({navigation}) => {
           },
         );
 
-        console.log(response.data[0]._id);
+        console.log('Friend Array :', response?.data);
+        for (let i = 0; i < response?.data?.length; i++) {
+          console.log(
+            ' Array Latest Message  =======> ',
+            response?.data?.[i]?.latestMessage?.message,
+          );
+        }
+        if (response?.data && response?.data?.length > 0) {
+          // Sort the array by latest message time
+          const sortedFriends = sortByLatestMessage(response.data);
 
-        if (response.data && response.data) {
-          setFriends(response.data);
-          setFilteredFriends(response.data);
+          console.log(
+            'Sorted friends by latest message:',
+            sortedFriends.map(f => ({
+              username: f?.username,
+              time: f?.latestMessage?.time,
+            })),
+          );
+
+          // Update both states with the sorted array
+          setFriends(sortedFriends);
+          setFilteredFriends(sortedFriends);
+        } else {
+          setFriends([]);
+          setFilteredFriends([]);
         }
       } catch (error) {
         console.error('Error fetching friends:', error);
@@ -105,7 +137,7 @@ const LandingChat = ({navigation}) => {
       const response = await axios.post(
         `${BASE_URL}/khelmela/addFriends`,
         {
-          friendId: userToAdd.id,
+          friendId: userToAdd?.id,
         },
         {
           headers: {
@@ -115,7 +147,7 @@ const LandingChat = ({navigation}) => {
       );
       setClicked(true);
 
-      Alert.alert('Success', response.data?.message || 'Friend  added !');
+      Alert.alert('Success', response?.data?.message || 'Friend added!');
       setTimeout(() => {
         setShowSearchResults(false);
         setClicked(false);
@@ -127,13 +159,13 @@ const LandingChat = ({navigation}) => {
       console.error('Error adding friend:', error);
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Failed to add friend',
+        error?.response?.data?.message || 'Failed to add friend',
       );
     }
   };
 
   const searchPeople = async () => {
-    if (!searchTerm.trim()) {
+    if (!searchTerm?.trim()) {
       Alert.alert('Error', 'Please enter a name to search');
       return;
     }
@@ -156,7 +188,7 @@ const LandingChat = ({navigation}) => {
         },
       );
 
-      if (response.data && response.data.users) {
+      if (response?.data && response?.data?.users) {
         setSearchResults(response.data.users);
         setShowSearchResults(true);
       } else {
@@ -165,10 +197,10 @@ const LandingChat = ({navigation}) => {
         setShowSearchResults(true);
       }
     } catch (error) {
-      console.error('Error searching users:', error.message);
+      console.error('Error searching users:', error?.message);
       Alert.alert(
         'Error',
-        error.response?.data?.message || 'Failed to search users',
+        error?.response?.data?.message || 'Failed to search users',
       );
     } finally {
       setLoading(false);
@@ -176,11 +208,11 @@ const LandingChat = ({navigation}) => {
   };
 
   const handleOnpress = item => {
-    navigation.navigate('PrivateChat', {
+    navigation?.navigate('PrivateChat', {
       userId: user,
-      FriendId: item._id,
-      photoUrl: item.image || item.photoUrl,
-      name: item.username || item.name,
+      FriendId: item?.id,
+      photoUrl: item?.image || item?.photoUrl,
+      name: item?.username || item?.name,
     });
   };
 
@@ -224,17 +256,17 @@ const LandingChat = ({navigation}) => {
             },
           });
 
-          newSocket.on('connect', () => {
+          newSocket?.on('connect', () => {
             console.log('Socket connected');
           });
 
-          newSocket.on('newMessage', handleNewMessage);
+          newSocket?.on('newMessage', handleNewMessage);
 
           setSocket(newSocket);
 
           return () => {
-            newSocket.off('newMessage');
-            newSocket.disconnect();
+            newSocket?.off('newMessage');
+            newSocket?.disconnect();
           };
         }
       } catch (error) {
@@ -246,102 +278,126 @@ const LandingChat = ({navigation}) => {
   }, []);
 
   // Handle new message received via socket
-  const handleNewMessage = useCallback(messageData => {
-    setFriends(prevFriends => {
-      // Find the friend who sent the message
-      const friendIndex = prevFriends.findIndex(
-        f => f._id === messageData.senderId || f._id === messageData.receiverId,
-      );
+  const handleNewMessage = useCallback(
+    messageData => {
+      console.log('New message received:', messageData);
 
-      if (friendIndex === -1) return prevFriends;
+      // When a new message comes in, update the friends list
+      setFriends(prevFriends => {
+        const updatedFriends = [...prevFriends];
+        const friendIndex = updatedFriends.findIndex(
+          f =>
+            f?._id === messageData?.senderId ||
+            f?._id === messageData?.receiverId ||
+            f?.id === messageData?.senderId ||
+            f?.id === messageData?.receiverId,
+        );
 
-      // Move the friend to the top of the list
-      const updatedFriends = [...prevFriends];
-      const [friend] = updatedFriends.splice(friendIndex, 1);
+        if (friendIndex !== -1) {
+          // Update the friend's latest message
+          const friend = updatedFriends[friendIndex];
+          friend.latestMessage = {
+            ...messageData?.message,
+            time: new Date().toISOString(),
+          };
 
-      // Update friend's last message if needed
-      friend.lastMessage = messageData.message;
-      friend.lastMessageTime = new Date().toISOString();
+          // Remove from current position
+          updatedFriends.splice(friendIndex, 1);
 
-      return [friend, ...updatedFriends];
-    });
-  }, []);
+          // Add to the beginning of the array
+          updatedFriends.unshift(friend);
 
-  // Update filteredFriends whenever friends change
-  useEffect(() => {
-    setFilteredFriends(friends);
-  }, [friends]);
+          // Also update filtered friends
+          setFilteredFriends([...updatedFriends]);
+
+          return updatedFriends;
+        }
+
+        // If friend not found, fetch the full list
+        fetchFriends();
+        return prevFriends;
+      });
+    },
+    [fetchFriends],
+  );
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles?.safeArea}>
       <StatusBar backgroundColor="#417D80" barStyle="light-content" />
-      <View style={styles.mainContainer}>
-        <View style={styles.headerContainer}>
-          <Text style={styles.header}>Chat</Text>
+      <View style={styles?.mainContainer}>
+        <View style={styles?.headerContainer}>
+          <Text style={styles?.header}>Chat</Text>
         </View>
 
-        <View style={styles.searchContainer}>
-          <View style={styles.searchWrapper}>
+        <View style={styles?.searchContainer}>
+          <View style={styles?.searchWrapper}>
             <TextInput
-              style={styles.searchBar}
+              style={styles?.searchBar}
               placeholder="Search Friend"
               placeholderTextColor="#8A8A8A"
               value={searchTerm}
               onChangeText={setSearchTerm}
             />
             <TouchableOpacity
-              style={styles.searchButton}
+              style={styles?.searchButton}
               onPress={searchPeople}
               disabled={loading}>
               {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
-                <Text style={styles.searchButtonText}>Search</Text>
+                <Text style={styles?.searchButtonText}>Search</Text>
               )}
             </TouchableOpacity>
           </View>
         </View>
 
-        <View style={styles.listContainer}>
-          <Text style={styles.sectionTitle}>Recent Chats</Text>
+        <View style={styles?.listContainer}>
+          <Text style={styles?.sectionTitle}>Recent Chats</Text>
           <FlatList
             data={filteredFriends}
-            keyExtractor={item => item._id.toString()}
+            keyExtractor={item =>
+              item?._id || item?.id || Math.random().toString()
+            }
             renderItem={({item}) => (
               <TouchableOpacity
-                style={styles.friendCard}
+                style={styles?.friendCard}
                 onPress={() => handleOnpress(item)}
                 activeOpacity={0.7}>
                 <Image
                   source={{
                     uri:
-                      item.photoUrl ||
-                      item.image ||
+                      item?.photoUrl ||
+                      item?.image ||
                       'https://storage.googleapis.com/khelmela-98.firebasestorage.app/users/13cca677-dc05-4fb3-9ee4-c80b745ac8a0-.jpg',
                   }}
-                  style={styles.avatar}
+                  style={styles?.avatar}
                 />
-                <View style={styles.friendInfo}>
-                  <Text style={styles.friendName}>
-                    {item.username || item.name}
+                <View style={styles?.friendInfo}>
+                  <Text style={styles?.friendName}>
+                    {item?.username || item?.name || 'User'}
                   </Text>
                   <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage || 'Tap to start chatting'}
+                    {typeof item.latestMessage?.message === 'string'
+                      ? item.latestMessage.message
+                      : 'Tap to start chatting'}
                   </Text>
                 </View>
-                <View style={styles.lastSeenContainer}>
-                  {item.lastMessageTime && (
-                    <Text style={styles.timeStamp}>
-                      {new Date(item.lastMessageTime).toLocaleTimeString([], {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}
+                <View style={styles?.lastSeenContainer}>
+                  {item?.latestMessage?.time && (
+                    <Text style={styles?.timeStamp}>
+                      {new Date(item.latestMessage.time).toLocaleTimeString(
+                        [],
+                        {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        },
+                      )}
                     </Text>
                   )}
                   <View
                     style={[
-                      styles.onlineIndicator,
-                      item.online && styles.online,
+                      styles?.onlineIndicator,
+                      item?.online && styles?.online,
                     ]}
                   />
                 </View>
@@ -349,7 +405,7 @@ const LandingChat = ({navigation}) => {
             )}
             ListEmptyComponent={renderEmptyFriendsList}
             showsVerticalScrollIndicator={false}
-            contentContainerStyle={styles.listContentContainer}
+            contentContainerStyle={styles?.listContentContainer}
             refreshControl={
               <RefreshControl
                 refreshing={refreshing}
@@ -367,58 +423,58 @@ const LandingChat = ({navigation}) => {
           animationType="slide"
           transparent={true}
           onRequestClose={closeSearchResults}>
-          <View style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalHeader}>Search Results</Text>
+          <View style={styles?.modalContainer}>
+            <View style={styles?.modalContent}>
+              <Text style={styles?.modalHeader}>Search Results</Text>
 
-              {searchResults.length === 0 ? (
-                <View style={styles.noResultsContainer}>
-                  <Text style={styles.noResults}>No users found</Text>
-                  <Text style={styles.noResultsSubtext}>
+              {searchResults?.length === 0 ? (
+                <View style={styles?.noResultsContainer}>
+                  <Text style={styles?.noResults}>No users found</Text>
+                  <Text style={styles?.noResultsSubtext}>
                     Try searching with a different name
                   </Text>
                 </View>
               ) : (
                 <FlatList
                   data={searchResults}
-                  keyExtractor={item => item.id}
+                  keyExtractor={item => item?.id || Math.random().toString()}
                   renderItem={({item}) => (
-                    <View style={styles.searchResultItem}>
+                    <View style={styles?.searchResultItem}>
                       <TouchableOpacity
-                        style={styles.userInfoContainer}
+                        style={styles?.userInfoContainer}
                         onPress={() => handleOnpress(item)}>
                         <Image
                           source={{
                             uri:
-                              item.image ||
+                              item?.image ||
                               'https://firebasestorage.googleapis.com/v0/b/khelmela-98.firebasestorage.app/o/mainLogo%2Flogo.jpg?alt=media&token=07f1f6ae-2391-4143-83f4-6ff44bba581b',
                           }}
-                          style={styles.resultAvatar}
+                          style={styles?.resultAvatar}
                         />
-                        <View style={styles.resultUserInfo}>
-                          <Text style={styles.resultUsername}>
-                            {item.username}
+                        <View style={styles?.resultUserInfo}>
+                          <Text style={styles?.resultUsername}>
+                            {item?.username || 'User'}
                           </Text>
-                          <Text style={styles.resultSubtext}>Tap to chat</Text>
+                          <Text style={styles?.resultSubtext}>Tap to chat</Text>
                         </View>
                       </TouchableOpacity>
                       {!clicked && (
                         <TouchableOpacity
-                          style={styles.addButton}
+                          style={styles?.addButton}
                           onPress={() => addFriend(item)}>
-                          <Text style={styles.addButtonText}>Add Friend</Text>
+                          <Text style={styles?.addButtonText}>Add Friend</Text>
                         </TouchableOpacity>
                       )}
                     </View>
                   )}
-                  contentContainerStyle={styles.resultListContainer}
+                  contentContainerStyle={styles?.resultListContainer}
                 />
               )}
 
               <TouchableOpacity
-                style={styles.closeButton}
+                style={styles?.closeButton}
                 onPress={closeSearchResults}>
-                <Text style={styles.closeButtonText}>Close</Text>
+                <Text style={styles?.closeButtonText}>Close</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -427,7 +483,6 @@ const LandingChat = ({navigation}) => {
     </SafeAreaView>
   );
 };
-
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,

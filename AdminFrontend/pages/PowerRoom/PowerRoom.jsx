@@ -196,62 +196,6 @@ const PowerRoom = () => {
             <Text style={styles.messagetext}>{message}</Text>
           </View>
         </View>
-
-        <View style={[styles.box, {height: 500}]}>
-          <Text style={styles.header}> Search for Match</Text>
-
-          <View style={styles.itemwrapper}>
-            <TextInput
-              placeholder={'Match_id'}
-              style={styles.input}
-              onChangeText={value => {
-                setMatchId(value.trim());
-              }}
-            />
-            <TouchableOpacity
-              style={[styles.button, {backgroundColor: '#cdcdcd'}]}
-              onPress={() => searchMatch(matchId)}>
-              <Text> Search</Text>
-            </TouchableOpacity>
-          </View>
-
-          <Text style={styles.userName}>user-Host</Text>
-
-          <Text style={styles.info.infobox}> ID: {user?.id}</Text>
-          <Text style={styles.info.infobox}>Email : {user?.email}</Text>
-
-          <View style={styles.itemwrapper}></View>
-
-          <Text style={styles.userName}> user2 </Text>
-          <Text style={styles.info.infobox}> ID: {user?.id}</Text>
-          <Text style={styles.info.infobox}> Email: {user?.email}</Text>
-
-          <View style={styles.itemwrapper}></View>
-
-          <Text style={styles.info}></Text>
-
-          <View style={[styles.itemwrapper, {marginTop: -15}]}>
-            <View style={styles.column}>
-              <Text style={styles.infoMatch}>🎮 Mode:{item?.user} </Text>
-              <Text style={styles.infoMatch}>🔫 skills:{item?.skill}</Text>
-              <Text style={styles.infoMatch}>🎯 Headshot:{item?.headshot}</Text>
-              <Text style={styles.infoMatch}>🗺️ match:{item?.match}</Text>
-            </View>
-            <View style={styles.itemwrapper}>
-              <View style={styles.column}>
-                <Text style={styles.infoMatch}>
-                  💥 Limited Ammo:{item?.ammo}
-                </Text>
-                <Text style={styles.infoMatch}>🔄 Rounds:{item?.round}</Text>
-                <Text style={styles.infoMatch}>💰 Coin:{item?.coin} </Text>
-              </View>
-            </View>
-          </View>
-
-          <Text style={[styles.info, {fontSize: 20}]}>
-            🏆 Prize:{item?.betAmount * 1.8}
-          </Text>
-        </View>
       </ScrollView>
     </View>
   );

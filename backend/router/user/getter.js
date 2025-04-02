@@ -28,7 +28,6 @@ router.get("/userRequest/:request", Authverify, async (req, res) => {
       console.log("User not Found ------->");
       return res.status(404).json({ message: "User not found" });
     }
-
     if (request === "friends") {
       if (!Array.isArray(user.friends) || user.friends.length === 0) {
         return res.json({ message: "No friends found" });
@@ -36,11 +35,16 @@ router.get("/userRequest/:request", Authverify, async (req, res) => {
 
       console.log("Fetching friend details...");
 
-      // Filter and validate friend IDs
+      // Map friend IDs and maintain structure
+      const friendIdMap = new Map();
       const friendIds = user.friends
-        .map((f) =>
-          isValidObjectId(f?.id) ? new mongoose.Types.ObjectId(f.id) : null
-        )
+        .map((f) => {
+          if (isValidObjectId(f?.id)) {
+            friendIdMap.set(f.id, f); // Store original object
+            return new mongoose.Types.ObjectId(f.id);
+          }
+          return null;
+        })
         .filter(Boolean);
 
       if (friendIds.length === 0) {
@@ -52,8 +56,20 @@ router.get("/userRequest/:request", Authverify, async (req, res) => {
         "_id username image"
       );
 
-      console.log("Friends fetched successfully!");
-      return res.json(friends);
+      // Merge fetched data with existing friend objects
+      const updatedFriends = user.friends.map((f) => {
+        const updatedFriend = friends.find((friend) => friend._id.equals(f.id));
+        return updatedFriend
+          ? {
+              ...f,
+              username: updatedFriend.username,
+              image: updatedFriend.image,
+            }
+          : f;
+      });
+
+      console.log("Friends fetched and merged successfully!");
+      return res.json(updatedFriends);
     }
 
     if (request === "user") {

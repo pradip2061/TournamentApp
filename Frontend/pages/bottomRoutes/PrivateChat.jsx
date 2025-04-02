@@ -30,6 +30,7 @@ import {
   formatTimestamp,
   isImageMessage,
 } from '../../components/PrivateChatComponent/Dateformat';
+import playNotificationSound from '../../utility/Notification';
 
 // Message item component
 const MessageItem = ({
@@ -201,15 +202,18 @@ const PrivateChat = ({route, navigation}) => {
 
   // Setup socket connection
   useEffect(() => {
-    console.log('BASE_URL', BASE_URL);
-    const newSocket = io(BASE_URL);
-    setSocket(newSocket);
+    const newSocket = io(BASE_URL); // Connect to server
+    setSocket(newSocket); // Store socket in state
 
-    // Cleanup on unmount
+    newSocket.on('connect', () => {
+      console.log(' Notify connection t0 Connected to server:', newSocket.id);
+      newSocket.emit('register', userId); // Register AFTER connection is established
+    });
+
+    // Listen for notifications
+
     return () => {
-      if (newSocket) {
-        newSocket.disconnect();
-      }
+      newSocket.disconnect(); // Cleanup when component unmounts
     };
   }, []);
 
@@ -217,7 +221,13 @@ const PrivateChat = ({route, navigation}) => {
     if (!socket) return;
     socket.emit('joinRoom', roomId);
     socket.on('message', message => {
+      console.log('Message Recived ', message);
       dispatchMessages({type: 'ADD_MESSAGE', payload: message});
+    });
+
+    socket.on('notify', ({message}) => {
+      console.log('notify-------', message);
+      playNotificationSound();
     });
 
     socket.on('connect_error', error => {
@@ -298,6 +308,7 @@ const PrivateChat = ({route, navigation}) => {
     const messageData = {
       roomId,
       senderID: userId,
+      FriendId: FriendId,
       message: newMessage,
       type: 'text',
       time: new Date().toISOString(),
@@ -305,6 +316,7 @@ const PrivateChat = ({route, navigation}) => {
 
     // Emit message to server
     socket.emit('message', {room: roomId, message: messageData});
+    socket.emit(`notify`, {user: userId, message: messageData});
 
     // Update local state immediately
     dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
@@ -383,6 +395,8 @@ const PrivateChat = ({route, navigation}) => {
       };
 
       socket.emit('message', {room: roomId, message: messageData});
+      socket.emit('notify', {user: userId, message: messageData});
+
       dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
       setSelectedPhoto(null);
     } catch (error) {

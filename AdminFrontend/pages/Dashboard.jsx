@@ -141,7 +141,9 @@ const Dashboard = ({navigation}) => {
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.modalButtonYes}
-                onPress={handleLogout}>
+                onPress={() => {
+                  AsyncStorage.clear();
+                }}>
                 <Text style={styles.modalButtonText}>Yes</Text>
               </TouchableOpacity>
             </View>

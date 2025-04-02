@@ -74,7 +74,9 @@ const Home = ({navigation}) => {
             style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
             onPress={() => navigation.navigate('Transcation')}>
             <Doller name="circle-dollar-to-slot" size={32} color="gold" />
-            <Text style={{color: 'white', fontSize:17,fontWeight:'bold'}}>{data?.balance} +</Text>
+            <Text style={{color: 'white', fontSize: 17, fontWeight: 'bold'}}>
+              {data?.balance} +
+            </Text>
           </TouchableOpacity>
           <View style={styles.headerIcons}>
             <TouchableOpacity
@@ -165,12 +167,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 13,
     gap: 180,
-    marginLeft:21
+    marginLeft: 21,
   },
   headerIcons: {
     flexDirection: 'row',
     gap: 40,
-    marginRight:15
+    marginRight: 15,
   },
   topGamesText: {
     width: 180,

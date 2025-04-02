@@ -45,7 +45,7 @@ const MatchTypeModal = ({visible, onClose}) => {
 
   const handleCreate = async () => {
     if (!amount) {
-      alert('Please enter the Entry fee');
+      Alert.alert('Please enter the Entry fee');
       return;
     }
 
@@ -53,50 +53,26 @@ const MatchTypeModal = ({visible, onClose}) => {
     const data = {
       playermode: playerMode,
       entryFee: amount,
+      matchType: matchType,
       time: `${selectedHour}:${selectedMinute}${isPM ? ' PM' : ' AM'}`,
     };
     console.log('Token ......', token);
     console.log('Creating Match with details ......', matchType, data);
+    console.log(` Base URl to being sent......  ${baseUrl}/khelmela/create_FM`);
 
-    if (matchType === 'FreeFire') {
-      console.log('creating for free fire .....> ');
-      console.log('BaseUrl -----', baseUrl);
-      const response = await axios.post(
-        `${baseUrl}/khelmela/createFFfullmap`,
-        data,
-        {
-          headers: {Authorization: ` ${token}`},
-        },
-      );
-      console.log('Response from server', response.data.message);
-      if (response.data.message) {
-        Alert.alert('Created', response.data.message);
-      } else {
-        Alert.alert('Try Again', 'Server Did not  respond');
-        console.log(response);
-        return;
-      }
-    }
+    const response = await axios.post(`${baseUrl}/khelmela/create_FM`, data, {
+      headers: {Authorization: `${token}`},
+    });
+    console.log('Response from server', response);
+    if (response.data.message) {
+      Alert.alert('Created', response.data.message);
+      onClose();
+    } else {
+      Alert.alert('Try Again', 'Server Did not  respond');
 
-    if (matchType === 'PUBG') {
-      const token = await AsyncStorage.getItem('token');
-      const response = await axios.post(
-        `${baseUrl}/khelmela/admin/createpubg-FM`,
-        data,
-        {
-          headers: {Authorization: ` ${token}`},
-        },
-      );
-      console.log('Response from server', response);
-      if (response.data.message) {
-        Alert.alert('Created', response.data.message);
-        onClose();
-      } else {
-        Alert.alert('Try Again', 'Server Did not  respond');
-
-        console.log(response);
-        return;
-      }
+      console.log(response);
+      Alert.alert(response?.data?.message);
+      return;
     }
   };
 

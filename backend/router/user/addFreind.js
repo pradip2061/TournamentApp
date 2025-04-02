@@ -117,6 +117,9 @@ router.post("/addFriends", Authverify, async (req, res) => {
         $push: {
           friends: {
             id: friendId,
+            latestMessage: {
+              message: {},
+            },
           },
         },
       }
