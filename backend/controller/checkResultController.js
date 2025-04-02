@@ -268,7 +268,8 @@ if( match.teamHost[0].userid === userid){
 const divideMoney = async (req, res) => {
     try {
         const { matchId } = req.body;
-
+        console.log("backend bata divide money", matchId);
+        
         const matchinfo = await ClashSquad.findById(matchId);
         if (!matchinfo) {
             return res.status(404).json({ message: "Match not found" });
@@ -292,6 +293,12 @@ const divideMoney = async (req, res) => {
         if (typeof hostStatus !== "boolean" || typeof opponentStatus !== "boolean") {
             return res.status(200).json({ message: "Match result is not yet determined" });
         }
+
+        // Ensure victory and loss objects exist
+        host.victory = host.victory || { FreefireClash: [] };
+        host.loss = host.loss || { FreefireClash: [] };
+        user.victory = user.victory || { FreefireClash: [] };
+        user.loss = user.loss || { FreefireClash: [] };
 
         // Update Host
         host.isplaying = false;
@@ -318,12 +325,13 @@ const divideMoney = async (req, res) => {
         await Promise.all([host.save(), user.save(), matchinfo.save()]);
 
         return res.status(200).json({ message: "Money submitted successfully" });
-
     } catch (error) {
         console.error("Error in divideMoney:", error);
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+
 
 
 
