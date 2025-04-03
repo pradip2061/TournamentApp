@@ -37,7 +37,7 @@ const createCs = async (req, res) => {
       userProof:"",
       hostProof:"",
       opponentName:"",
-      createdAtid:""
+     
     });
 
     await newMatch.save();
