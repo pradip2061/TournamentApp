@@ -5,7 +5,7 @@ const tdm = require("../model/TdmModel")
 const deleteCard = async (req, res) => {
     try {
       const { matchId } = req.body;
-      const userId = req.user.id; // Assuming req.user contains { id }
+      const userId = req.user; // Assuming req.user contains { id }
   
       // Find the match first
       const match = await ClashSquad.findById(matchId);
