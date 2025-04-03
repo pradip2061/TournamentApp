@@ -18,26 +18,26 @@ const createCs = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    if (userinfo.balance < matchDetails.betAmount) {
-      // Fixed logic
+    if (userinfo.balance < matchDetails.betAmount) { // Fixed logic
       return res.status(400).json({ message: "You don’t have enough balance" });
     }
-    if (!userinfo.gameName[0].freefire) {
+    if(!userinfo.gameName[0].freefire){
       return res.status(400).json({
-        message: "add FreeFire gameName in your profile",
-      });
+        message:'add pubgGameName in your profile'
+      })
     }
     const newMatch = new ClashSquad({
       matchDetails: matchDetails,
-      teamHost: [{ userid: userId, reportImage: "", reportMessage: "" }],
-      teamopponent: [{ userid: "", reportImage: "", reportMessage: "" }],
+      teamHost: [{ userid: userId,reportImage:"",reportMessage:"" }],
+      teamopponent: [{ userid: "" ,reportImage:"",reportMessage:""}],
       status: "pending",
       customId: null,
       customPassword: null,
-      TotalPlayers: 1,
-      userProof: "",
-      hostProof: "",
-      opponentName: "",
+      TotalPlayers:1,
+      userProof:"",
+      hostProof:"",
+      opponentName:"",
+      createdAtid:""
     });
 
     await newMatch.save();
