@@ -52,30 +52,39 @@ const createCs = async (req, res) => {
   }
 };
 
-const getCsData = async (req, res) => {
-  try {
+const getCsData = async (req, res) => {   
+  try {     
     const userid = req.user;
+    
+    if (!userid) {
+      return res.status(400).json({ error: "User ID is missing" });
+    }
+
     const userinfo = await User.findOne({ _id: userid });
-    const matchId = userinfo?.matchId?.FreefireClashId?.[0];
-    const matchjoin = await ClashSquad?.find({ _id: matchId });
+
+    if (!userinfo) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const matchId = userinfo?.matchId?.FreefireClashId?.[0] || null;
+
+    // Fetch the user's joined match
+    const matchjoin = matchId ? await ClashSquad.find({ _id: matchId }) : [];
+
+    // Fetch matches where the user is not in teamHost or teamopponent
     const card = await ClashSquad.find({
-      $nor: [
-        { teamHost: { $elemMatch: { userid: userid } } },
-        { teamopponent: { $elemMatch: { userid: userid } } },
-      ],
+      $and: [
+        { $nor: [{ teamHost: { $elemMatch: { userid } } }, { teamopponent: { $elemMatch: { userid } } }] },
+        { status: { $in: ["pending", "running"] } }
+      ]
     }).sort({ createdAt: -1 });
-    console.log(card, "card");
-    console.log(matchjoin, "matchjoin");
-    res.status(200).json({
-      card,
-      matchjoin,
-    });
-  } catch (error) {
-    console.error("Error:", error);
-    res
-      .status(500)
-      .json({ error: "Internal Server Error", details: error.message });
-  }
+
+    res.status(200).json({ card, matchjoin });
+
+  } catch (error) {     
+    console.error("Error:", error);     
+    res.status(500).json({ error: "Internal Server Error", details: error.message });   
+  } 
 };
 
 const playingmatch = async (req, res) => {
