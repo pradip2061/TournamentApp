@@ -123,6 +123,7 @@ const joinuser = async (req, res) => {
   userinfo.balance -= match.matchDetails[0].betAmount;
   match.teamopponent[0].userid = userid;
   match.TotalPlayers += 1;
+ match.createdAtid = new Date(Date.now() + 6 * 60 * 1000);
   match.opponentName = userinfo.gameName[0].freefire;
   await match.save();
   await userinfo.save();
