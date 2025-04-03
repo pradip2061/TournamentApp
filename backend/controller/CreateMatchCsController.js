@@ -142,6 +142,64 @@ const joinuser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const create_FM = async (req, res) => {
+  console.log("Create Fm_  match ROute ---------.");
+  try {
+    const { time, entryFee, playermode, matchType } = req.body;
+    if (!time || !entryFee || !playermode || !matchType) {
+      console.log("missing Fields .........");
+      return res.status(400).json({ message: "Please fill all fields" });
+    }
+
+    console.log(
+      `time ${time} entryFee ${entryFee} playermode ${playermode} matchType ${matchType}`
+    );
+    let match_type;
+    let match;
+    if (matchType === "FreeFire") {
+      match = await FFfreefire.create({
+        playermode,
+        gameName: [],
+        entryFee,
+        time,
+        coustum: {
+          id: "",
+          password: "",
+        },
+        TotalPlayer: 0,
+      });
+    } else if (matchType == "PUBG") {
+      match = await PubgFull.create({
+        playermode,
+        gameName: [],
+        entryFee,
+        time,
+        coustum: {
+          id: "",
+          password: "",
+        },
+        TotalPlayer: 0,
+      });
+    } else {
+      console.log("invalid Match Type .......");
+      return res.status(400).json({
+        message: "Invalid match type",
+      });
+    }
+    console.log("Creating match with type..... ", match);
+
+    console.log("match Created for ", matchType, "sucesfully .............");
+    match.save();
+
+    res.status(200).json({
+      message: "Created successfully",
+      match,
+      totalPlayers: total,
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
 const trackusermodel = async(req,res)=>{
   const{matchId}=req.body
   const userid = req.user
@@ -429,4 +487,4 @@ const EnrollMatch = async (req, res) => {
 };
 
 
-module.exports = {EnrollMatch,createCs,addName,trackusermodeltdm,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,checkUserOrAdmintdm,joinuserff,checkisplaying,getFFmatch,createFF};
+module.exports = {EnrollMatch,createCs,addName,trackusermodeltdm,getCsData,playingmatch,joinuser,trackusermodel,checkUserOrAdmin,checkUserOrAdmintdm,joinuserff,checkisplaying,create_FM,getFFmatch,createFF};
