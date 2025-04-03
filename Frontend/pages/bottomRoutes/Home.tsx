@@ -7,6 +7,7 @@ import {
   Modal,
   BackHandler,
   Alert,
+  ImageBackground,
 } from 'react-native';
 import React, {
   useCallback,
@@ -22,6 +23,7 @@ import Card from '../../components/Card';
 import LinearGradient from 'react-native-linear-gradient';
 import {useFocusEffect} from '@react-navigation/native';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
+import FastImage from 'react-native-fast-image';
 
 const freefire = require('../../assets/freefire.jpeg');
 const img1 = require('../../assets/ffmap.jpg');
@@ -31,19 +33,21 @@ const img4 = require('../../assets/clashsquad.webp');
 const pubgfull = require('../../assets/pubgfull.jpg');
 const tdm = require('../../assets/tdm.jpg');
 
+const bg1 = require('../../assets/bg9.gif');
+
 const Home = ({navigation}) => {
   const [toggle, setToggle] = useState('freefire');
   const {checkadmin, data, getProfile} = useContext(CheckAdminContext);
 
   useFocusEffect(
     useCallback(() => {
-        console.log("Tab Screen Mounted");
-        getProfile()
-        return () => {
-            console.log("Tab Screen Unmounted");
-        };
-    }, [])
-);
+      console.log('Tab Screen Mounted');
+      getProfile();
+      return () => {
+        console.log('Tab Screen Unmounted');
+      };
+    }, []),
+  );
   useFocusEffect(
     useCallback(() => {
       const backAction = () => {
@@ -63,95 +67,85 @@ const Home = ({navigation}) => {
   );
 
   return (
-    <LinearGradient
-      colors={['#1e1e2f', '#3b3b5b', '#6b5b95']}
-      start={{x: 0, y: 0}}
-      end={{x: 1, y: 1}}
-      style={styles.container}>
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
-            onPress={() => navigation.navigate('Transcation')}>
-            <Doller name="circle-dollar-to-slot" size={32} color="gold" />
-            <Text style={{color: 'white', fontSize: 17, fontWeight: 'bold'}}>
-              {data?.balance} +
-            </Text>
+    <FastImage style={styles.container} source={bg1}>
+      <View style={styles.header}>
+        <TouchableOpacity
+          style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
+          onPress={() => navigation.navigate('Transcation')}>
+          <Doller name="circle-dollar-to-slot" size={32} color="gold" />
+          <Text style={{color: 'white', fontSize: 17, fontWeight: 'bold'}}>
+            {data?.balance} +
+          </Text>
+        </TouchableOpacity>
+        <View style={styles.headerIcons}>
+          <TouchableOpacity onPress={() => navigation.navigate('EnrollMatch')}>
+            <Gamepad name="game-controller" size={32} color="#fff" />
           </TouchableOpacity>
-          <View style={styles.headerIcons}>
-            <TouchableOpacity
-              onPress={() => navigation.navigate('EnrollMatch')}>
-              <Gamepad name="game-controller" size={32} color="#fff" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Gamepad
-                name="menu"
-                size={34}
-                color="grey"
-                onPress={() => navigation.navigate('Setting')}
-              />
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <Text style={styles.topGamesText}>TOP GAMES</Text>
-        <View style={styles.box}>
-          <View style={styles.tabContainer}>
-            <TouchableOpacity
-              onPress={() => setToggle('freefire')}
-              style={
-                toggle === 'freefire'
-                  ? styles.tabButtonActive
-                  : styles.tabButton
-              }>
-              <TabButton images={freefire} toggleset={toggle} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setToggle('pubg')}
-              style={
-                toggle === 'pubg' ? styles.tabButtonActive : styles.tabButton
-              }>
-              <TabButton images={img2} toggleset={toggle} />
-            </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => setToggle('cod')}
-              style={
-                toggle === 'cod' ? styles.tabButtonActive : styles.tabButton
-              }>
-              <TabButton images={img3} toggleset={toggle} />
-            </TouchableOpacity>
-          </View>
-          <Text style={styles.selectModeText}>SELECT MODE</Text>
-          <View style={styles.cardContainer}>
-            {toggle === 'freefire' && (
-              <View>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('FreeFire')}>
-                  <Card image={img1} name="Full Map Matches" />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('ClashSquad')}>
-                  <Card image={img4} name="Clash Squad" />
-                </TouchableOpacity>
-              </View>
-            )}
-            {toggle === 'pubg' && (
-              <View>
-                <TouchableOpacity onPress={() => navigation.navigate('Pubg')}>
-                  <Card image={pubgfull} name="Full Map Matches" />
-                </TouchableOpacity>
-                <TouchableOpacity onPress={() => navigation.navigate('TDM')}>
-                  <Card image={tdm} name="TDM(Team Death Match)" />
-                </TouchableOpacity>
-              </View>
-            )}
-            {toggle === 'cod' && (
-              <Text style={styles.comingSoonText}>Coming Soon...</Text>
-            )}
-          </View>
+          <TouchableOpacity>
+            <Gamepad
+              name="menu"
+              size={34}
+              color="grey"
+              onPress={() => navigation.navigate('Setting')}
+            />
+          </TouchableOpacity>
         </View>
       </View>
-    </LinearGradient>
+
+      <Text style={styles.topGamesText}>TOP GAMES</Text>
+      <View style={styles.box}>
+        <View style={styles.tabContainer}>
+          <TouchableOpacity
+            onPress={() => setToggle('freefire')}
+            style={
+              toggle === 'freefire' ? styles.tabButtonActive : styles.tabButton
+            }>
+            <TabButton images={freefire} toggleset={toggle} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setToggle('pubg')}
+            style={
+              toggle === 'pubg' ? styles.tabButtonActive : styles.tabButton
+            }>
+            <TabButton images={img2} toggleset={toggle} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setToggle('cod')}
+            style={
+              toggle === 'cod' ? styles.tabButtonActive : styles.tabButton
+            }>
+            <TabButton images={img3} toggleset={toggle} />
+          </TouchableOpacity>
+        </View>
+        <Text style={styles.selectModeText}>SELECT MODE</Text>
+        <View style={styles.cardContainer}>
+          {toggle === 'freefire' && (
+            <View>
+              <TouchableOpacity onPress={() => navigation.navigate('FreeFire')}>
+                <Card image={img1} name="Full Map Matches" />
+              </TouchableOpacity>
+              <TouchableOpacity
+                onPress={() => navigation.navigate('ClashSquad')}>
+                <Card image={img4} name="Clash Squad" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {toggle === 'pubg' && (
+            <View>
+              <TouchableOpacity onPress={() => navigation.navigate('Pubg')}>
+                <Card image={pubgfull} name="Full Map Matches" />
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => navigation.navigate('TDM')}>
+                <Card image={tdm} name="TDM(Team Death Match)" />
+              </TouchableOpacity>
+            </View>
+          )}
+          {toggle === 'cod' && (
+            <Text style={styles.comingSoonText}>Coming Soon...</Text>
+          )}
+        </View>
+      </View>
+    </FastImage>
   );
 };
 
@@ -159,6 +153,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     alignItems: 'center',
+    backgroundColor: '#000',
   },
   header: {
     width: '100%',
@@ -189,7 +184,7 @@ const styles = StyleSheet.create({
   },
   box: {
     width: 320,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: 'white',
     height: '70%',
     borderRadius: 55,
     paddingTop: 20,
@@ -204,6 +199,7 @@ const styles = StyleSheet.create({
     height: 70,
     borderRadius: 40, // Increased border radius
     borderWidth: 2,
+    backgroundColor: 'transparent',
     borderColor: '#ddd',
     alignItems: 'center',
     justifyContent: 'center',
@@ -239,6 +235,7 @@ const styles = StyleSheet.create({
   },
   comingSoonText: {
     fontSize: 18,
+    width: '80%',
     color: '#666',
     textAlign: 'center',
     marginTop: 20,

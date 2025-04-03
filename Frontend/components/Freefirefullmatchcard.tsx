@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,7 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   Platform,
+  ImageBackground,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import axios from 'axios';
@@ -17,17 +18,17 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
 import LinearGradient from 'react-native-linear-gradient';
-import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
-import { launchImageLibrary } from 'react-native-image-picker';
-import { BASE_URL } from '../env';
+import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
+import {launchImageLibrary} from 'react-native-image-picker';
+import {BASE_URL} from '../env';
 
 const freefire = require('../assets/freefire.jpeg');
 const bermuda = require('../assets/bermuda.jpg');
 const purgatory = require('../assets/pugatory.png');
 const kalahari = require('../assets/kalahari.webp');
 
-const Freefirefullmatchcard = ({ matches }) => {
-  const { setTrigger, data } = useContext(CheckAdminContext);
+const Freefirefullmatchcard = ({matches}) => {
+  const {setTrigger, data} = useContext(CheckAdminContext);
   const [joinModel, setJoinModel] = useState(false);
   const [checKJoined, setCheckJoined] = useState('');
   const [visible, setVisible] = useState(false);
@@ -54,7 +55,7 @@ const Freefirefullmatchcard = ({ matches }) => {
 
   useEffect(() => {
     const getName = () => {
-      const Name = matches.gameName.filter((item) => item.userid === data._id);
+      const Name = matches.gameName.filter(item => item.userid === data._id);
       setPlayer2(Name?.[0]?.player2 || '');
       setPlayer3(Name?.[0]?.player3 || '');
       setPlayer4(Name?.[0]?.player4 || '');
@@ -65,21 +66,22 @@ const Freefirefullmatchcard = ({ matches }) => {
   const joinuser = async () => {
     const token = await AsyncStorage.getItem('token');
     try {
-      if (matches.TotalPlayer === 48) { // Adjusted to Free Fire's max players
+      if (matches.TotalPlayer === 48) {
+        // Adjusted to Free Fire's max players
         setMessage('Slot is full!');
         return;
       }
       await axios
         .post(
           `${BASE_URL}/khelmela/joinff`,
-          { matchId },
+          {matchId},
           {
             headers: {
               Authorization: `${token}`,
             },
-          }
+          },
         )
-        .then((response) => {
+        .then(response => {
           setMessage(response.data.message);
           setTrigger('done');
         });
@@ -96,14 +98,14 @@ const Freefirefullmatchcard = ({ matches }) => {
       await axios
         .post(
           `${BASE_URL}/khelmela/checkuserff`,
-          { matchId },
+          {matchId},
           {
             headers: {
               Authorization: `${token}`,
             },
-          }
+          },
         )
-        .then((response) => {
+        .then(response => {
           if (response.status === 200) {
             setCheckJoined(response.data.message);
           }
@@ -126,14 +128,14 @@ const Freefirefullmatchcard = ({ matches }) => {
       await axios
         .post(
           `${BASE_URL}/khelmela/addNameff`,
-          { matchId, player1, player2, player3, player4 },
+          {matchId, player1, player2, player3, player4},
           {
             headers: {
               Authorization: `${token}`,
             },
-          }
+          },
         )
-        .then((response) => {
+        .then(response => {
           setMessage(response.data.message);
         });
     } catch (error) {
@@ -184,7 +186,7 @@ const Freefirefullmatchcard = ({ matches }) => {
           folderName: 'report',
           filename: filename,
         },
-        { headers: { Authorization: `${token}` } },
+        {headers: {Authorization: `${token}`}},
       );
       if (!imageResponse?.data?.url) {
         setError('Image upload failed');
@@ -231,8 +233,8 @@ const Freefirefullmatchcard = ({ matches }) => {
       }
       const response = await axios.post(
         `${BASE_URL}/khelmela/reportClash`,
-        { reportMessage, uploadedProof, matchId },
-        { headers: { Authorization: `${token}` } },
+        {reportMessage, uploadedProof, matchId},
+        {headers: {Authorization: `${token}`}},
       );
       setMessage(response.data.message);
       checkReportClash();
@@ -254,8 +256,8 @@ const Freefirefullmatchcard = ({ matches }) => {
       }
       const response = await axios.post(
         `${BASE_URL}/khelmela/checkreportClash`,
-        { matchId },
-        { headers: { Authorization: `${token}` } },
+        {matchId},
+        {headers: {Authorization: `${token}`}},
       );
       setCheckReport(response.data.message);
     } catch (error) {
@@ -278,8 +280,8 @@ const Freefirefullmatchcard = ({ matches }) => {
   };
 
   return (
-    <LinearGradient
-      colors={["#0f0c29", "#302b63", "#24243e"]}
+    <ImageBackground
+      source={require('../assets/bg9.jpg')}
       style={styles.container}
       key={matches._id}>
       <View style={styles.header}>
@@ -317,16 +319,18 @@ const Freefirefullmatchcard = ({ matches }) => {
 
       <View style={styles.timeAndEntryContainer}>
         <View style={styles.timeContainer}>
-          <Text style={{ marginLeft: 5 }}>Time: {matches.time || '9:00 AM'}</Text>
+          <Text style={{marginLeft: 5}}>Time: {matches.time || '9:00 AM'}</Text>
           {checKJoined === 'notjoined' ? (
             <TouchableOpacity
               style={styles.entryButton}
               onPress={() => setJoinModel(true)}>
-              <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
+              <Text style={{color: 'white'}}>
+                Entry fee: {matches.entryFee}
+              </Text>
             </TouchableOpacity>
           ) : (
             <TouchableOpacity style={styles.joinedButton}>
-              <Text style={{ color: 'white' }}>Joined</Text>
+              <Text style={{color: 'white'}}>Joined</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -335,7 +339,12 @@ const Freefirefullmatchcard = ({ matches }) => {
       <Modal transparent animationType="slide" visible={joinModel}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Did you join match?</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to join this match?
+            </Text>
+            <Text style={styles.smallText}>
+              Rs {matches.entryFee} will be deducted from your account.
+            </Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
@@ -363,13 +372,22 @@ const Freefirefullmatchcard = ({ matches }) => {
               </View>
             ) : (
               <>
-                <Text style={styles.squadHeaderText}>Enter Your Squad Member Game Names</Text>
+                <Text style={styles.squadHeaderText}>
+                  Enter Your Squad Member Game Names
+                </Text>
                 <View style={styles.Row}>
                   <View style={styles.mainplayerbox}>
                     <Text style={styles.mainPlayerText}>{player1}</Text>
                   </View>
                   <TouchableOpacity style={styles.add} onPress={addName}>
-                    <Text style={{ color: 'black', fontSize: 15, fontWeight: '700' }}>Save</Text>
+                    <Text
+                      style={{
+                        color: 'black',
+                        fontSize: 15,
+                        fontWeight: '700',
+                      }}>
+                      Save
+                    </Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.inputContainer}>
@@ -378,7 +396,7 @@ const Freefirefullmatchcard = ({ matches }) => {
                       style={styles.squadInput}
                       placeholder="Player 2"
                       value={player2}
-                      onChangeText={(text) => setPlayer2(text)}
+                      onChangeText={text => setPlayer2(text)}
                       placeholderTextColor="grey"
                       textAlign="center" // Centered text
                     />
@@ -386,7 +404,7 @@ const Freefirefullmatchcard = ({ matches }) => {
                       style={styles.squadInput}
                       placeholder="Player 3"
                       value={player3}
-                      onChangeText={(text) => setPlayer3(text)}
+                      onChangeText={text => setPlayer3(text)}
                       placeholderTextColor="#aaa"
                       textAlign="center" // Centered text
                     />
@@ -394,25 +412,38 @@ const Freefirefullmatchcard = ({ matches }) => {
                       style={styles.squadInput}
                       placeholder="Player 4"
                       value={player4}
-                      onChangeText={(text) => setPlayer4(text)}
+                      onChangeText={text => setPlayer4(text)}
                       placeholderTextColor="#aaa"
                       textAlign="center" // Centered text
                     />
                   </View>
-                  <Text style={{ fontSize: 13, color: 'white', textAlign: 'center' }}>
+                  <Text
+                    style={{
+                      fontSize: 13,
+                      color: 'white',
+                      textAlign: 'center',
+                    }}>
                     Room id & pass will be shown before 6 min matchtime
                   </Text>
                   <View style={styles.clip}>
                     <View style={styles.input}>
                       <Text>customid: 88997</Text>
                       <TouchableOpacity onPress={clipboardid}>
-                        <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
+                        <AntDesign
+                          name="copy1"
+                          size={17}
+                          style={{marginLeft: 10}}
+                        />
                       </TouchableOpacity>
                     </View>
                     <View style={styles.input}>
                       <Text>custom: 54988</Text>
                       <TouchableOpacity onPress={clipboardpass}>
-                        <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
+                        <AntDesign
+                          name="copy1"
+                          size={17}
+                          style={{marginLeft: 10}}
+                        />
                       </TouchableOpacity>
                     </View>
                   </View>
@@ -438,7 +469,8 @@ const Freefirefullmatchcard = ({ matches }) => {
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.modalContainer}>
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+          <ScrollView
+            contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalText}>Report Match</Text>
@@ -462,7 +494,9 @@ const Freefirefullmatchcard = ({ matches }) => {
                 <TouchableOpacity
                   style={styles.uploadButton}
                   onPress={pickReportImage}>
-                  <Text style={styles.uploadText}>Click here to upload proof</Text>
+                  <Text style={styles.uploadText}>
+                    Click here to upload proof
+                  </Text>
                 </TouchableOpacity>
                 {reportImage && (
                   <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
@@ -487,7 +521,7 @@ const Freefirefullmatchcard = ({ matches }) => {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
-    </LinearGradient>
+    </ImageBackground>
   );
 };
 
@@ -700,7 +734,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
-    width: 300,
+    width: 330,
     alignItems: 'center',
   },
   modalHeader: {
@@ -716,6 +750,14 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center', // Centered text
   },
+  smallText: {
+    marginTop: 20,
+    marginBottom: 20,
+    fontSize: 14,
+    color: '#333',
+    textAlign: 'center', // Centered text
+  },
+
   closeButton: {
     padding: 5,
   },

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Animated,
+  ImageBackground,
 } from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -20,7 +21,9 @@ import {FlatList, TouchableWithoutFeedback} from 'react-native-gesture-handler';
 import ShimmerBox from '../../components/ShimmerBox';
 import LinearGradient from 'react-native-linear-gradient';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
+
 import {BASE_URL} from '../../env';
+import MatchCard from '../../components/MatchCard';
 
 const FreeFire = ({navigation}) => {
   const [card, setCard] = useState([]);
@@ -41,44 +44,44 @@ const FreeFire = ({navigation}) => {
     }
   }, []);
   return (
-    <ScrollView style={styles.container}>
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <Ionicons name="menu-outline" size={24} color="black" />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search your match"
-          placeholderTextColor="#666"
-        />
-        <FontAwesome5 name="search" size={20} color="black" />
-      </View>
-      <Text style={styles.note}>
-        Note: All matches are made by the admin everyday in same time
-      </Text>
-      {card.length !== 0 ? (
-        <FlatList
-          data={card}
-          scrollEnabled={false}
-          
-          keyExtractor={(item, id) => id.toString()}
-          renderItem={({item}) => <Freefirefullmatchcard matches={item}  
-          /> }
-          contentContainerStyle={{gap:35,marginLeft:8}}
-        /> 
-      ) : (
-        <ShimmerBox />
-      )}
-      <Modal visible={createModal} animationType="fade" transparent>
-        <TouchableWithoutFeedback onPress={() => setCreateModal(false)}>
-          <View
-            style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-            <TouchableWithoutFeedback onPress={() => {}}>
-              <Text></Text>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
-      </Modal>
-    </ScrollView>
+    <ImageBackground style={styles.matchCard}>
+      <ScrollView style={styles.container}>
+        {/* Search Bar */}
+        <View style={styles.searchContainer}>
+          <Ionicons name="menu-outline" size={24} color="black" />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search your match"
+            placeholderTextColor="#666"
+          />
+          <FontAwesome5 name="search" size={20} color="black" />
+        </View>
+        <Text style={styles.note}>
+          Note: All matches are created by admin . Everyday at the same time
+        </Text>
+        {card.length !== 0 ? (
+          <FlatList
+            data={card}
+            scrollEnabled={false}
+            keyExtractor={(item, id) => id.toString()}
+            renderItem={({item}) => <Freefirefullmatchcard matches={item} />}
+            contentContainerStyle={{gap: 35, marginLeft: 8}}
+          />
+        ) : (
+          <ShimmerBox />
+        )}
+        <Modal visible={createModal} animationType="fade" transparent>
+          <TouchableWithoutFeedback onPress={() => setCreateModal(false)}>
+            <View
+              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
+              <TouchableWithoutFeedback onPress={() => {}}>
+                <Text></Text>
+              </TouchableWithoutFeedback>
+            </View>
+          </TouchableWithoutFeedback>
+        </Modal>
+      </ScrollView>
+    </ImageBackground>
   );
 };
 
@@ -88,6 +91,10 @@ const styles = StyleSheet.create({
     height: '100%',
     paddingRight: 15,
     backgroundColor: 'F2F2F2',
+  },
+
+  MatchCard: {
+    borderRadius: 40,
   },
 
   searchContainer: {
@@ -110,7 +117,7 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   note: {
-    color: '#555',
+    color: 'red',
     fontSize: 15,
     marginBottom: 16,
     marginLeft: 30,
