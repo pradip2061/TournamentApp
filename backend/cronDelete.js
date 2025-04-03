@@ -93,7 +93,7 @@ const deleteifNoPasswordClashSquad = async () => {
     // Find match cards older than now with only one player
     const matchCards = await ClashSquad.find({
       createdAtid: { $lte: now }, // Assuming createdAt is the correct field
-      TotalPlayers: 1
+      TotalPlayers: 2
     });
 
     if (matchCards.length === 0) {
