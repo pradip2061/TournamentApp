@@ -685,7 +685,9 @@ try {
                           <View style={styles.rightContainer}>
                             <TouchableOpacity
                               style={styles.button}
-                              onPress={customIdAndPassword}>
+                              onPress={customIdAndPassword} 
+                              disabled={!match?.teamopponent[0]?.userid}
+                              >
                               <Text style={styles.buttonText}>Publish</Text>
                             </TouchableOpacity>
                           </View>
