@@ -93,7 +93,7 @@ const deleteifNoPasswordClashSquad = async () => {
     // Find match cards older than now with only one player
     const matchCards = await ClashSquad.find({
       createdAtid: { $lte: now }, // Assuming createdAt is the correct field
-      TotalPlayers: 2
+      TotalPlayers: 2,
     });
 
     if (matchCards.length === 0) {
@@ -116,14 +116,13 @@ const deleteifNoPasswordClashSquad = async () => {
           if (userinfo) {
             userinfo.matchId.FreefireClashId = []; // Clear match ID
             userinfo.isplaying = false;
-            userinfo.balance += Number(match?.entryFee || 0); // Ensure entryFee is a number
+            userinfo.balance += Number(match?.matchDetails[0].betAmount || 0); // Ensure entryFee is a number
             await userinfo.save();
           } else {
             console.log(`User with ID ${hostId} not found.`);
           }
         }
       }
-
       // Handle teamOpponent
       if (match.teamopponent?.length > 0) {
         const opponentId = match.teamopponent[0]?.userid;
@@ -132,7 +131,7 @@ const deleteifNoPasswordClashSquad = async () => {
           if (userinfo) {
             userinfo.matchId.FreefireClashId = []; // Clear match ID
             userinfo.isplaying = false;
-            userinfo.balance += Number(match?.entryFee || 0);
+            userinfo.balance += Number(match?.matchDetails[0].betAmount || 0);
             await userinfo.save();
           } else {
             console.log(`User with ID ${opponentId} not found.`);
