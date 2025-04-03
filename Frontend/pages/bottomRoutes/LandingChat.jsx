@@ -69,6 +69,14 @@ const LandingChat = ({navigation}) => {
   };
 
   // Modify the fetchFriends function to accept a token parameter
+  useEffect(() => {
+    const friendFromLocal = async () => {
+      const frnds = await AsyncStorage.getItem('friends');
+      setFilteredFriends(JSON.parse(frnds));
+    };
+    friendFromLocal();
+  }, []);
+
   const fetchFriends = useCallback(
     async (currentToken = null) => {
       try {
@@ -89,12 +97,8 @@ const LandingChat = ({navigation}) => {
         );
 
         console.log('Friend Array :', response?.data);
-        for (let i = 0; i < response?.data?.length; i++) {
-          console.log(
-            ' Array Latest Message  =======> ',
-            response?.data?.[i]?.latestMessage?.message,
-          );
-        }
+        await AsyncStorage.setItem('friends', JSON.stringify(response?.data));
+
         if (response?.data && response?.data?.length > 0) {
           // Sort the array by latest message time
           const sortedFriends = sortByLatestMessage(response.data);

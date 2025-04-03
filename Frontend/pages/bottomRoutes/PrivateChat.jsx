@@ -225,11 +225,6 @@ const PrivateChat = ({route, navigation}) => {
       dispatchMessages({type: 'ADD_MESSAGE', payload: message});
     });
 
-    socket.on('notify', ({message}) => {
-      console.log('notify-------', message);
-      playNotificationSound();
-    });
-
     socket.on('connect_error', error => {
       console.error('Socket connection error:', error);
       Alert.alert(
@@ -316,7 +311,11 @@ const PrivateChat = ({route, navigation}) => {
 
     // Emit message to server
     socket.emit('message', {room: roomId, message: messageData});
-    socket.emit(`notify`, {user: userId, message: messageData});
+    socket.emit('Notify', {
+      type: 'newMessage',
+      message: messageData,
+      reciver: FriendId,
+    });
 
     // Update local state immediately
     dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
@@ -395,7 +394,11 @@ const PrivateChat = ({route, navigation}) => {
       };
 
       socket.emit('message', {room: roomId, message: messageData});
-      socket.emit('notify', {user: userId, message: messageData});
+      socket.emit('Notify', {
+        type: 'newMessage',
+        message: messageData,
+        reciver: FriendId,
+      });
 
       dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
       setSelectedPhoto(null);

@@ -61,6 +61,8 @@ const setupChatSocket = (io) => {
           console.error("User not found");
           return;
         }
+        await socket.join(userId);
+        console.log("Global Socket COnnetion Established ------------ \n\n\n");
       } catch (error) {
         console.error("Error decoding token:", error.message);
         socket.emit("registerError", {
@@ -72,15 +74,14 @@ const setupChatSocket = (io) => {
 
     // Message Socket
 
+    socket.on("Notify", (data) => {
+      console.log("Message Received from Client", data);
+      io.to(data.reciver).emit("Notify", data);
+    });
+
     socket.on("message", async ({ room, message }) => {
       console.log(room, message);
       socket.to(room).emit("message", message);
-      const data = {
-        FriendId: message.FriendId,
-        type: "newMessage",
-        message: message.message,
-      };
-      socket.to(message.FriendId).emit("Notify", data);
 
       try {
         const main_chat = {

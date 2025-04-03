@@ -3,7 +3,7 @@ import {io} from 'socket.io-client';
 import {baseUrl} from './env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Alert} from 'react-native';
-import axios from 'axios';
+
 import playNotificationSound from './utility/Notification';
 
 // Create Context
@@ -30,14 +30,22 @@ export const SocketProvider = ({children}) => {
       await universalSocket();
 
       newSocket.on('Notify', data => {
-        playNotificationSound();
-        console.log(data);
+        console.log('Big Notify ', data);
         if (data.type === 'newMessage') {
-          Alert.alert('New Message', data.message);
+          Alert.alert('New Message', data?.message?.message || 'NEw Message');
+        } else if (data.type === 'notification') {
+          Alert.alert(
+            'New Notification',
+            data?.message?.message || 'New Notification',
+          );
+        } else if (data.type === 'file') {
+          Alert.alert('New File', data?.message?.message || 'New File');
+        } else {
+          Alert.alert('New Notify', data?.message?.message || 'New Notify');
         }
-        if (data.type === 'notification') {
-          Alert.alert('New Notification', data.message);
-        }
+        setTimeout(() => {
+          playNotificationSound();
+        }, 200);
       });
     };
     Global();
@@ -47,6 +55,7 @@ export const SocketProvider = ({children}) => {
       console.log('Disconnecting Global socket ');
     };
   }, []);
+
   return (
     <SocketContext.Provider value={socket}>{children}</SocketContext.Provider>
   );

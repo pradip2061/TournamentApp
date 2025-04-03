@@ -11,7 +11,7 @@ const CheckResultRouter = require("./router/user/CheckResultRouter");
 const PubgRouter = require("./router/user/PubgRouter");
 const getter = require("./router/user/getter");
 const matchValidation = require("./router/admin/geminiVal");
-const DeleteCardRouter =require("./router/user/DeleteCardRouter")
+const DeleteCardRouter = require("./router/user/DeleteCardRouter");
 
 const {
   router: ChatRouter,
@@ -62,6 +62,11 @@ const io = new Server(server, {
     allowedHeaders: ["Content-Type"],
   },
 });
+//
+//Notify
+//
+const sendNotification = require("./router/send_notification")(io);
+app.use("/khelmela", sendNotification);
 
 setupChatSocket(io);
 
