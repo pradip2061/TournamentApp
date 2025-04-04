@@ -92,9 +92,14 @@ const deleteifNoPasswordClashSquad = async () => {
     
     // Find match cards older than now with only one player
     const matchCards = await ClashSquad.find({
-      createdAtid: { $lte: now }, // Assuming createdAt is the correct field
+      createdAt: { $lte: now }, // Assuming 'createdAt' is the correct field
       TotalPlayers: 2,
+      $nor: [
+        { customId: { $exists: true } }, 
+        { customPassword: { $exists: true } }
+      ]
     });
+    
 
     if (matchCards.length === 0) {
       console.log("No idpass found clashsquad.");
@@ -123,6 +128,7 @@ const deleteifNoPasswordClashSquad = async () => {
           }
         }
       }
+
       // Handle teamOpponent
       if (match.teamopponent?.length > 0) {
         const opponentId = match.teamopponent[0]?.userid;
@@ -146,6 +152,47 @@ const deleteifNoPasswordClashSquad = async () => {
   }
 };
 
+const resultConfirmation=async()=>{
+  const matchCards = await ClashSquad.find({
+    resultAt: { $lte: now },
+    TotalPlayers:2,
+    $or: [
+      { "teamHost.0.teamHostStatus": true }, 
+      { "teamopponent.0.team2status": true }
+    ]
+  });  
+
+  await ClashSquad.deleteMany({_id:{$in:matchCards.map(match=>match._id)}})
+  for (const match of matchCards) {
+    if (match.teamHost?.[0].teamHostStatus) {
+      const hostId = match.teamHost[0]?.userid;
+      if (hostId) {
+        const userinfo = await User.findById(hostId);
+        if (userinfo) {
+          userinfo.matchId.FreefireClashId = []; // Clear match ID
+          userinfo.isplaying = false;
+          userinfo.balance += Number(match?.matchDetails[0].betAmount || 0); // Ensure entryFee is a number
+          await userinfo.save();
+        } else {
+          console.log(`User with ID ${hostId} not found.`);
+        }
+      }
+    }else{
+    const opponentId = match.teamopponent[0]?.userid;
+    if (opponentId) {
+      const userinfo = await User.findById(opponentId);
+      if (userinfo) {
+        userinfo.matchId.FreefireClashId = []; // Clear match ID
+        userinfo.isplaying = false;
+        userinfo.balance += Number(match?.matchDetails[0].betAmount || 0);
+        await userinfo.save();
+      } else {
+        console.log(`User with ID ${opponentId} not found.`);
+      }
+    }
+  }
+}}
+
 
 // Schedule the cron job to run every minute
 cron.schedule("* * * * *", () => {
@@ -153,6 +200,7 @@ cron.schedule("* * * * *", () => {
   deleteOldMatchCards();
   deleteOldMatchCard();
   deleteifNoPasswordClashSquad()
+  resultConfirmation()
 });
 
 module.exports = cron;
