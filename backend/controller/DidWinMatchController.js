@@ -24,6 +24,9 @@ const DidYouWinMatch = async (req, res) => {
    
         if (match.teamHost[0].userid === userid) {
             match.teamHost[0].teamHostStatus = boolean;
+            if(!match.resultAt){
+                match.resultAt= new Date(Date.now() + 30 * 60 * 1000);
+            }
             userinfo.isplaying=false
             userinfo.matchId.FreefireClashId=[]
             if(boolean === true){
@@ -34,6 +37,9 @@ const DidYouWinMatch = async (req, res) => {
             }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
+            if(!match.resultAt){
+                match.resultAt= new Date(Date.now() + 30 * 60 * 1000);
+            }
             userinfo.isplaying=false
             userinfo.matchId.FreefireClashId=[]
             if(boolean === true){
