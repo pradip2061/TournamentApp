@@ -154,47 +154,59 @@ const deleteifNoPasswordClashSquad = async () => {
   }
 };
 
-const resultConfirmation=async()=>{
-  const now =new Date()
-  const matchCards = await ClashSquad.find({
-    resultAt: { $lte: now },
-    TotalPlayers:2,
-    $or: [
-      { "teamHost.0.teamHostStatus": true }, 
-      { "teamopponent.0.team2status": true }
-    ]
-  });  
+const resultConfirmation = async () => {
+  try {
+    const now = new Date();
 
-  await ClashSquad.deleteMany({_id:{$in:matchCards.map(match=>match._id)}})
-  for (const match of matchCards) {
-    if (match.teamHost?.[0].teamHostStatus) {
-      const hostId = match.teamHost[0]?.userid;
-      if (hostId) {
-        const userinfo = await User.findById(hostId);
-        if (userinfo) {
-          userinfo.matchId.FreefireClashId = []; // Clear match ID
-          userinfo.isplaying = false;
-          userinfo.balance += Number(match?.matchDetails[0].betAmount || 0); // Ensure entryFee is a number
-          await userinfo.save();
-        } else {
-          console.log(`User with ID ${hostId} not found.`);
+    const matchCards = await ClashSquad.find({
+      resultAt: { $lte: now },
+      TotalPlayers: 2,
+      $or: [
+        {
+          "teamHost.0.teamHostStatus": { $type: "bool" },
+          "teamopponent.0.team2status": null
+        },
+        {
+          "teamHost.0.teamHostStatus": null,
+          "teamopponent.0.team2status": { $type: "bool" }
+        }
+      ]
+    });
+
+    for (const match of matchCards) {
+      const betAmount = Number(match?.matchDetails?.[0]?.betAmount || 0);
+      let userinfo = null;
+
+      if (match.teamHost?.[0]?.teamHostStatus === true) {
+        const hostId = match.teamHost[0]?.userid;
+        if (hostId) {
+          userinfo = await User.findById(hostId);
+        }
+      } else if (match.teamopponent?.[0]?.team2status === true) {
+        const opponentId = match.teamopponent[0]?.userid;
+        if (opponentId) {
+          userinfo = await User.findById(opponentId);
         }
       }
-    }else{
-    const opponentId = match.teamopponent[0]?.userid;
-    if (opponentId) {
-      const userinfo = await User.findById(opponentId);
+
       if (userinfo) {
-        userinfo.matchId.FreefireClashId = []; // Clear match ID
+        userinfo.matchId.FreefireClashId = [];
         userinfo.isplaying = false;
-        userinfo.balance += Number(match?.matchDetails[0].betAmount || 0);
+        userinfo.balance += betAmount;
+
         await userinfo.save();
+
+        match.status = "completed";
+        await match.save();
       } else {
-        console.log(`User with ID ${opponentId} not found.`);
+        console.log(`Winner user not found for match ID: ${match._id}`);
       }
     }
+  } catch (err) {
+    console.error("Error in resultConfirmation:", err);
   }
-}}
+};
+
 
 
 // Schedule the cron job to run every minute
