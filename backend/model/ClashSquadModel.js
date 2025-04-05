@@ -48,6 +48,12 @@ const schema = new mongoose.Schema(
           type: Boolean,
           default: null,
         },
+        reportImage:{
+          type:String,
+        },
+        reportMessage:{
+          type:String,
+        }
       },
     ],
     teamopponent: [
@@ -78,6 +84,7 @@ const schema = new mongoose.Schema(
     },
    createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
    createdAtid:{type:Date},
+   resultAt:{type:Date},
    hostProof:{
     type:String
    },
