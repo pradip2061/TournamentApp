@@ -1,35 +1,44 @@
-import { View, Text, StyleSheet, Pressable, TextInput, Modal, TouchableOpacity, ScrollView, Animated } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  Modal,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Freefirefullmatchcard from '../../components/Freefirefullmatchcard';
 import axios from 'axios';
-import { FlatList } from 'react-native-gesture-handler';
+import {FlatList} from 'react-native-gesture-handler';
 import ShimmerBox from '../../components/ShimmerBox';
 import PubgFullMatchCard from '../../components/PubgFullMatchCard';
-import { CheckAdminContext } from '../ContextApi/ContextApi';
-import{BASE_URL} from '../../env'
+import {CheckAdminContext} from '../ContextApi/ContextApi';
+import {BASE_URL} from '../../env';
 const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
 const erangle = require('../assets/erangle.jpg');
 const sanhok = require('../assets/sanhok.jpg');
 
-const Pubg = ({ navigation }) => {
+const Pubg = ({navigation}) => {
   const [data, setData] = useState([]);
-  const { checkrole, checkadmin } = useContext(CheckAdminContext);
+  const {checkrole, checkadmin} = useContext(CheckAdminContext);
 
   useEffect(() => {
     checkrole();
   }, []);
 
   useEffect(() => {
-    const getmatchCard = () => {
-      axios.get(`${BASE_URL}/khelmela/getpubg`)
-        .then((response) => {
-          setData(response.data.data);
-          console.log(data);
-        });
+    const getmatchCard = async () => {
+      await axios.get(`${BASE_URL}/khelmela/getpubg`).then(response => {
+        setData(response.data.card);
+        console.log('match card data', response.data);
+      });
     };
     getmatchCard();
   }, []);
@@ -51,7 +60,7 @@ const Pubg = ({ navigation }) => {
         Note: All matches are made by the admin everyday in same time
       </Text>
 
-      {checkadmin === "admin" ? (
+      {checkadmin === 'admin' ? (
         <TouchableOpacity>
           <Text>admin</Text>
         </TouchableOpacity>
@@ -61,9 +70,11 @@ const Pubg = ({ navigation }) => {
 
       <FlatList
         data={data}
-        keyExtractor={(item) => item._id}
-        renderItem={({ item }) => <PubgFullMatchCard matches={item} key={item._id} />}
-        contentContainerStyle={{ gap: 20, paddingBottom: 20 }}
+        keyExtractor={item => item._id}
+        renderItem={({item}) => (
+          <PubgFullMatchCard matches={item} key={item._id} />
+        )}
+        contentContainerStyle={{gap: 20, paddingBottom: 20}}
         scrollEnabled={false}
       />
     </ScrollView>
@@ -84,7 +95,7 @@ const styles = StyleSheet.create({
     height: 45, // Slightly shorter
     marginTop: 20, // Simplified margins
     marginHorizontal: 20, // Centered with equal margins
-    borderWidth:1
+    borderWidth: 1,
   },
   searchInput: {
     flex: 1,
@@ -92,8 +103,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   note: {
-    color: '#555',//te
-    fontSize: 14,// Smaller font
+    color: '#555', //te
+    fontSize: 14, // Smaller font
     marginVertical: 10, // Simplified margin
     marginLeft: 20, // Consistent left margin
   },

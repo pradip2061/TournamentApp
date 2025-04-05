@@ -1,5 +1,6 @@
 const ClashSquad = require("../model/ClashSquadModel");
 const FFfreefire = require("../model/FullMatchFFModel");
+const pubgfull = require("../model/PubgFullMatchModel");
 const PubgFull = require("../model/PubgFullMatchModel");
 const { User } = require("../model/schema");
 const tdm = require("../model/TdmModel");
@@ -24,7 +25,7 @@ const createCs = async (req, res) => {
     }
     if (!userinfo.gameName[0].freefire) {
       return res.status(400).json({
-        message: "add FreeFire gameName in your profile",
+        message: "add pubgGameName in your profile",
       });
     }
     const newMatch = new ClashSquad({
@@ -55,21 +56,36 @@ const createCs = async (req, res) => {
 const getCsData = async (req, res) => {
   try {
     const userid = req.user;
+
+    if (!userid) {
+      return res.status(400).json({ error: "User ID is missing" });
+    }
+
     const userinfo = await User.findOne({ _id: userid });
-    const matchId = userinfo?.matchId?.FreefireClashId?.[0];
-    const matchjoin = await ClashSquad?.find({ _id: matchId });
+
+    if (!userinfo) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    const matchId = userinfo?.matchId?.FreefireClashId?.[0] || null;
+
+    // Fetch the user's joined match
+    const matchjoin = matchId ? await ClashSquad.find({ _id: matchId }) : [];
+
+    // Fetch matches where the user is not in teamHost or teamopponent
     const card = await ClashSquad.find({
-      $nor: [
-        { teamHost: { $elemMatch: { userid: userid } } },
-        { teamopponent: { $elemMatch: { userid: userid } } },
+      $and: [
+        {
+          $nor: [
+            { teamHost: { $elemMatch: { userid } } },
+            { teamopponent: { $elemMatch: { userid } } },
+          ],
+        },
+        { status: { $in: ["pending", "running"] } },
       ],
     }).sort({ createdAt: -1 });
-    console.log(card, "card");
-    console.log(matchjoin, "matchjoin");
-    res.status(200).json({
-      card,
-      matchjoin,
-    });
+
+    res.status(200).json({ card, matchjoin });
   } catch (error) {
     console.error("Error:", error);
     res
@@ -114,6 +130,7 @@ const joinuser = async (req, res) => {
   userinfo.balance -= match.matchDetails[0].betAmount;
   match.teamopponent[0].userid = userid;
   match.TotalPlayers += 1;
+  match.createdAtid = new Date(Date.now() + 6 * 60 * 1000);
   match.opponentName = userinfo.gameName[0].freefire;
   await match.save();
   await userinfo.save();
@@ -248,14 +265,15 @@ const create_FM = async (req, res) => {
     const { time, entryFee, playermode, matchType } = req.body;
     if (!time || !entryFee || !playermode || !matchType) {
       console.log("missing Fields .........");
-      return res.status(400).json({ message: "Please fill all fields" });
+      return res.status(400).send({ message: "Please fill all fields" });
     }
 
     console.log(
       `time ${time} entryFee ${entryFee} playermode ${playermode} matchType ${matchType}`
     );
-    let match_type;
+
     let match;
+
     if (matchType === "FreeFire") {
       match = await FFfreefire.create({
         playermode,
@@ -268,7 +286,7 @@ const create_FM = async (req, res) => {
         },
         TotalPlayer: 0,
       });
-    } else if (matchType == "PUBG") {
+    } else if (matchType === "PUBG") {
       match = await PubgFull.create({
         playermode,
         gameName: [],
@@ -282,21 +300,33 @@ const create_FM = async (req, res) => {
       });
     } else {
       console.log("invalid Match Type .......");
-      return res.status(400).json({
-        message: "Invalid match type",
-      });
+      return res.status(400).json({ message: "Invalid match type" });
     }
-    console.log("Creating match with type..... ", match);
 
-    console.log("match Created for ", matchType, "sucesfully .............");
-    match.save();
+    console.log("match Created for ", matchType, "successfully .............");
 
     res.status(200).json({
       message: "Created successfully",
       match,
-      totalPlayers: total,
+      totalPlayers: match.TotalPlayer,
     });
   } catch (error) {
+    console.error("Error creating match:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+const getpubg = async (req, res) => {
+  try {
+    const card = await pubgfull
+      .find({
+        status: { $in: ["pending", "running"] },
+      })
+      .sort({ createdAt: -1 });
+    res.status(200).json({
+      card,
+    });
+  } catch (error) {
+    console.error("Error fetching pubg matches:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -482,4 +512,5 @@ module.exports = {
   checkisplaying,
   getFFmatch,
   create_FM,
+  getpubg,
 };

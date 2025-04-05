@@ -8,14 +8,16 @@ module.exports = (io) => {
   });
 
   router.post("/SAP-1/send-notification", (req, res) => {
+    console.log(" Notification sent to SAP-1,,,,,,,,,,,,,,,,,-k-------");
     const { reciver, message } = req.body;
 
     if (!reciver || !message) {
+      console.log("missing Fields while Sending Notification");
       return res
         .status(400)
         .json({ error: "reciver and message are required" });
     }
-
+    console.log("Notifiaction sent to Users-:-  " + message);
     if (reciver === "all") {
       io.emit("Notify", message);
       return res.status(200).json({ message: "Notification sent to all" });
@@ -23,17 +25,18 @@ module.exports = (io) => {
 
     // Handle array of recivers
     if (Array.isArray(reciver) && reciver.length > 0) {
+      console.log("Array of recivers");
       reciver.forEach((r) => io.to(r).emit("Notify", message));
       return res
         .status(200)
-        .json({ message: `Notification sent to recivers: ${reciver}` });
+        .json({ message: `Notification sent to multiple Users  ` });
     }
 
     // Handle single reciver
     io.to(reciver).emit("Notify", message);
     res
       .status(200)
-      .json({ message: `Notification sent to reciver: ${reciver}` });
+      .json({ message: `Notification sent to reciver: [${reciver}] ` });
   });
 
   return router;

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect} from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,15 @@ import {
   Easing,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { BASE_URL } from '../../env';
+import {BASE_URL} from '../../env';
 import axios from 'axios';
 
-const ConfirmationPopup = ({ visible, onConfirm, onCancel, message }) => (
-  <Modal transparent visible={visible} animationType="slide" onRequestClose={onCancel}>
+const ConfirmationPopup = ({visible, onConfirm, onCancel, message}) => (
+  <Modal
+    transparent
+    visible={visible}
+    animationType="slide"
+    onRequestClose={onCancel}>
     <View style={styles.popupContainer}>
       <View style={styles.popupContent}>
         <Text style={styles.popupMessage}>{message}</Text>
@@ -31,7 +35,7 @@ const ConfirmationPopup = ({ visible, onConfirm, onCancel, message }) => (
   </Modal>
 );
 
-const NotificationModal = ({ visible, onClose, message, type }) => {
+const NotificationModal = ({visible, onClose, message, type}) => {
   const slideAnim = useState(new Animated.Value(-100))[0];
   const opacityAnim = useState(new Animated.Value(0))[0];
 
@@ -58,8 +62,16 @@ const NotificationModal = ({ visible, onClose, message, type }) => {
 
   const handleClose = () => {
     Animated.parallel([
-      Animated.timing(slideAnim, { toValue: -100, duration: 300, useNativeDriver: true }),
-      Animated.timing(opacityAnim, { toValue: 0, duration: 300, useNativeDriver: true }),
+      Animated.timing(slideAnim, {
+        toValue: -100,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+      Animated.timing(opacityAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }),
     ]).start(onClose);
   };
 
@@ -68,13 +80,27 @@ const NotificationModal = ({ visible, onClose, message, type }) => {
   return (
     <Modal transparent visible={visible} animationType="none">
       <View style={styles.notificationContainer}>
-        <Animated.View style={[styles.notificationContent, { backgroundColor, transform: [{ translateY: slideAnim }], opacity: opacityAnim }]}>
-          <Text style={styles.notificationIcon}>{type === 'success' ? '✅' : '❌'}</Text>
+        <Animated.View
+          style={[
+            styles.notificationContent,
+            {
+              backgroundColor,
+              transform: [{translateY: slideAnim}],
+              opacity: opacityAnim,
+            },
+          ]}>
+          <Text style={styles.notificationIcon}>
+            {type === 'success' ? '✅' : '❌'}
+          </Text>
           <View style={styles.notificationTextContainer}>
-            <Text style={styles.notificationTitle}>{type === 'success' ? 'Success' : 'Error'}</Text>
+            <Text style={styles.notificationTitle}>
+              {type === 'success' ? 'Success' : 'Error'}
+            </Text>
             <Text style={styles.notificationMessage}>{message}</Text>
           </View>
-          <TouchableOpacity style={styles.notificationCloseButton} onPress={handleClose}>
+          <TouchableOpacity
+            style={styles.notificationCloseButton}
+            onPress={handleClose}>
             <Text style={styles.notificationCloseText}>✕</Text>
           </TouchableOpacity>
         </Animated.View>
@@ -126,8 +152,10 @@ const WithdrawRequestCard = ({
   };
 
   const getCompletionMessage = () => {
-    if (status === 'approved') return statusmessage || 'This request has been approved and processed.';
-    if (status === 'rejected') return statusmessage || 'This request has been rejected.';
+    if (status === 'approved')
+      return statusmessage || 'This request has been approved and processed.';
+    if (status === 'rejected')
+      return statusmessage || 'This request has been rejected.';
     return '';
   };
 
@@ -136,13 +164,25 @@ const WithdrawRequestCard = ({
     try {
       const response = await axios.post(
         `${BASE_URL}/khelmela/admin/money/withdraw/drop`,
-        { requestId: id, message },
-        { headers: { Authorization: `${authToken}` } }
+        {requestId: id, message},
+        {headers: {Authorization: `${authToken}`}},
       );
+      const notify = await axios.post(
+        `${BASE_URL}/khelmela/SAP-1/send-notification`,
+        {
+          message: `Your Deposite Request  has been Rejected  , Reason : ${message}`,
+          reciver: senderId,
+        },
+      );
+
+      console.log(notify.data);
       showNotification(response.data.message, 'success');
       setTimeout(handleRefresh, 2500);
     } catch (error) {
-      showNotification(error.response?.data?.message || 'Failed to drop request', 'error');
+      showNotification(
+        error.response?.data?.message || 'Failed to drop request',
+        'error',
+      );
     }
   };
 
@@ -151,9 +191,18 @@ const WithdrawRequestCard = ({
     try {
       const response = await axios.post(
         `${BASE_URL}/khelmela/admin/money/withdraw/release`,
-        { requestId: id, message },
-        { headers: { Authorization: `${authToken}` } }
+        {requestId: id, message},
+        {headers: {Authorization: `${authToken}`}},
       );
+      const notify = await axios.post(
+        `${BASE_URL}/khelmela/SAP-1/send-notification`,
+        {
+          message: `Your Deposite Request  has been Approved , Balance added  to your Account`,
+          reciver: senderId,
+        },
+      );
+
+      console.log(notify.data);
       showNotification(response.data.message, 'success');
       setTimeout(handleRefresh, 2100);
     } catch (error) {
@@ -162,11 +211,15 @@ const WithdrawRequestCard = ({
   };
 
   return (
-    <View style={[
-      styles.container,
-      status === 'approved' ? styles.approvedContainer :
-      status === 'rejected' ? styles.rejectedContainer : styles.container
-    ]}>
+    <View
+      style={[
+        styles.container,
+        status === 'approved'
+          ? styles.approvedContainer
+          : status === 'rejected'
+          ? styles.rejectedContainer
+          : styles.container,
+      ]}>
       <Text style={styles.statusText}>Status: {getStatusText()}</Text>
       <Text style={styles.detailText}>Amount: ₹{amount}</Text>
       <Text style={styles.detailText}>Method: {selectedMethod}</Text>
@@ -184,17 +237,23 @@ const WithdrawRequestCard = ({
             onChangeText={setMessage}
           />
           <View style={styles.buttonContainer}>
-            <TouchableOpacity style={styles.dropButton} onPress={() => setDropPopupVisible(true)}>
+            <TouchableOpacity
+              style={styles.dropButton}
+              onPress={() => setDropPopupVisible(true)}>
               <Text style={styles.buttonText}>Drop</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.releaseButton} onPress={() => setReleasePopupVisible(true)}>
+            <TouchableOpacity
+              style={styles.releaseButton}
+              onPress={() => setReleasePopupVisible(true)}>
               <Text style={styles.buttonText}>Release</Text>
             </TouchableOpacity>
           </View>
         </>
       ) : (
         <View style={styles.completionMessageContainer}>
-          <Text style={styles.completionMessageText}>{getCompletionMessage()}</Text>
+          <Text style={styles.completionMessageText}>
+            {getCompletionMessage()}
+          </Text>
         </View>
       )}
 
@@ -228,7 +287,7 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     marginHorizontal: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.1,
     shadowRadius: 6,
     elevation: 4,
@@ -276,7 +335,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
@@ -286,7 +345,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     borderRadius: 8,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
@@ -309,7 +368,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.25,
     shadowRadius: 4,
   },
@@ -363,7 +422,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     padding: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
+    shadowOffset: {width: 0, height: 3},
     shadowOpacity: 0.3,
     shadowRadius: 5,
     elevation: 6,

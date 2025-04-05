@@ -89,7 +89,7 @@ const MatchCard = ({ match, refreshData }) => {
 
   const notify = () => {
     setNotifyModel(true);
-    setTimeout(() => setNotifyModel(false), 900);
+    setTimeout(() => setNotifyModel(false), 1200);
   };
 
   const customIdAndPassword = async e => {
@@ -506,7 +506,7 @@ const MatchCard = ({ match, refreshData }) => {
     checkReportClash();
   }, [trigger, render, message]);
 
-  const handleReportMessageChange = text => {
+  const handleReportMessageChange = (text) => {
     const words = text.trim().split(/\s+/);
     if (words.length <= 100) {
       setReportMessage(text);
@@ -517,6 +517,7 @@ const MatchCard = ({ match, refreshData }) => {
   };
 
   const divideMoney=async(matchId)=>{
+    console.log("from frontend divide money")
 try {
  await axios.post(`${BASE_URL}/khelmela/dividemoney`,{matchId})
 } catch (error) {
@@ -572,12 +573,10 @@ try {
                   <View style={styles.footer}>
                     {
                       check === 'host'? <Text style={styles.text}>
-                      👾 Opponent: {item.opponentName||"no one has join yet"}
+                      👾 Opponent: {match.opponentName||"no one has join yet"}
                     </Text>: check === 'userjoined'? <Text style={styles.text}>
                       👾 Opponent: {item.gameName}
-                    </Text>: <Text style={styles.text}>
-                      👾 Opponent: {item.gameName}
-                    </Text>
+                    </Text>: null
                     }
                    
                     <View style={styles.footerRow}>
@@ -686,7 +685,9 @@ try {
                           <View style={styles.rightContainer}>
                             <TouchableOpacity
                               style={styles.button}
-                              onPress={customIdAndPassword}>
+                              onPress={customIdAndPassword} 
+                              disabled={!match?.teamopponent[0]?.userid}
+                              >
                               <Text style={styles.buttonText}>Publish</Text>
                             </TouchableOpacity>
                           </View>

@@ -77,6 +77,7 @@ const schema = new mongoose.Schema(
       default:0
     },
    createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
+   createdAtid:{type:Date},
    hostProof:{
     type:String
    },

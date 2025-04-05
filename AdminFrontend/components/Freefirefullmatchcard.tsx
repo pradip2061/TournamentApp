@@ -15,7 +15,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
-import {BASE_URL} from '../env';
+import {BASE_URL, baseUrl} from '../env';
 
 const freefire = require('../assets/freefire.jpeg');
 const kalahari = require('../assets/kalahari.webp');
@@ -118,46 +118,52 @@ const Freefirefullmatchcard = ({matches}) => {
   );
 
   const UpdateIdPassword = async () => {
-    try {
-      let data = {};
-      const token = await AsyncStorage.getItem('token');
+    let data = {};
+    const token = await AsyncStorage.getItem('token');
 
-      if (selectedTime) {
-        data = {
-          matchId,
-          coustum: {
-            id: customId,
-            password: customPassword,
-          },
-          time: selectedTime,
-        };
-      }
-      //
-      else {
-        data = {
-          matchType: 'FF',
-          matchId,
-          coustum: {
-            id: customId,
-            password: customPassword,
-          },
-        };
-      }
-
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/admin/updateFullMatch`,
-        data,
-        {
-          headers: {Authorization: `${token}`},
+    if (selectedTime) {
+      data = {
+        matchId,
+        coustum: {
+          id: customId,
+          password: customPassword,
         },
-      );
-
-      console.log(data);
-      Alert.alert('Sucessful', response?.data?.message);
-    } catch (error) {
-      console.error('Failed to update:', error);
-      Alert.alert('Failed', 'Failed to update');
+        time: selectedTime,
+      };
     }
+    //
+    else {
+      data = {
+        matchType: 'FF',
+        matchId,
+        coustum: {
+          id: customId,
+          password: customPassword,
+        },
+      };
+    }
+
+    const response = await axios.post(
+      `${BASE_URL}/khelmela/admin/updateFullMatch`,
+      data,
+      {
+        headers: {Authorization: `${token}`},
+      },
+    );
+
+    console.log('data from server ', response.data);
+    const users = response.data.match.userid;
+
+    const notify = await axios.post(
+      `${baseUrl}/khelmela/SAP-1/send-notification`,
+      {
+        reciver: users,
+        message: `Here is coutum  Id and Password  for ${response.data.matchType} match  at ${response.data.match.time}`,
+      },
+    );
+    console.log('data from server ', notify.data);
+
+    Alert.alert(response?.data?.status || 'Sucessful', response?.data?.message);
   };
 
   return (

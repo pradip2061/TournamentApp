@@ -19,8 +19,9 @@ const Pubg = () => {
   useEffect(() => {
     const getMatch = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/khelmela/getff`);
+        const response = await axios.get(`${BASE_URL}/khelmela/getpubg`);
         setCard(response.data.card);
+        console.log('Pubg Matches -----', response.data.card);
       } catch (error) {
         console.error(error);
       }

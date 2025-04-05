@@ -198,6 +198,15 @@ const MoneyRequestCard = ({
         onRequestUpdate();
       }, 1900);
 
+      const notify = await axios.post(
+        `${baseUrl}/khelmela/SAP-1/send-notification`,
+        {
+          message: `Your Deposite Request  has been Rejected  , Reason : ${message}`,
+          reciver: senderId,
+        },
+      );
+
+      console.log(notify.data);
       //
     } catch (error) {
       console.error('Error dropping request:', error);
@@ -221,6 +230,16 @@ const MoneyRequestCard = ({
           senderId: senderId,
         },
       );
+      const notify = await axios.post(
+        `${baseUrl}/khelmela/SAP-1/send-notification`,
+        {
+          message: `Your Deposite Request  has been Approved , Balance added  to your Account`,
+          reciver: senderId,
+        },
+      );
+
+      console.log(notify.data);
+
       showNotification(withdrawResponse.data.message, 'success');
       setTimeout(() => {
         onRequestUpdate();

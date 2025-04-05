@@ -65,7 +65,10 @@ const MatchTypeModal = ({visible, onClose}) => {
     });
     console.log('Response from server', response);
     if (response.data.message) {
-      Alert.alert('Created', response.data.message);
+      Alert.alert(
+        'Created',
+        response?.data?.message || 'Match created successfully',
+      );
       onClose();
     } else {
       Alert.alert('Try Again', 'Server Did not  respond');

@@ -10,25 +10,25 @@ import {
   ScrollView,
   Platform,
 } from 'react-native';
-import React, { useContext, useEffect, useState } from 'react';
+import React, {useContext, useEffect, useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import ModalNotify from './ModalNotify';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
-import { BASE_URL } from '../env';
-import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
-import { launchImageLibrary } from 'react-native-image-picker';
+import {BASE_URL} from '../env';
+import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
+import {launchImageLibrary} from 'react-native-image-picker';
 
 const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
 const erangle = require('../assets/erangle.jpg');
 const sanhok = require('../assets/sanhok.jpg');
 
-const PubgFullMatchCard = ({ matches }) => {
+const PubgFullMatchCard = ({matches}) => {
   const [modal, setModal] = useState(false);
-  const { data } = useContext(CheckAdminContext);
+  const {data} = useContext(CheckAdminContext);
   const matchId = matches._id;
   const [notifyModel, setNotifyModel] = useState(false);
   const [message, setMessage] = useState('');
@@ -68,7 +68,7 @@ const PubgFullMatchCard = ({ matches }) => {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/joinuserPubg`,
-        { matchId },
+        {matchId},
         {
           headers: {
             Authorization: `${token}`,
@@ -89,7 +89,7 @@ const PubgFullMatchCard = ({ matches }) => {
       await axios
         .post(
           `${BASE_URL}/khelmela/checkuserPubg`,
-          { matchId },
+          {matchId},
           {
             headers: {
               Authorization: `${token}`,
@@ -118,7 +118,7 @@ const PubgFullMatchCard = ({ matches }) => {
     setMessage('');
     const token = await AsyncStorage.getItem('token');
     try {
-      const payload = { matchId, player1, player2, player3, player4 };
+      const payload = {matchId, player1, player2, player3, player4};
       await axios
         .post(`${BASE_URL}/khelmela/addName`, payload, {
           headers: {
@@ -138,7 +138,7 @@ const PubgFullMatchCard = ({ matches }) => {
   useEffect(() => {
     const checkmatchType = () => {
       axios
-        .post(`${BASE_URL}/khelmela/checkmatchTypePubg`, { matchId })
+        .post(`${BASE_URL}/khelmela/checkmatchTypePubg`, {matchId})
         .then(response => {
           if (response.status === 200) {
             setCheckMatch(response.data.message);
@@ -189,7 +189,7 @@ const PubgFullMatchCard = ({ matches }) => {
           folderName: 'report',
           filename: filename,
         },
-        { headers: { Authorization: `${token}` } },
+        {headers: {Authorization: `${token}`}},
       );
       if (!imageResponse?.data?.url) {
         setError('Image upload failed');
@@ -236,8 +236,8 @@ const PubgFullMatchCard = ({ matches }) => {
       }
       const response = await axios.post(
         `${BASE_URL}/khelmela/reportClash`,
-        { reportMessage, uploadedProof, matchId },
-        { headers: { Authorization: `${token}` } },
+        {reportMessage, uploadedProof, matchId},
+        {headers: {Authorization: `${token}`}},
       );
       setMessage(response.data.message);
       checkReportClash();
@@ -259,8 +259,8 @@ const PubgFullMatchCard = ({ matches }) => {
       }
       const response = await axios.post(
         `${BASE_URL}/khelmela/checkreportClash`,
-        { matchId },
-        { headers: { Authorization: `${token}` } },
+        {matchId},
+        {headers: {Authorization: `${token}`}},
       );
       setCheckReport(response.data.message);
     } catch (error) {
@@ -352,11 +352,13 @@ const PubgFullMatchCard = ({ matches }) => {
 
       <View style={styles.timeAndEntryContainer}>
         <View style={styles.timeContainer}>
-          <Text style={{ marginLeft:5}}>Time: {matches.time || '3:00 PM'}</Text>
+          <Text style={{marginLeft: 5}}>Time: {matches.time || '3:00 PM'}</Text>
           {checkJoined === 'notjoined' ? (
             <TouchableOpacity
               style={styles.entryButton}
-              onPress={() => setModal(true)}>
+              onPress={() => {
+                setModal(true);
+              }}>
               <Text style={{color: 'white'}}>
                 Entry fee: {matches.entryFee}
               </Text>
@@ -372,7 +374,12 @@ const PubgFullMatchCard = ({ matches }) => {
       <Modal transparent animationType="slide" visible={modal}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Did you join match?</Text>
+            <Text style={styles.modalText}>
+              Are you sure you want to join this match?
+            </Text>
+            <Text>
+              Rs {matches.entryFee} will be deducted from your account{' '}
+            </Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
@@ -393,7 +400,6 @@ const PubgFullMatchCard = ({ matches }) => {
 
       {checkJoined === 'joined' ? (
         <View style={styles.joinedContainer}>
-         
           <View style={styles.playerContainer}>
             {matches.playermode === 'solo' ? (
               <View style={styles.soloContainer}>
@@ -401,63 +407,77 @@ const PubgFullMatchCard = ({ matches }) => {
               </View>
             ) : (
               <>
-                <Text style={styles.squadHeaderText}>Enter Your Squad Member Game Names</Text>
+                <Text style={styles.squadHeaderText}>
+                  Enter Your Squad Member Game Names
+                </Text>
                 <View style={styles.Row}>
                   <View style={styles.mainplayerbox}>
-                  <Text style={styles.mainPlayerText}>{player1}</Text>
+                    <Text style={styles.mainPlayerText}>{player1}</Text>
                   </View>
                   <TouchableOpacity style={styles.add} onPress={addName}>
-                  <Text style={{color: 'black',fontSize:15,fontWeight:'700'}} >Save </Text>
-                </TouchableOpacity>
+                    <Text
+                      style={{color: 'black', fontSize: 15, fontWeight: '700'}}>
+                      Save{' '}
+                    </Text>
+                  </TouchableOpacity>
                 </View>
                 <View style={styles.inputContainer}>
                   <View style={styles.squadInputRow}>
-                  <TextInput
-                    style={styles.squadInput}
-                    placeholder="Player 2"
-                    value={player2}
-                    onChangeText={text => setPlayer2(text)}
-                    placeholderTextColor="grey"
-                  />
-                  <TextInput
-                    style={styles.squadInput}
-                    placeholder="Player 3"
-                    value={player3}
-                    onChangeText={text => setPlayer3(text)}
-                    placeholderTextColor="#aaa"
-                  />
-                  <TextInput
-                    style={styles.squadInput}
-                    placeholder="Player 4"
-                    value={player4}
-                    onChangeText={text => setPlayer4(text)}
-                    placeholderTextColor="#aaa"
-                  />
+                    <TextInput
+                      style={styles.squadInput}
+                      placeholder="Player 2"
+                      value={player2}
+                      onChangeText={text => setPlayer2(text)}
+                      placeholderTextColor="grey"
+                    />
+                    <TextInput
+                      style={styles.squadInput}
+                      placeholder="Player 3"
+                      value={player3}
+                      onChangeText={text => setPlayer3(text)}
+                      placeholderTextColor="#aaa"
+                    />
+                    <TextInput
+                      style={styles.squadInput}
+                      placeholder="Player 4"
+                      value={player4}
+                      onChangeText={text => setPlayer4(text)}
+                      placeholderTextColor="#aaa"
+                    />
+                  </View>
+
+                  <Text style={{fontSize: 13, color: 'white'}}>
+                    Room id & pass will be show before 6 min matchtime
+                  </Text>
+                  <View style={styles.clip}>
+                    <View style={styles.input}>
+                      <Text>customid: 88997</Text>
+                      <TouchableOpacity onPress={clipboardid}>
+                        <AntDesign
+                          name="copy1"
+                          size={17}
+                          style={{marginLeft: 10}}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.input}>
+                      <Text>custom: 54988</Text>
+                      <TouchableOpacity onPress={clipboardpass}>
+                        <AntDesign
+                          name="copy1"
+                          size={17}
+                          style={{marginLeft: 10}}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
                 </View>
-                
-                <Text style={{fontSize:13,color:'white'}}>Room id & pass will be show before 6 min matchtime</Text>   
-            <View style={styles.clip}>
-            <View style={styles.input}>
-              <Text>customid: 88997</Text>
-              <TouchableOpacity onPress={clipboardid}>
-                <AntDesign name="copy1" size={17} style={{marginLeft: 10}} />
-              </TouchableOpacity>
-            </View>
-            <View style={styles.input}>
-              <Text>custom: 54988</Text>
-              <TouchableOpacity onPress={clipboardpass}>
-                <AntDesign name="copy1" size={17} style={{marginLeft: 10}} />
-              </TouchableOpacity>
-            </View>
-            </View>
-          </View>
                 {checkReport === 'report' ? (
                   <Text style={styles.reportStatus}>Report Submitted</Text>
                 ) : (
                   <TouchableOpacity
                     style={styles.reportButton}
-                    onPress={() => setReportModel(true)}
-                  >
+                    onPress={() => setReportModel(true)}>
                     <Text style={styles.reportButtonText}>Report Match</Text>
                   </TouchableOpacity>
                 )}
@@ -469,19 +489,19 @@ const PubgFullMatchCard = ({ matches }) => {
         <Text style={styles.loadingText}>...loading</Text>
       )}
 
+      {/* Report Modal  */}
       <Modal transparent animationType="slide" visible={reportModel}>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}
-        >
-          <ScrollView contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}>
+          style={styles.modalContainer}>
+          <ScrollView
+            contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
             <View style={styles.modalContent}>
               <View style={styles.modalHeader}>
                 <Text style={styles.modalText}>Report Match</Text>
                 <TouchableOpacity
                   onPress={() => setReportModel(false)}
-                  style={styles.closeButton}
-                >
+                  style={styles.closeButton}>
                   <Text style={styles.closeText}>X</Text>
                 </TouchableOpacity>
               </View>
@@ -497,9 +517,10 @@ const PubgFullMatchCard = ({ matches }) => {
               <View style={styles.uploadContainer}>
                 <TouchableOpacity
                   style={styles.uploadButton}
-                  onPress={pickReportImage}
-                >
-                  <Text style={styles.uploadText}>Click here to upload proof</Text>
+                  onPress={pickReportImage}>
+                  <Text style={styles.uploadText}>
+                    Click here to upload proof
+                  </Text>
                 </TouchableOpacity>
                 {reportImage && (
                   <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
@@ -508,15 +529,13 @@ const PubgFullMatchCard = ({ matches }) => {
               <View style={styles.buttonContainer}>
                 <TouchableOpacity
                   style={[styles.button, styles.noButton]}
-                  onPress={() => setReportModel(false)}
-                >
+                  onPress={() => setReportModel(false)}>
                   <Text style={styles.buttonText}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.button, styles.yesButton]}
                   onPress={submitReport}
-                  disabled={loading}
-                >
+                  disabled={loading}>
                   <Text style={styles.buttonText}>
                     {loading ? 'Submitting...' : 'Submit'}
                   </Text>
@@ -620,11 +639,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    
   },
   inputContainer: {
     gap: 10,
-    
   },
   input: {
     height: 30,
@@ -635,7 +652,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    borderRadius:15
+    borderRadius: 15,
   },
   playerContainer: {
     alignItems: 'center',
@@ -666,8 +683,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     gap: 18,
     marginTop: 10,
-    marginBottom:5
-    
+    marginBottom: 5,
   },
   squadInput: {
     width: 90,
@@ -677,37 +693,38 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     color: 'black',
-    backgroundColor:'white',
-    
+    backgroundColor: 'white',
+
     fontSize: 12,
   },
-  Row:{flexDirection:'row',marginLeft:110,gap:50},
-  add:{  backgroundColor: 'skyblue',
+  Row: {flexDirection: 'row', marginLeft: 110, gap: 50},
+  add: {
+    backgroundColor: 'skyblue',
     height: 30,
     width: 70,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 25,
-    marginTop: 5},
+    marginTop: 5,
+  },
 
   mainPlayerText: {
     width: 90,
     height: 40,
-    
-   
+
     borderRadius: 8,
     paddingHorizontal: 10,
     color: 'black',
-   
+
     textAlign: 'center',
     lineHeight: 40,
     fontWeight: 'bold',
     fontSize: 15,
   },
-  clip:{flexDirection:'row', gap:15},
-  mainplayerbox:{
-    backgroundColor:'white',
-    borderRadius:15
+  clip: {flexDirection: 'row', gap: 15},
+  mainplayerbox: {
+    backgroundColor: 'white',
+    borderRadius: 15,
   },
   joinedButton: {
     backgroundColor: 'green',
@@ -716,7 +733,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 25,
-    
   },
   entryButton: {
     backgroundColor: 'green',
@@ -737,12 +753,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(0,0,0,0.5)',
+    width: '100%',
   },
   modalContent: {
     backgroundColor: '#fff',
     padding: 20,
     borderRadius: 10,
-    width: 300,
+    width: '80%',
+    height: '25%',
     alignItems: 'center',
   },
   modalHeader: {
@@ -769,7 +787,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     width: '100%',
     justifyContent: 'space-between',
-    marginTop: 10,
+    marginTop: '15%',
   },
   button: {
     paddingVertical: 12,
@@ -837,7 +855,6 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: 'center',
   },
-
 });
 
 export default PubgFullMatchCard;

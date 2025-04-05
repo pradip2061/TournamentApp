@@ -11,62 +11,64 @@ import PrivateChat from './pages/Chat/PrivateChat';
 import AdminHome from './pages/Transaction/AdminHome';
 import Withdraw from './pages/components/Withdraw';
 import GamePannel from './pages/Tournament/GamePannel';
+import {SocketProvider} from './SocketContext';
 
 const Stack = createStackNavigator();
 
 const App = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Authenticate">
-        
-        <Stack.Screen
-          name="Authenticate"
-          component={Authenticate}
-          options={{headerShown: false}}
-        />
+    <SocketProvider>
+      <NavigationContainer>
+        <Stack.Navigator initialRouteName="Authenticate">
+          <Stack.Screen
+            name="Authenticate"
+            component={Authenticate}
+            options={{headerShown: false}}
+          />
 
-        <Stack.Screen
-          name="Dashboard"
-          component={Dashboard}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="AdminHome"
-          component={AdminHome}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="PowerRoom"
-          component={PowerRoom}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="LandingChat"
-          component={LandingChat}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="PrivateChat"
-          component={PrivateChat}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="Withdraw"
-          component={Withdraw}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="UploadPhoto"
-          component={UploadPhoto}
-          options={{headerShown: false}}
-        />
-        <Stack.Screen
-          name="GamePannel"
-          component={GamePannel}
-          options={{headerShown: false}}
-        />
-      </Stack.Navigator>
-    </NavigationContainer>
+          <Stack.Screen
+            name="Dashboard"
+            component={Dashboard}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="AdminHome"
+            component={AdminHome}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="PowerRoom"
+            component={PowerRoom}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="LandingChat"
+            component={LandingChat}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="PrivateChat"
+            component={PrivateChat}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="Withdraw"
+            component={Withdraw}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="UploadPhoto"
+            component={UploadPhoto}
+            options={{headerShown: false}}
+          />
+          <Stack.Screen
+            name="GamePannel"
+            component={GamePannel}
+            options={{headerShown: false}}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </SocketProvider>
   );
 };
 

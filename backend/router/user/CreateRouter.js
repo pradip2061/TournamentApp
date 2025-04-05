@@ -15,6 +15,7 @@ const {
   EnrollMatch,
   trackusermodeltdm,
   checkUserOrAdmintdm,
+  getpubg,
 } = require("../../controller/CreateMatchCsController");
 const userRateLimiter = require("../../middleware/reactLimit");
 const Authverify = require("../../middleware/AuthVerify");
@@ -29,9 +30,6 @@ router1.get("/get", Authverify, getCsData);
 router1.get("/getsingle", playingmatch);
 router1.get("/getff", getFFmatch);
 router1.get("/enrollmatch", Authverify, EnrollMatch);
-router1.get("/create_FM", (req, res) => {
-  res.send("create FM");
-});
 
 router1.post("/create_FM", Authverify, create_FM);
 router1.post("/addNameff", Authverify, addName);
@@ -49,4 +47,5 @@ router1.post(
   verifyDidYouWinMatch,
   DidYouWinMatchtdm
 );
+router1.get("/getpubg", getpubg);
 module.exports = router1;

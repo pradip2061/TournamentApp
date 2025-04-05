@@ -69,7 +69,7 @@ const Dashboard = ({navigation}) => {
       <Text style={styles.dashboardTitle}>Dashboard</Text>
 
       <View style={styles.buttonContainer}>
-        <TouchableOpacity style={styles.box} onPress={Button}>
+        <TouchableOpacity style={styles.box} onPress={() => handleDeposite()}>
           <Image
             source={require('../assets/deposit.png')}
             style={styles.boxImage}
