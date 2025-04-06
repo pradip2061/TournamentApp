@@ -174,6 +174,9 @@ const resultConfirmation = async () => {
     });
 
     for (const match of matchCards) {
+      if(match.teamHost[0].reportMessage || match.teamopponent[0].reportMessage){
+        return
+      }
       const betAmount = Number(match?.matchDetails?.[0]?.betAmount || 0);
       let userinfo = null;
 
@@ -182,7 +185,7 @@ const resultConfirmation = async () => {
         if (hostId) {
           userinfo = await User.findById(hostId);
         }
-      } else if (match.teamopponent?.[0]?.team2status === true) {
+      } else if (match.teamopponent?.[0]?.team2Status === true) {
         const opponentId = match.teamopponent[0]?.userid;
         if (opponentId) {
           userinfo = await User.findById(opponentId);
