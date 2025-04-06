@@ -279,6 +279,10 @@ const divideMoney = async (req, res) => {
         if (!matchinfo.teamHost?.[0] || !matchinfo.teamopponent?.[0]) {
             return res.status(400).json({ message: "Invalid match data" });
         }
+        if( typeof matchinfo.teamHost[0].teamHostStatus === "boolean" &&
+           typeof matchinfo.teamopponent[0].team2Status === "boolean" && matchinfo.teamHost[0].teamHostStatus === matchinfo.teamopponent[0].team2Status){
+            return res.status(200).json({ message: "resultconflict" });
+        }
 
         const betAmount = Number(matchinfo.matchDetails?.[0]?.betAmount || 0);
         const hostId = matchinfo.teamHost[0].userid;
