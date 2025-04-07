@@ -382,6 +382,7 @@ const MatchCard = ({ match, refreshData }) => {
         setMessage(response.data.message);
         checkresult();
         divideMoney(matchId)
+        refreshData()
       } catch (error) {
         setError(error.response?.data?.message || 'Submission failed');
       } finally {
@@ -411,6 +412,7 @@ const MatchCard = ({ match, refreshData }) => {
       setMessage(response.data.message);
       checkresult();
       divideMoney(matchId)
+      refreshData()
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     } finally {
@@ -475,6 +477,7 @@ const MatchCard = ({ match, refreshData }) => {
       );
       setMessage(response.data.message);
       checkReportClash();
+      refreshData()
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     } finally {
@@ -519,10 +522,25 @@ const MatchCard = ({ match, refreshData }) => {
   const divideMoney=async(matchId)=>{
     console.log("from frontend divide money")
 try {
- await axios.post(`${BASE_URL}/khelmela/dividemoney`,{matchId})
+ const response =await axios.post(`${BASE_URL}/khelmela/dividemoney`,{matchId})
+ if(response.data.message === "resultconflict"){
+  resultConflictNotify(response.data.userid,response.data.hostid)
+ }
 } catch (error) {
   console.log(error)
 }
+  }
+  const resultConflictNotify=async(reciver1,reciver2)=>{
+    try {
+      await axios.post(`${BASE_URL}/khelmela/SAP-1/send-notification`,{
+        reciver : [ reciver1 , reciver2 ]  ,
+        message :{  "message": "conflict detected on your clashsquad match both user selected yes in Did you win match, wait 30-40 min moderator will be look for conflict. fair player will be provide win amount money" ,
+              type : "notification"}
+        }
+        )
+    } catch (error) {
+      console.log(error.response.data.message)
+    }
   }
   return (
     <View style={styles.cardContainer}>

@@ -104,7 +104,7 @@ const TDM = ({ navigation }) => {
 
 useEffect(()=>{
   getMatches();
-},[])
+},[message])
 
 
 

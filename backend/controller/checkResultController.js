@@ -49,25 +49,45 @@ const checkResult = async (req, res) => {
 
 
 const checkResulttdm = async (req, res) => {
-    const userid = req.user;
-    // Check if match exists
-    const userinfo =await User.findOne({_id:userid})
-    const matchId=userinfo?.matchId?.pubgTdmId?.[0]
-    const match = await tdm.findOne({ _id: matchId });
-    if (!match) {
-        return res.status(400).json({ message: "Invalid match data" });
-    }
+    try {
+        const userid = req.user;
+        // Check if user exists first
+        const userinfo = await User.findOne({ _id: userid });
+        if (!userinfo) {
+            return res.status(400).json({ message: "User not found" });
+        }
 
-    if(!userinfo){
-        return res.status(400).json({ message: "user not found" });
-    }
-    
-    if(typeof match.teamHost[0].teamHostStatus === 'boolean'){
-        return res.status(200).json({ message: "resultsubmit" });
-    }else if(typeof match.teamopponent[0].team2Status === 'boolean'){
-        return res.status(200).json({ message: "resultsubmit" });
-    }else{
+        // Ensure matchId exists
+        const matchId = userinfo.matchId?.pubgTdmId?.[0];
+        if (!matchId) {
+            return res.status(400).json({ message: "No match associated with user" });
+        }
+
+        // Find match
+        const match = await tdm.findOne({ _id: matchId });
+        if (!match) {
+            return res.status(400).json({ message: "Invalid match data" });
+        }
+
+        // Check team host status
+        if (match.teamHost[0]?.userid === userid) {
+            if (typeof match.teamHost[0].teamHostStatus === "boolean") {
+                return res.status(200).json({ message: "resultsubmit" });
+            }
+        }
+
+        // Check opponent status
+        if (match.teamopponent[0]?.userid === userid) {
+            if (typeof match.teamopponent[0].team2Status === "boolean") {
+                return res.status(200).json({ message: "resultsubmit" });
+            }
+        }
+
+        // Default response
         return res.status(200).json({ message: "noresponse" });
+    } catch (error) {
+        console.error("Error checking match result:", error);
+        return res.status(500).json({ message: "Internal server error" });
     }
 };
 
@@ -281,7 +301,9 @@ const divideMoney = async (req, res) => {
         }
         if( typeof matchinfo.teamHost[0].teamHostStatus === "boolean" &&
            typeof matchinfo.teamopponent[0].team2Status === "boolean" && matchinfo.teamHost[0].teamHostStatus === matchinfo.teamopponent[0].team2Status){
-            return res.status(200).json({ message: "resultconflict" });
+            matchinfo.status="conflict"
+            await matchinfo.save()
+            return res.status(200).json({ message: "resultconflict",userid:matchinfo.teamHost[0].userid,hostid:matchinfo.teamopponent[0].userid});
         }
 
         const betAmount = Number(matchinfo.matchDetails?.[0]?.betAmount || 0);
@@ -329,7 +351,7 @@ const divideMoney = async (req, res) => {
         // Save all changes in parallel
         await Promise.all([host.save(), user.save(), matchinfo.save()]);
 
-        return res.status(200).json({ message: "Money submitted successfully" });
+        return res.status(200).json({ message: "Money submitted successfully"});
     } catch (error) {
         console.error("Error in divideMoney:", error);
         return res.status(500).json({ message: "Internal Server Error" });

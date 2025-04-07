@@ -4,7 +4,7 @@ const {User} = require("./model/schema");
 const tdm = require("./model/TdmModel");
 
 // Function to delete match cards older than 6 minutes
-const deleteOldMatchCards = async () => {
+const deleteOldMatchCardsClash = async () => {
   try {
     const now = new Date();
     // Find match cards that need to be deleted
@@ -31,6 +31,7 @@ const deleteOldMatchCards = async () => {
         userinfo.isplaying = false;
           userinfo.balance += Number(match?.matchDetails?.[0]?.betAmount || 0); // Convert betAmount to Number safely
         await userinfo.save();
+        console.log("hello from clashsquad")
       }
     }
 
@@ -45,7 +46,7 @@ const deleteOldMatchCards = async () => {
   }
 };
 
-const deleteOldMatchCard = async () => {
+const deleteOldMatchCardtdm = async () => {
   try {
     const now = new Date();
     // Find match cards that need to be deleted
@@ -55,28 +56,29 @@ const deleteOldMatchCard = async () => {
     });
 
     if (matchCards.length === 0) {
-      console.log("No expired match cards found tdm.");
+      console.log("No expired match cards found.");
       return;
     }
+
     // Process each match card
     for (const match of matchCards) {
       const userId = match.teamHost[0]?.userid; // Get user ID safely
       if (userId) {
         const userinfo = await User.findOne({ _id: userId });
         if (!userinfo) {
-        return res.status(404).json({
-          message:'user not found'
-        })
+          return res.status(404).json({message:'user not found'})
         }
-        userinfo.matchId.pubgTdmId.splice(0,userinfo.matchId.pubgTdmId.length); // Removes 1 item at the found index
+        userinfo.matchId.pubgTdmId.splice(0, userinfo.matchId.pubgTdmId.length);
+        // Removes 1 item at the found index
         userinfo.isplaying = false;
-        userinfo.balance += Number(match?.entryFee || 0); // Convert betAmount to Number safely
+          userinfo.balance += Number(match?.entryFee || 0); // Convert betAmount to Number safely
         await userinfo.save();
+        console.log("hello from clashsquad")
       }
     }
 
     // Delete match cards after processing
-    const deleted = await tdm.deleteMany({
+    const deleted = await ClashSquad.deleteMany({
       _id: { $in: matchCards?.map(match => match._id) }
     });
 
@@ -120,6 +122,7 @@ const deleteifNoPasswordClashSquad = async () => {
         const hostId = match.teamHost[0]?.userid;
         if (hostId) {
           const userinfo = await User.findById(hostId);
+          console.log("hello password")
           if (userinfo) {
             userinfo.matchId.FreefireClashId = []; // Clear match ID
             userinfo.isplaying = false;
@@ -154,10 +157,78 @@ const deleteifNoPasswordClashSquad = async () => {
   }
 };
 
-const resultConfirmation = async () => {
+
+const deleteifNoPasswordTdm= async () => {
   try {
     const now = new Date();
+    
+    // Find match cards older than now with only one player
+    const matchCards = await tdm.find({
+      createdAtid: { $lte: now },
+      TotalPlayers: 2,
+          $or: [
+            { customId: null },
+            { customId: null}
+          ]
+    });
+    
+    console.log(matchCards)
+    
 
+    if (matchCards.length === 0) {
+      console.log("No idpass found clashsquad.");
+      return;
+    }
+
+    // Delete the found match cards
+    await tdm.deleteMany({
+      _id: { $in: matchCards.map(match => match._id) }
+    });
+
+    // Process each match card
+    for (const match of matchCards) {
+      // Handle teamHost
+      if (match.teamHost?.length > 0) {
+        const hostId = match.teamHost[0]?.userid;
+        if (hostId) {
+          const userinfo = await User.findById(hostId);
+          console.log("hello password")
+          if (userinfo) {
+            userinfo.matchId.pubgTdmId = []; // Clear match ID
+            userinfo.isplaying = false;
+            userinfo.balance += Number(match?.entryFee|| 0); // Ensure entryFee is a number
+            await userinfo.save();
+          } else {
+            console.log(`User with ID ${hostId} not found.`);
+          }
+        }
+      }
+
+      // Handle teamOpponent
+      if (match.teamopponent?.length > 0) {
+        const opponentId = match.teamopponent[0]?.userid;
+        if (opponentId) {
+          const userinfo = await User.findById(opponentId);
+          if (userinfo) {
+            userinfo.matchId.pubgTdmId = []; // Clear match ID
+            userinfo.isplaying = false;
+            userinfo.balance += Number(match?.entryFee || 0);
+            await userinfo.save();
+          } else {
+            console.log(`User with ID ${opponentId} not found.`);
+          }
+        }
+      }
+    }
+
+    console.log("Deleted expired ClashSquad matches and refunded users.");
+  } catch (error) {
+    console.error("Error deleting ClashSquad matches:", error);
+  }
+};
+const resultConfirmationClash = async () => {
+  try {
+    const now = new Date();
     const matchCards = await ClashSquad.find({
       resultAt: { $lte: now },
       TotalPlayers: 2,
@@ -172,6 +243,11 @@ const resultConfirmation = async () => {
         }
       ]
     });
+
+    if(matchCards.length === 0){
+      console.log("no cards found")
+      return 
+    }
 
     for (const match of matchCards) {
       if(match.teamHost[0].reportMessage || match.teamopponent[0].reportMessage){
@@ -210,15 +286,76 @@ const resultConfirmation = async () => {
   }
 };
 
+const resultConfirmationTdm = async () => {
+  try {
+    const now = new Date();
+    const matchCards = await tdm.find({
+      resultAt: { $lte: now },
+      TotalPlayers: 2,
+      $or: [
+        {
+          "teamHost.0.teamHostStatus": { $type: "bool" },
+          "teamopponent.0.team2status": null
+        },
+        {
+          "teamHost.0.teamHostStatus": null,
+          "teamopponent.0.team2status": { $type: "bool" }
+        }
+      ]
+    });
+
+    if(matchCards.length === 0){
+      console.log("no cards found")
+      return 
+    }
+
+    for (const match of matchCards) {
+      if(match.teamHost[0].reportMessage || match.teamopponent[0].reportMessage){
+        return
+      }
+      const betAmount = Number(match?.entryFee|| 0);
+      let userinfo = null;
+
+      if (match.teamHost?.[0]?.teamHostStatus === true) {
+        const hostId = match.teamHost[0]?.userid;
+        if (hostId) {
+          userinfo = await User.findById(hostId);
+        }
+      } else if (match.teamopponent?.[0]?.team2Status === true) {
+        const opponentId = match.teamopponent[0]?.userid;
+        if (opponentId) {
+          userinfo = await User.findById(opponentId);
+        }
+      }
+
+      if (userinfo) {
+        userinfo.matchId.pubgTdmId = [];
+        userinfo.isplaying = false;
+        userinfo.balance += betAmount;
+
+        await userinfo.save();
+
+        match.status = "completed";
+        await match.save();
+      } else {
+        console.log(`Winner user not found for match ID: ${match._id}`);
+      }
+    }
+  } catch (err) {
+    console.error("Error in resultConfirmation:", err);
+  }
+};
 
 
 // Schedule the cron job to run every minute
 cron.schedule("* * * * *", () => {
   console.log("Running cron job: Deleting old match cards...");
-  deleteOldMatchCards();
-  deleteOldMatchCard();
+  deleteOldMatchCardsClash();
+ deleteOldMatchCardtdm();
   deleteifNoPasswordClashSquad()
-  resultConfirmation()
+  deleteifNoPasswordTdm()
+  resultConfirmationClash()
+  resultConfirmationTdm()
 });
 
 module.exports = cron;

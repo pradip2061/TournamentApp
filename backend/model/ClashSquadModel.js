@@ -39,6 +39,7 @@ const schema = new mongoose.Schema(
           type: String,
           required: true,
         },
+
       },
     ],
     teamHost: [
@@ -75,7 +76,7 @@ const schema = new mongoose.Schema(
     },
     status:{
       type: String ,
-      enum: ["running", "pending","completed"],
+      enum: ["running", "pending","completed","conflict"],
       default: "pending",
     },
     TotalPlayers:{

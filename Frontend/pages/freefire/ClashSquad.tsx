@@ -101,9 +101,9 @@ const ClashSquad = ({navigation}) => {
         )
         .then(response => {
           modal(response.data.message);
-         getMatches()
           setMatchDetails(prev => ({...prev, show: false}));
           matchidSend(response.data.newMatch._id);
+          getMatches()
         });
     } catch (error) {
       const errorMessage = error.response.data.message || 'Exceed the limit';
@@ -147,7 +147,7 @@ const ClashSquad = ({navigation}) => {
 
     useEffect(()=>{
       getMatches();
-    },[])
+    },[message])
 
 
   const refreshData = () => {

@@ -313,7 +313,9 @@ const TdmCard = ({matches, getmatches}) => {
           {headers: {Authorization: `${token}`}},
         );
         setMessage(response.data.message);
+        divideMoney(matchId)
         checkresult();
+        getmatches()
       } catch (error) {
         setError(error.response?.data?.message || 'Submission failed');
       } finally {
@@ -343,7 +345,9 @@ const TdmCard = ({matches, getmatches}) => {
       );
 
       setMessage(response.data.message);
+      divideMoney(matchId)
       checkresult();
+      getmatches()
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     } finally {
@@ -477,6 +481,7 @@ const TdmCard = ({matches, getmatches}) => {
       );
       setMessage(response.data.message);
       checkReportClash();
+      getmatches()
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
     } finally {
@@ -505,6 +510,39 @@ const TdmCard = ({matches, getmatches}) => {
   useEffect(() => {
     checkReportClash();
   }, []);
+  const handleReportMessageChange = (text) => {
+    const words = text.trim().split(/\s+/);
+    if (words.length <= 100) {
+      setReportMessage(text);
+    } else {
+      setError('Maximum 100 words allowed');
+      notify();
+    }
+  };
+
+  const divideMoney=async(matchId)=>{
+    console.log("from frontend divide money")
+try {
+ const response =await axios.post(`${BASE_URL}/khelmela/dividemoney`,{matchId})
+ if(response.data.message === "resultconflict"){
+  resultConflictNotify(response.data.userid,response.data.hostid)
+ }
+} catch (error) {
+  console.log(error)
+}
+  }
+  const resultConflictNotify=async(reciver1,reciver2)=>{
+    try {
+      await axios.post(`${BASE_URL}/khelmela/SAP-1/send-notification`,{
+        reciver : [ reciver1 , reciver2 ]  ,
+        message :{  "message": "conflict detected on your clashsquad match both user selected yes in Did you win match, wait 30-40 min moderator will be look for conflict. fair player will be provide win amount money" ,
+              type : "notification"}
+        }
+        )
+    } catch (error) {
+      console.log(error.response.data.message)
+    }
+  }
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
@@ -670,7 +708,7 @@ const TdmCard = ({matches, getmatches}) => {
                       <View style={styles.rightContainer}>
                         <TouchableOpacity
                           style={styles.button}
-                          onPress={customIdAndPassword}>
+                          onPress={customIdAndPassword} disabled={!matches.teamopponent[0].userid}>
                           <Text style={styles.buttonText}>Publish</Text>
                         </TouchableOpacity>
                       </View>
@@ -726,7 +764,7 @@ const TdmCard = ({matches, getmatches}) => {
                                 placeholder="enter the messages"
                                 style={styles.input}
                                 value={reportMessage}
-                                onChangeText={text => setReportMessage(text)}
+                                onChangeText={handleReportMessageChange}
                               />
                               <TouchableOpacity onPress={pickImageReport}>
                                 <Text>Upload</Text>

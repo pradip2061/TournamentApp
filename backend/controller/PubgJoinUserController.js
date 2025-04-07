@@ -197,11 +197,13 @@ const createtdm =async(req,res)=>{
   teamopponent: [{ userid: "",reportImage:"",reportMessage:"" }],
       userProof:"",
       hostProof:"",
-    TotalPlayers:1
+    TotalPlayers:1,
+    opponentname:""
       });
 
       await newMatch.save()
       userinfo.balance -= matchDetails.betAmount
+      userinfo.isplaying=true
       userinfo.save()
 res.status(200).json({
   message:'match create successfully',
@@ -241,17 +243,18 @@ const joinuserPubgtdm = async (req, res) => {
   const { matchId } = req.body;
   const userinfo = await User.findOne({ _id: userid });
   const match = await tdm.findOne({ _id: matchId });
-  if (userinfo.balance >= match.entryFee) {
-    userinfo.balance -= match.entryFee;
-  userinfo.matchId.pubgTdmId.push(matchId)
-  
   if(!userinfo.gameName[0].pubg){
     return res.status(400).json({
       message:'add pubgGameName in your profile'
     })
   }
+  if (userinfo.balance >= match.entryFee) {
+    userinfo.balance -= match.entryFee;
+  userinfo.matchId.pubgTdmId.push(matchId)
   match.teamopponent[0].userid=userid
   match.TotalPlayers +=1
+  match.createdAtid = new Date(Date.now() + 6 * 60 * 1000);
+  match.opponentName = userinfo.gameName[0].freefire;
   await match.save();
   await userinfo.save();
   res.status(200).json({

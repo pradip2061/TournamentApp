@@ -280,8 +280,8 @@ const Freefirefullmatchcard = ({matches}) => {
   };
 
   return (
-    <ImageBackground
-      source={require('../assets/bg9.jpg')}
+    <LinearGradient
+      colors={["#0f0c29", "#302b63", "#24243e"]}
       style={styles.container}
       key={matches._id}>
       <View style={styles.header}>
@@ -521,7 +521,7 @@ const Freefirefullmatchcard = ({matches}) => {
           </ScrollView>
         </KeyboardAvoidingView>
       </Modal>
-    </ImageBackground>
+    </LinearGradient>
   );
 };
 

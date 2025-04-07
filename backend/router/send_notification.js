@@ -10,7 +10,7 @@ module.exports = (io) => {
   router.post("/SAP-1/send-notification", (req, res) => {
     console.log(" Notification sent to SAP-1,,,,,,,,,,,,,,,,,-k-------");
     const { reciver, message } = req.body;
-
+    console.log("reciver:",reciver)
     if (!reciver || !message) {
       console.log("missing Fields while Sending Notification");
       return res
