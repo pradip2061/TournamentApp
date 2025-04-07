@@ -79,8 +79,8 @@ const setupChatSocket = (io) => {
       io.to(data.reciver).emit("Notify", data);
     });
 
-    socket.on("message", async ({ room, message }) => {
-      console.log(room, message);
+    socket.on("message", async ({ room, message, reciver }) => {
+      console.log("Socket Message Rom ", reciver, room, message);
       socket.to(room).emit("message", message);
 
       try {

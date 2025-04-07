@@ -18,11 +18,9 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL} from '../../env';
 import {jwtDecode} from 'jwt-decode';
-import io from 'socket.io-client';
 
 const LandingChat = ({navigation}) => {
   const [user, setUser] = useState('');
-  const [re, setRe] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
   const [clicked, setClicked] = useState(false);
   const [friends, setFriends] = useState([]);
@@ -32,7 +30,6 @@ const LandingChat = ({navigation}) => {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [token, setToken] = useState('');
-  const [socket, setSocket] = useState(null);
 
   useEffect(() => {
     const getUser = async () => {
@@ -55,27 +52,15 @@ const LandingChat = ({navigation}) => {
   // Directly sort by timestamp in latestMessage.time
   const sortByLatestMessage = data => {
     return [...data].sort((a, b) => {
-      // Extract timestamps or use a very old date if missing
       const timeA = a?.latestMessage?.time
         ? new Date(a.latestMessage.time).getTime()
         : 0;
       const timeB = b?.latestMessage?.time
         ? new Date(b.latestMessage.time).getTime()
         : 0;
-
-      // Sort in descending order (newest first)
       return timeB - timeA;
     });
   };
-
-  // Modify the fetchFriends function to accept a token parameter
-  useEffect(() => {
-    const friendFromLocal = async () => {
-      const frnds = await AsyncStorage.getItem('friends');
-      setFilteredFriends(JSON.parse(frnds));
-    };
-    friendFromLocal();
-  }, []);
 
   const fetchFriends = useCallback(
     async (currentToken = null) => {
@@ -97,12 +82,9 @@ const LandingChat = ({navigation}) => {
         );
 
         console.log('Friend Array :', response?.data);
-        await AsyncStorage.setItem('friends', JSON.stringify(response?.data));
 
         if (response?.data && response?.data?.length > 0) {
-          // Sort the array by latest message time
           const sortedFriends = sortByLatestMessage(response.data);
-
           console.log(
             'Sorted friends by latest message:',
             sortedFriends.map(f => ({
@@ -110,8 +92,6 @@ const LandingChat = ({navigation}) => {
               time: f?.latestMessage?.time,
             })),
           );
-
-          // Update both states with the sorted array
           setFriends(sortedFriends);
           setFilteredFriends(sortedFriends);
         } else {
@@ -128,7 +108,6 @@ const LandingChat = ({navigation}) => {
     [token],
   );
 
-  // Update onRefresh to use the current token
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchFriends();
@@ -140,24 +119,15 @@ const LandingChat = ({navigation}) => {
       const token = await AsyncStorage.getItem('token');
       const response = await axios.post(
         `${BASE_URL}/khelmela/addFriends`,
-        {
-          friendId: userToAdd?.id,
-        },
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
+        {friendId: userToAdd?.id},
+        {headers: {Authorization: `${token}`}},
       );
       setClicked(true);
-
       Alert.alert('Success', response?.data?.message || 'Friend added!');
       setTimeout(() => {
         setShowSearchResults(false);
         setClicked(false);
       }, 900);
-
-      // Refresh friends list after adding a friend
       fetchFriends();
     } catch (error) {
       console.error('Error adding friend:', error);
@@ -184,19 +154,14 @@ const LandingChat = ({navigation}) => {
 
       const response = await axios.post(
         `${BASE_URL}/khelmela/search-users`,
-        {
-          name: searchTerm,
-        },
-        {
-          headers: {Authorization: `${tokenToUse}`},
-        },
+        {name: searchTerm},
+        {headers: {Authorization: `${tokenToUse}`}},
       );
 
       if (response?.data && response?.data?.users) {
         setSearchResults(response.data.users);
         setShowSearchResults(true);
       } else {
-        // Handle empty response
         setSearchResults([]);
         setShowSearchResults(true);
       }
@@ -217,14 +182,18 @@ const LandingChat = ({navigation}) => {
       FriendId: item?.id,
       photoUrl: item?.image || item?.photoUrl,
       name: item?.username || item?.name,
+      filteredFriends,
+      setFilteredFriends,
     });
   };
 
+  useEffect(() => {
+    console.log('Landing CHat ............------.... ', filteredFriends);
+  }, [filteredFriends]);
   const closeSearchResults = () => {
     setShowSearchResults(false);
     setSearchResults([]);
     setSearchTerm('');
-    // Refresh friends list when modal closes
     fetchFriends();
   };
 
@@ -246,83 +215,6 @@ const LandingChat = ({navigation}) => {
         <Text style={styles.emptySearchButtonText}>Find Players</Text>
       </TouchableOpacity>
     </View>
-  );
-
-  // Socket connection setup
-  useEffect(() => {
-    const setupSocket = async () => {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (token) {
-          const newSocket = io(BASE_URL, {
-            auth: {
-              token: token,
-            },
-          });
-
-          newSocket?.on('connect', () => {
-            console.log('Socket connected');
-          });
-
-          newSocket?.on('newMessage', handleNewMessage);
-
-          setSocket(newSocket);
-
-          return () => {
-            newSocket?.off('newMessage');
-            newSocket?.disconnect();
-          };
-        }
-      } catch (error) {
-        console.error('Socket connection error:', error);
-      }
-    };
-
-    setupSocket();
-  }, []);
-
-  // Handle new message received via socket
-  const handleNewMessage = useCallback(
-    messageData => {
-      console.log('New message received:', messageData);
-
-      // When a new message comes in, update the friends list
-      setFriends(prevFriends => {
-        const updatedFriends = [...prevFriends];
-        const friendIndex = updatedFriends.findIndex(
-          f =>
-            f?._id === messageData?.senderId ||
-            f?._id === messageData?.receiverId ||
-            f?.id === messageData?.senderId ||
-            f?.id === messageData?.receiverId,
-        );
-
-        if (friendIndex !== -1) {
-          // Update the friend's latest message
-          const friend = updatedFriends[friendIndex];
-          friend.latestMessage = {
-            ...messageData?.message,
-            time: new Date().toISOString(),
-          };
-
-          // Remove from current position
-          updatedFriends.splice(friendIndex, 1);
-
-          // Add to the beginning of the array
-          updatedFriends.unshift(friend);
-
-          // Also update filtered friends
-          setFilteredFriends([...updatedFriends]);
-
-          return updatedFriends;
-        }
-
-        // If friend not found, fetch the full list
-        fetchFriends();
-        return prevFriends;
-      });
-    },
-    [fetchFriends],
   );
 
   return (

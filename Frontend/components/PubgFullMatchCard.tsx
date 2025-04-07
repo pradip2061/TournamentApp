@@ -447,7 +447,7 @@ const PubgFullMatchCard = ({matches}) => {
                   </View>
 
                   <Text style={{fontSize: 13, color: 'white'}}>
-                    Room id & pass will be show before 6 min matchtime
+                    Room id & pass will be visible before 6 min of the matchtime
                   </Text>
                   <View style={styles.clip}>
                     <View style={styles.input}>

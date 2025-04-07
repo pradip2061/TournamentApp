@@ -8,6 +8,7 @@ import {
   Modal,
   FlatList,
   Alert,
+  Button,
 } from 'react-native';
 import React, {useEffect, useState} from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
@@ -16,6 +17,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
 import {BASE_URL, baseUrl} from '../env';
+import PlayerPositionsModal from './PositionSelectorModal';
 
 const freefire = require('../assets/freefire.jpeg');
 const kalahari = require('../assets/kalahari.webp');
@@ -32,6 +34,8 @@ const Freefirefullmatchcard = ({matches}) => {
   const initalTime = matches.time;
   const [amPm, setAmPm] = useState('PM');
   const [timeModalVisible, setTimeModalVisible] = useState(false);
+  const [positionModal, setPositionModal] = useState(false);
+  const [players, setPlayers] = useState();
 
   const [hidematch, setHidematch] = useState(false);
 
@@ -93,6 +97,27 @@ const Freefirefullmatchcard = ({matches}) => {
 
   const openTimeSelector = () => {
     setTimeModalVisible(true);
+  };
+
+  const listUser = () => {
+    let player = [];
+    for (let i = 0; i < matches.gameName.length; i++) {
+      player[i] = {
+        id: matches.gameName[i].userid,
+        gameName: matches.gameName[i].player1,
+      };
+    }
+    console.log();
+    setPlayers(player);
+    setPositionModal(true);
+  };
+
+  useEffect(() => {
+    console.log('Players State ', players);
+  }, [players]);
+
+  const handleClose = () => {
+    setPositionModal(false);
   };
 
   const selectTime = time => {
@@ -239,7 +264,7 @@ const Freefirefullmatchcard = ({matches}) => {
       </View>
       <View style={styles.divider} />
 
-      {/* Time Selection with AM/PM Toggle */}
+      {/* Time Selection with AM/PM Toggle  and Position Selection */}
       <View style={styles.timeAndEntryContainer}>
         <View style={styles.timeSelectionContainer}>
           <TouchableOpacity
@@ -251,6 +276,12 @@ const Freefirefullmatchcard = ({matches}) => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.amPmToggle} onPress={toggleAmPm}>
             <Text style={styles.amPmText}>{amPm}</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={{backgroundColor: 'yellow', padding: 10, borderRadius: 10}}
+            onPress={listUser}>
+            <Text> Position </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -343,6 +374,15 @@ const Freefirefullmatchcard = ({matches}) => {
           </View>
         </View>
       </Modal>
+
+      {/* Position Modal */}
+      <PlayerPositionsModal
+        visible={positionModal}
+        onClose={handleClose}
+        players={players}
+        matchType={'FF'}
+        match_id={matches._id}
+      />
     </LinearGradient>
   );
 };

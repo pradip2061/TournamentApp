@@ -1,24 +1,36 @@
-import { View, Text, StyleSheet, Pressable, TextInput, Modal, Keyboard, TouchableOpacity, ScrollView, Animated } from 'react-native'
-import React, { useContext, useEffect, useState } from 'react'
-import AntDesign from 'react-native-vector-icons/AntDesign'
-import Ionicons from 'react-native-vector-icons/Ionicons'
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5'
-import Entypo from 'react-native-vector-icons/Entypo'
-import MatchCard from '../../components/MatchCard'
-import { FlatList } from 'react-native-gesture-handler'
-import axios from 'axios'
-import AsyncStorage from '@react-native-async-storage/async-storage'
-import ShimmerBox from '../../components/ShimmerBox'
-import { CheckAdminContext } from '../ContextApi/ContextApi'
-import TdmCard from '../../components/TdmCard'
-import { BASE_URL } from '../../env'
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  TextInput,
+  Modal,
+  Keyboard,
+  TouchableOpacity,
+  ScrollView,
+  Animated,
+} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
+import AntDesign from 'react-native-vector-icons/AntDesign';
+import Ionicons from 'react-native-vector-icons/Ionicons';
+import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import Entypo from 'react-native-vector-icons/Entypo';
+import MatchCard from '../../components/MatchCard';
+import {FlatList} from 'react-native-gesture-handler';
+import axios from 'axios';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import ShimmerBox from '../../components/ShimmerBox';
+import {CheckAdminContext} from '../ContextApi/ContextApi';
+import TdmCard from '../../components/TdmCard';
+import {BASE_URL} from '../../env';
 
-const TDM = ({ navigation }) => {
-  const [datas, setDatas] = useState([])
-  const [trigger, setTrigger] = useState('')
-  const [visible, setVisible] = useState(false)
-  const [message, setMessage] = useState('')
-  const { getdata, data, getProfile } = useContext(CheckAdminContext)
+import {useSocket} from '../../SocketContext';
+const TDM = ({navigation}) => {
+  const [datas, setDatas] = useState([]);
+  const [trigger, setTrigger] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [message, setMessage] = useState('');
+  const {getdata, data, getProfile} = useContext(CheckAdminContext);
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
@@ -26,91 +38,102 @@ const TDM = ({ navigation }) => {
     gameName: data?.gameName?.[0]?.pubg || '',
     betAmount: '',
   });
-    const[joinMatch,setJoinMatch]=useState([])
+  const [joinMatch, setJoinMatch] = useState([]);
 
-  console.log(matchDetails.match)
-  
-  const modal = (messages) => {
-    setVisible(true)
-    setMessage(String(messages))
+  const {renderPage, setRenderPage} = useSocket();
+
+  console.log(matchDetails.match);
+
+  const modal = messages => {
+    setVisible(true);
+    setMessage(String(messages));
     setTimeout(() => {
-      setVisible(false)
-      setMessage('')
-    }, 1000)
-  }
+      setVisible(false);
+      setMessage('');
+    }, 1000);
+  };
 
   const handleOutsidePress = () => {
     Keyboard.dismiss();
-    setMatchDetails((prev) => ({ ...prev, show: false }));
-  }
-
-  const handleModalContentPress = (e) => {
-    e.stopPropagation();
-  }
-
-  const sendData = async (e) => {
-    e.preventDefault()
-    try {
-      if (!matchDetails.betAmount || !matchDetails.gameName) {
-        modal('Fill all fields')
-        return
-      }
-      const token = await AsyncStorage.getItem('token')
-      await axios.post(`${BASE_URL}/khelmela/creatematchtdm`, { matchDetails }, {
-        headers: {
-          Authorization: `${token}`
-        }
-      })
-      .then((response) => {
-        console.log(response)
-        modal(response.data.message)
-        setTrigger('done')
-        setMatchDetails((prev) => ({ ...prev, show: false }))
-        matchidSend(response.data.newMatch._id)
-      })
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "Exceed the limit";
-      modal(errorMessage)
-    }
-  }
-
-  const matchidSend = async (matchId) => {
-    console.log(matchId)
-    try {
-      const token = await AsyncStorage.getItem('token')
-      await axios.post(`${BASE_URL}/khelmela/addinhosttdm`, { matchId }, {
-        headers: {
-          Authorization: `${token}`
-        }
-      })
-    } catch (error) {
-      const errorMessage = error.response?.data?.message || "Exceed the limit";
-      modal(errorMessage)
-    }
-  }
-
-  const getMatches = async () => {
-    const token=await AsyncStorage.getItem('token')
-    await axios.get(`${BASE_URL}/khelmela/gettdm`,{
-      headers:{
-        Authorization:`${token}`
-      }
-    }).then(response => {
-      setDatas(response.data.card);
-      setJoinMatch(response.data.matchjoin)
-      console.log(response)
-    });
+    setMatchDetails(prev => ({...prev, show: false}));
   };
 
-useEffect(()=>{
-  getMatches();
-},[])
+  const handleModalContentPress = e => {
+    e.stopPropagation();
+  };
 
+  const sendData = async e => {
+    e.preventDefault();
+    try {
+      if (!matchDetails.betAmount || !matchDetails.gameName) {
+        modal('Fill all fields');
+        return;
+      }
+      const token = await AsyncStorage.getItem('token');
+      await axios
+        .post(
+          `${BASE_URL}/khelmela/creatematchtdm`,
+          {matchDetails},
+          {
+            headers: {
+              Authorization: `${token}`,
+            },
+          },
+        )
+        .then(response => {
+          console.log(response);
+          modal(response.data.message);
+          setTrigger('done');
+          setMatchDetails(prev => ({...prev, show: false}));
+          matchidSend(response.data.newMatch._id);
+        });
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Exceed the limit';
+      modal(errorMessage);
+    }
+  };
 
+  const matchidSend = async matchId => {
+    console.log(matchId);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios.post(
+        `${BASE_URL}/khelmela/addinhosttdm`,
+        {matchId},
+        {
+          headers: {
+            Authorization: `${token}`,
+          },
+        },
+      );
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || 'Exceed the limit';
+      modal(errorMessage);
+    }
+  };
 
-  const triggergettdm =()=>{
-    getMatches()
-  }
+  const getMatches = async () => {
+    const token = await AsyncStorage.getItem('token');
+    await axios
+      .get(`${BASE_URL}/khelmela/gettdm`, {
+        headers: {
+          Authorization: `${token}`,
+        },
+      })
+      .then(response => {
+        setDatas(response.data.card);
+        setJoinMatch(response.data.matchjoin);
+        console.log(response);
+      });
+  };
+
+  useEffect(() => {
+    getMatches();
+  }, [visible, renderPage]);
+
+  const triggergettdm = () => {
+    getMatches();
+  };
 
   return (
     <ScrollView>
@@ -129,7 +152,9 @@ useEffect(()=>{
           Note: All matches are made by host player not admin
         </Text>
 
-        <Pressable style={styles.createButton} onPress={() => setMatchDetails((prev) => ({ ...prev, show: true }))}>
+        <Pressable
+          style={styles.createButton}
+          onPress={() => setMatchDetails(prev => ({...prev, show: true}))}>
           <Ionicons name="add-circle-outline" size={24} color="white" />
           <Text style={styles.createButtonText}>Create</Text>
         </Pressable>
@@ -138,34 +163,37 @@ useEffect(()=>{
           <Entypo name="game-controller" size={24} color="#333" />
           <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
-        <View style={{backgroundColor:'red'}}>
-        { joinMatch?.length !== 0 ? (
-      <FlatList
-        data={joinMatch}
-        scrollEnabled={false}
-        keyExtractor={(item, id) => id.toString()}
-        renderItem={({ item }) => (
-          <TdmCard matches={item} getmatches={triggergettdm}/>
-        )}
-        contentContainerStyle={{ gap: 20 }}
-      />
-    ) : (
-      <Text>No join Matches Right now.</Text>
-    )}
+        <View style={{backgroundColor: 'red'}}>
+          {joinMatch?.length !== 0 ? (
+            <FlatList
+              data={joinMatch}
+              scrollEnabled={false}
+              keyExtractor={(item, id) => id.toString()}
+              renderItem={({item}) => (
+                <TdmCard matches={item} getmatches={triggergettdm} />
+              )}
+              contentContainerStyle={{gap: 20}}
+            />
+          ) : (
+            <Text>No join Matches Right now.</Text>
+          )}
         </View>
-        <View style={{ paddingBottom: 300 }}>
+        <View style={{paddingBottom: 300}}>
           <View>
             {datas?.length ? (
               <FlatList
                 data={datas}
                 scrollEnabled={false}
                 keyExtractor={(item, id) => id.toString()}
-                renderItem={({ item }) => <TdmCard matches={item} getmatches={triggergettdm}/>}
-                ItemSeparatorComponent={() => <View style={{ height: 20 }} />}
+                renderItem={({item}) => (
+                  <TdmCard matches={item} getmatches={triggergettdm} />
+                )}
+                ItemSeparatorComponent={() => <View style={{height: 20}} />}
               />
+            ) : data === null || data?.length === 0 ? (
+              <Text>No Matches Right now.</Text>
             ) : (
-              data === null || data?.length === 0 ? <Text>No Matches Right now.</Text> :
-              <ShimmerBox/>
+              <ShimmerBox />
             )}
           </View>
         </View>
@@ -173,43 +201,48 @@ useEffect(()=>{
         <Modal
           visible={matchDetails.show}
           transparent
-          animationType='fade'
-          onRequestClose={handleOutsidePress}
-        >
+          animationType="fade"
+          onRequestClose={handleOutsidePress}>
           <TouchableOpacity
             style={styles.modalOverlay}
             activeOpacity={1}
-            onPress={handleOutsidePress}
-          >
-            <View 
+            onPress={handleOutsidePress}>
+            <View
               style={styles.modal}
               onStartShouldSetResponder={() => true}
-              onResponderGrant={handleModalContentPress}
-            >
-              <ScrollView 
+              onResponderGrant={handleModalContentPress}>
+              <ScrollView
                 style={styles.modalScroll}
                 contentContainerStyle={styles.modalContentContainer}
-                showsVerticalScrollIndicator={true}
-              >
-                <TouchableOpacity 
+                showsVerticalScrollIndicator={true}>
+                <TouchableOpacity
                   style={styles.closeButton}
-                  onPress={handleOutsidePress}
-                >
+                  onPress={handleOutsidePress}>
                   <AntDesign name="close" size={24} color="#333" />
                 </TouchableOpacity>
-                
+
                 <View style={styles.modalHandle} />
                 <Text style={styles.modalTitle}>Create Your Match</Text>
-                <View style={{ marginHorizontal: 15 }}>
+                <View style={{marginHorizontal: 15}}>
                   <Text style={styles.sectionTitle}>Room Mode</Text>
                   <View style={styles.toggleContainer}>
-                    {['1v1', '2v2', '3v3', '4v4'].map((mode) => (
+                    {['1v1', '2v2', '3v3', '4v4'].map(mode => (
                       <TouchableOpacity
                         key={mode}
-                        onPress={() => setMatchDetails((prev) => ({ ...prev, match: mode }))}
-                        style={matchDetails.match === mode ? styles.toggleActive : styles.toggle}
-                      >
-                        <Text style={matchDetails.match === mode ? styles.toggleTextActive : styles.toggleText}>
+                        onPress={() =>
+                          setMatchDetails(prev => ({...prev, match: mode}))
+                        }
+                        style={
+                          matchDetails.match === mode
+                            ? styles.toggleActive
+                            : styles.toggle
+                        }>
+                        <Text
+                          style={
+                            matchDetails.match === mode
+                              ? styles.toggleTextActive
+                              : styles.toggleText
+                          }>
                           {mode}
                         </Text>
                       </TouchableOpacity>
@@ -219,22 +252,28 @@ useEffect(()=>{
                   <View style={styles.inputSection}>
                     <Text style={styles.sectionTitle}>Game Name</Text>
                     <TextInput
-                      placeholder='Enter game name'
+                      placeholder="Enter game name"
                       style={styles.textInput}
                       value={matchDetails.gameName}
-                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, gameName: text }))}
+                      onChangeText={text =>
+                        setMatchDetails(prev => ({...prev, gameName: text}))
+                      }
                     />
 
                     <Text style={styles.sectionTitle}>Entry Fee</Text>
                     <TextInput
-                      placeholder='Enter amount'
+                      placeholder="Enter amount"
                       keyboardType="numeric"
                       style={styles.textInput}
                       value={matchDetails.betAmount}
-                      onChangeText={(text) => setMatchDetails((prev) => ({ ...prev, betAmount: text }))}
+                      onChangeText={text =>
+                        setMatchDetails(prev => ({...prev, betAmount: text}))
+                      }
                     />
 
-                    <TouchableOpacity style={styles.publishButton} onPress={sendData}>
+                    <TouchableOpacity
+                      style={styles.publishButton}
+                      onPress={sendData}>
                       <Text style={styles.publishButtonText}>Publish</Text>
                     </TouchableOpacity>
                   </View>
@@ -253,8 +292,8 @@ useEffect(()=>{
         </Modal>
       </View>
     </ScrollView>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -296,7 +335,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignSelf: 'flex-end',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
@@ -315,7 +354,7 @@ const styles = StyleSheet.create({
     width: 150,
     marginVertical: 15,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
+    shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
@@ -381,7 +420,6 @@ const styles = StyleSheet.create({
   toggleContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    
   },
   toggle: {
     paddingVertical: 8,
@@ -430,7 +468,7 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     elevation: 4,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
@@ -453,7 +491,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },
@@ -463,6 +501,6 @@ const styles = StyleSheet.create({
     color: '#333',
     textAlign: 'center',
   },
-})
+});
 
-export default TDM
+export default TDM;

@@ -30,7 +30,8 @@ import {
   formatTimestamp,
   isImageMessage,
 } from '../../components/PrivateChatComponent/Dateformat';
-import playNotificationSound from '../../utility/Notification';
+
+import {useSocket} from '../../SocketContext';
 
 // Message item component
 const MessageItem = ({
@@ -164,7 +165,14 @@ const messagesReducer = (state, action) => {
 };
 
 const PrivateChat = ({route, navigation}) => {
-  const {userId, FriendId, name, photoUrl} = route.params || {
+  const {
+    userId,
+    FriendId,
+    name,
+    photoUrl,
+    filteredFriends,
+    setFilteredFriends,
+  } = route.params || {
     name: 'Unknown',
     photoUrl: 'https://via.placeholder.com/40',
   };
@@ -175,7 +183,8 @@ const PrivateChat = ({route, navigation}) => {
   const [inputHeight, setInputHeight] = useState(40);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [socket, setSocket] = useState(null);
+  const {socket, isConnected, activeChat, setActiveChat} = useSocket();
+
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
@@ -201,44 +210,51 @@ const PrivateChat = ({route, navigation}) => {
   }, []);
 
   // Setup socket connection
-  useEffect(() => {
-    const newSocket = io(BASE_URL); // Connect to server
-    setSocket(newSocket); // Store socket in state
 
-    newSocket.on('connect', () => {
-      console.log(' Notify connection t0 Connected to server:', newSocket.id);
-      newSocket.emit('register', userId); // Register AFTER connection is established
-    });
-
-    // Listen for notifications
-
-    return () => {
-      newSocket.disconnect(); // Cleanup when component unmounts
-    };
-  }, []);
-
+  // Listen for notifications
   useEffect(() => {
     if (!socket) return;
-    socket.emit('joinRoom', roomId);
-    socket.on('message', message => {
-      console.log('Message Recived ', message);
-      dispatchMessages({type: 'ADD_MESSAGE', payload: message});
-    });
 
-    socket.on('connect_error', error => {
+    const handleConnect = () => {
+      console.log('Connected to socket:', socket.id);
+      socket.emit('register', userId);
+      socket.emit('joinRoom', roomId);
+    };
+
+    const handleMessage = message => {
+      console.log('Message Received:', message);
+      dispatchMessages({type: 'ADD_MESSAGE', payload: message});
+    };
+
+    const handleConnectError = error => {
       console.error('Socket connection error:', error);
       Alert.alert(
         'Connection Error',
         'Unable to connect to chat server. Please try again later.',
       );
-    });
-
-    // Cleanup listeners
-    return () => {
-      socket.off('message');
-      socket.off('connect_error');
     };
-  }, [socket, roomId]);
+
+    socket.on('connect', handleConnect);
+    socket.on('message', handleMessage);
+    socket.on('connect_error', handleConnectError);
+
+    return () => {
+      socket.off('connect', handleConnect);
+      socket.off('message', handleMessage);
+      socket.off('connect_error', handleConnectError);
+    };
+  }, [socket, roomId, userId]);
+
+  useEffect(() => {
+    setActiveChat(FriendId);
+    return () => {
+      setActiveChat(null);
+    };
+  }, [roomId, FriendId]);
+
+  useEffect(() => {
+    console.log('friend Id ', FriendId, activeChat);
+  }, [activeChat, FriendId]); // Run whenever activeChat or FriendId changes
 
   // Fetch messages with pagination
   const fetchMessages = useCallback(
@@ -310,7 +326,50 @@ const PrivateChat = ({route, navigation}) => {
     };
 
     // Emit message to server
-    socket.emit('message', {room: roomId, message: messageData});
+    socket.emit('message', {
+      room: roomId,
+      message: messageData,
+      reciver: FriendId,
+    });
+
+    const updateFriendMessage = (FriendId, messageData) => {
+      const updatedFriendsWithNewMessage = filteredFriends.map(friend => {
+        if (friend.id === FriendId) {
+          return {
+            ...friend, // Copy the existing friend data
+            latestMessage: {
+              message: messageData.message,
+              time: messageData.time,
+            },
+          };
+        }
+        return friend;
+      });
+
+      // Find the index of the updated friend
+      const updatedFriendIndex = updatedFriendsWithNewMessage.findIndex(
+        friend => friend.id === FriendId,
+      );
+
+      // If the friend was found and updated, move them to the beginning of the array
+      if (updatedFriendIndex > 0) {
+        const updatedFriend = updatedFriendsWithNewMessage.splice(
+          updatedFriendIndex,
+          1,
+        )[0];
+        setFilteredFriends([updatedFriend, ...updatedFriendsWithNewMessage]);
+      } else {
+        setFilteredFriends(updatedFriendsWithNewMessage);
+      }
+
+      console.log(
+        'Filtered Friends after Update~~~~~~~~~~~~~~~ ',
+        filteredFriends,
+      );
+    };
+
+    updateFriendMessage(FriendId, messageData);
+
     socket.emit('Notify', {
       type: 'newMessage',
       message: messageData,

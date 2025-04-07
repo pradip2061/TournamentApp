@@ -22,6 +22,8 @@ import ShimmerBox from '../../components/ShimmerBox';
 import LinearGradient from 'react-native-linear-gradient';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
 
+import {useSocket} from '../../SocketContext';
+
 import {BASE_URL} from '../../env';
 import MatchCard from '../../components/MatchCard';
 
@@ -29,6 +31,7 @@ const FreeFire = ({navigation}) => {
   const [card, setCard] = useState([]);
   const {checkrole, checkadmin} = useContext(CheckAdminContext);
   const [createModal, setCreateModal] = useState(false);
+  const {renderPage} = useSocket();
   useEffect(() => {
     checkrole();
   }, []);
@@ -42,7 +45,8 @@ const FreeFire = ({navigation}) => {
     } catch (error) {
       console.log(error);
     }
-  }, []);
+  }, [renderPage]);
+
   return (
     <ImageBackground style={styles.matchCard}>
       <ScrollView style={styles.container}>

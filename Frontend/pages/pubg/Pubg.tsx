@@ -24,10 +24,13 @@ const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
 const erangle = require('../assets/erangle.jpg');
 const sanhok = require('../assets/sanhok.jpg');
+import {useSocket} from '../../SocketContext';
 
 const Pubg = ({navigation}) => {
   const [data, setData] = useState([]);
   const {checkrole, checkadmin} = useContext(CheckAdminContext);
+
+  const {renderPage, setRenderPage} = useSocket();
 
   useEffect(() => {
     checkrole();
@@ -41,7 +44,7 @@ const Pubg = ({navigation}) => {
       });
     };
     getmatchCard();
-  }, []);
+  }, [renderPage]);
 
   return (
     <ScrollView style={styles.container}>

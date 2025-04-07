@@ -12,7 +12,7 @@ const PubgRouter = require("./router/user/PubgRouter");
 const getter = require("./router/user/getter");
 const matchValidation = require("./router/admin/geminiVal");
 const DeleteCardRouter = require("./router/user/DeleteCardRouter");
-
+const prize_Distribute = require("./router/admin/price_Distribute");
 const {
   router: ChatRouter,
   setupChatSocket,
@@ -53,6 +53,7 @@ app.use(
 );
 
 app.use("/khelmela/admin", Admin);
+app.use("/khelmela/admin", prize_Distribute);
 app.use("/khelmela/upload", upload);
 
 const io = new Server(server, {

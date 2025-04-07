@@ -16,6 +16,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import LinearGradient from 'react-native-linear-gradient';
 import {BASE_URL, baseUrl} from '../env';
+import PlayerPositionModal from './PositionSelectorModal';
 
 const img = require('../assets/image.png');
 const miramar = require('../assets/miramar.jpg');
@@ -33,6 +34,9 @@ const PubgFullMatchCard = ({matches}) => {
   const [timeModalVisible, setTimeModalVisible] = useState(false);
 
   const [hidematch, setHidematch] = useState(false);
+
+  const [positionModal, setPositionModal] = useState(false);
+  const [players, setPlayers] = useState();
 
   // Available time options
   const timeOptions = [
@@ -88,6 +92,23 @@ const PubgFullMatchCard = ({matches}) => {
       console.log(error);
       Alert.alert('Error ', error.message);
     }
+  };
+
+  const listUser = () => {
+    let player = [];
+    for (let i = 0; i < matches.gameName.length; i++) {
+      player[i] = {
+        id: matches.gameName[i].userid,
+        gameName: matches.gameName[i].player1,
+      };
+    }
+    console.log();
+    setPlayers(player);
+    setPositionModal(true);
+  };
+
+  const handleClose = () => {
+    setPositionModal(false);
   };
 
   const openTimeSelector = () => {
@@ -250,6 +271,11 @@ const PubgFullMatchCard = ({matches}) => {
           <TouchableOpacity style={styles.amPmToggle} onPress={toggleAmPm}>
             <Text style={styles.amPmText}>{amPm}</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={{backgroundColor: 'yellow', padding: 10, borderRadius: 10}}
+            onPress={listUser}>
+            <Text> Position </Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -341,6 +367,15 @@ const PubgFullMatchCard = ({matches}) => {
           </View>
         </View>
       </Modal>
+
+      {/* Position Modal  */}
+      <PlayerPositionModal
+        visible={positionModal}
+        onClose={handleClose}
+        players={players}
+        matchType={'pubg'}
+        match_id={matches._id}
+      />
     </LinearGradient>
   );
 };

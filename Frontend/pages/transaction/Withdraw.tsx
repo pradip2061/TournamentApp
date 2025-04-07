@@ -11,19 +11,21 @@ import {
 } from 'react-native';
 import {baseUrl} from '../../env';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 const Withdraw = ({navigation}) => {
   const [selectedMethod, setSelectedMethod] = useState('eSewa');
   const [amount, setAmount] = useState('');
   const [number, setNumber] = useState('');
   const [name, setName] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleWithdraw = async () => {
     if (!amount || !number) {
       Alert.alert(`Enter your ${selectedMethod} Number and Amount`);
       return;
     }
-
+    setIsLoading(true);
     const token = await AsyncStorage.getItem('token');
 
     console.log(token);
@@ -53,7 +55,7 @@ const Withdraw = ({navigation}) => {
     const res = await axios.post(`${baseUrl}/khelmela/withdraw`, data, {
       headers: {Authorization: `${token}`},
     });
-
+    setIsLoading(false);
     console.log(res.data);
     Alert.alert(res.data.message);
   };
@@ -119,9 +121,13 @@ const Withdraw = ({navigation}) => {
 
       <TouchableOpacity
         style={styles.saveButton}
-        onPress={() => handleWithdraw(selectedMethod)}>
+        onPress={() => {
+          handleWithdraw(selectedMethod);
+        }}>
         <Text style={styles.saveButtonText}>Save</Text>
       </TouchableOpacity>
+
+      <LoadingOverlay isVisible={isLoading} message={'एकै छिन् ल !'} />
     </View>
   );
 };

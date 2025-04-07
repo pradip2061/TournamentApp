@@ -16,6 +16,7 @@ import {launchImageLibrary} from 'react-native-image-picker';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL, baseUrl} from '../../env';
+import LoadingOverlay from '../../components/LoadingOverlay';
 
 const DepositMoney = () => {
   const [selectedMethod, setSelectedMethod] = useState('eSewa');
@@ -24,6 +25,7 @@ const DepositMoney = () => {
   const [Number, setNumber] = useState('');
   const [amount, setAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const progress = useRef(new Animated.Value(0)).current;
   const openGallery = () => {
@@ -79,7 +81,6 @@ const DepositMoney = () => {
     });
   };
   const handleDeposite = async () => {
-    setLoading(true);
     startLoadingAnimation();
 
     try {
@@ -93,7 +94,12 @@ const DepositMoney = () => {
         Alert.alert('Please upload an image');
         return;
       }
+      if (Number.length != 10) {
+        Alert.alert('Please enter a valid phone number');
+        return;
+      }
 
+      setIsLoading(true);
       // Generate a proper filename with extension
       const timestamp = new Date().getTime();
       const filename = `payment_proof_${timestamp}.jpg`;
@@ -137,7 +143,7 @@ const DepositMoney = () => {
           headers: {Authorization: `${token}`},
         },
       );
-
+      setIsLoading(false);
       Alert.alert(depositResponse.data.message);
     } catch (error) {
       console.error('Error:', error.response);
@@ -155,7 +161,7 @@ const DepositMoney = () => {
   });
 
   return (
-    <ScrollView>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
         {loading && (
           <Animated.View style={[styles.loadingBar, {width: progressWidth}]} />
@@ -165,7 +171,9 @@ const DepositMoney = () => {
         />
         <Text style={styles.heading}>Select Payment Method</Text>
         <View style={styles.methodContainer}>
-          <TouchableOpacity onPress={() => setSelectedMethod('eSewa')}>
+          <TouchableOpacity
+            style={styles.methodItem}
+            onPress={() => setSelectedMethod('eSewa')}>
             <Image
               source={require('../../assets/esewa.jpg')}
               style={
@@ -173,7 +181,9 @@ const DepositMoney = () => {
               }
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setSelectedMethod('Khalti')}>
+          <TouchableOpacity
+            style={styles.methodItem}
+            onPress={() => setSelectedMethod('Khalti')}>
             <Image
               source={require('../../assets/khalti.jpg')}
               style={
@@ -183,11 +193,13 @@ const DepositMoney = () => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.subHeading}>Pay on this QR</Text>
-        <Image
-          source={require('../../assets/scannerraiden.jpg')}
-          style={styles.qrImage}
-        />
+        <View style={styles.qrContainer}>
+          <Text style={styles.subHeading}>Pay on this QR</Text>
+          <Image
+            source={require('../../assets/scannerraiden.jpg')}
+            style={styles.qrImage}
+          />
+        </View>
 
         <TextInput
           style={styles.input}
@@ -212,23 +224,33 @@ const DepositMoney = () => {
           <AntDesign name="cloudupload" size={24} color="white" />
           <Text style={styles.uploadText}>Click here to upload Screenshot</Text>
         </TouchableOpacity>
+        {selectedImage && (
+          <View style={styles.uploadedImageContainer}>
+            <Text style={styles.uploadedImageLabel}>Uploaded Screenshot:</Text>
+            <Image source={{uri: selectedImage}} style={styles.uploadedImage} />
+          </View>
+        )}
         <TouchableOpacity style={styles.depositButton} onPress={handleDeposite}>
           <Text style={styles.depositText}>Deposit</Text>
         </TouchableOpacity>
-        {selectedImage && (
-          <Image source={{uri: selectedImage}} style={styles.uploadedImage} />
-        )}
       </View>
+
+      <LoadingOverlay isVisible={isLoading} message={'एकै छिन् ल !'} />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    justifyContent: 'center', // Center content vertically
+    paddingVertical: 20, // Add some vertical padding for better spacing
+    backgroundColor: '#F2F2F2',
+  },
   container: {
     flex: 1,
-    alignItems: 'center',
-    padding: 20,
-    backgroundColor: '#F2F2F2)',
+    alignItems: 'center', // Center items horizontally
+    paddingHorizontal: 20, // Use horizontal padding instead of fixed width
   },
   loadingBar: {
     position: 'absolute',
@@ -236,25 +258,38 @@ const styles = StyleSheet.create({
     left: 0,
     height: 5,
     backgroundColor: 'blue',
+    zIndex: 10, // Ensure it's above other elements
   },
-  heading: {fontSize: 26, fontWeight: 'bold', marginTop: 15, color: 'Black'},
+  heading: {fontSize: 26, fontWeight: 'bold', marginTop: 20, color: 'Black'},
   methodContainer: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: 47,
-    gap: 50,
+    justifyContent: 'space-around', // Distribute icons evenly
+    marginTop: 30,
+    width: '80%', // Adjust width as needed
   },
-  icon: {width: 90, height: 40, opacity: 0.8},
-  selectedIcon: {width: 110, height: 50, opacity: 1},
-  subHeading: {fontSize: 18, fontWeight: 'bold', marginTop: 25, color: 'black'},
-  qrImage: {width: 150, height: 250, marginBottom: 40},
+  methodItem: {
+    alignItems: 'center',
+  },
+  icon: {width: 90, height: 40, opacity: 0.8, resizeMode: 'contain'},
+  selectedIcon: {width: 110, height: 50, opacity: 1, resizeMode: 'contain'},
+  qrContainer: {
+    alignItems: 'center',
+    marginTop: 30,
+  },
+  subHeading: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: 'black',
+  },
+  qrImage: {width: 150, height: 250, marginBottom: 30, borderRadius: 10},
   input: {
     borderWidth: 1,
     borderColor: '#ccc',
     backgroundColor: 'white',
     width: '80%',
-    padding: 10,
-    marginBottom: 20,
+    padding: 15,
+    marginBottom: 15,
     borderRadius: 10,
     color: 'black',
   },
@@ -262,21 +297,32 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'lightblue',
-    padding: 10,
-    borderRadius: 5,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 20,
   },
-  uploadText: {color: 'white', marginLeft: 5},
+  uploadText: {color: 'white', marginLeft: 10, fontSize: 16},
   depositButton: {
-    width: 190,
-    height: 40,
+    width: '80%',
+    height: 50,
     backgroundColor: 'blue',
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 20,
     borderRadius: 25,
   },
-  depositText: {fontSize: 21, color: 'white'},
-  uploadedImage: {width: 200, height: 200, marginTop: 20, borderRadius: 10},
+  depositText: {fontSize: 20, color: 'white', fontWeight: 'bold'},
+  uploadedImageContainer: {
+    alignItems: 'center',
+    marginTop: 20,
+  },
+  uploadedImageLabel: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+    color: 'black',
+  },
+  uploadedImage: {width: 150, height: 150, borderRadius: 10},
 });
 
 export default DepositMoney;

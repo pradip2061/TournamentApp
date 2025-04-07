@@ -22,6 +22,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import ShimmerBox from '../../components/ShimmerBox';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
 import {BASE_URL} from '../../env';
+import {useSocket} from '../../SocketContext';
 
 const ClashSquad = ({navigation}) => {
   const [page, setPage] = useState(1);
@@ -29,8 +30,9 @@ const ClashSquad = ({navigation}) => {
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const {getProfile,data} = useContext(CheckAdminContext);
-  const[joinMatch,setJoinMatch]=useState([])
+  const {getProfile, data} = useContext(CheckAdminContext);
+  const [joinMatch, setJoinMatch] = useState([]);
+  const {renderPage, setRenderPage} = useSocket();
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
@@ -41,7 +43,7 @@ const ClashSquad = ({navigation}) => {
     round: 13,
     coin: 'Default',
     match: 'clashsquad',
-    gameName:data?.gameName[0]?.freefire,
+    gameName: data?.gameName[0]?.freefire,
     betAmount: '',
   });
   const modal = messages => {
@@ -101,7 +103,7 @@ const ClashSquad = ({navigation}) => {
         )
         .then(response => {
           modal(response.data.message);
-         getMatches()
+          getMatches();
           setMatchDetails(prev => ({...prev, show: false}));
           matchidSend(response.data.newMatch._id);
         });
@@ -111,7 +113,7 @@ const ClashSquad = ({navigation}) => {
     }
   };
 
-  const matchidSend = async (matchId) => {
+  const matchidSend = async matchId => {
     try {
       const token = await AsyncStorage.getItem('token');
       await axios.post(
@@ -129,30 +131,29 @@ const ClashSquad = ({navigation}) => {
     }
   };
 
+  const getMatches = async () => {
+    const token = await AsyncStorage.getItem('token');
+    await axios
+      .get(`${BASE_URL}/khelmela/get`, {
+        headers: {
+          Authorization: `${token}`,
+        },
+      })
+      .then(response => {
+        setDatas(response.data.card);
+        setJoinMatch(response.data.matchjoin);
+        console.log(response);
+      });
+  };
 
-
-
-      const getMatches = async () => {
-        const token=await AsyncStorage.getItem('token')
-        await axios.get(`${BASE_URL}/khelmela/get`,{
-          headers:{
-            Authorization:`${token}`
-          }
-        }).then(response => {
-          setDatas(response.data.card);
-          setJoinMatch(response.data.matchjoin)
-          console.log(response)
-        });
-      };
-
-    useEffect(()=>{
-      getMatches();
-    },[])
-
+  useEffect(() => {
+    getMatches();
+  }, [renderPage]);
 
   const refreshData = () => {
     getMatches();
   };
+
   return (
     <ScrollView>
       <View style={styles.container}>
@@ -182,53 +183,53 @@ const ClashSquad = ({navigation}) => {
           <Text style={styles.liveMatchesText}>Live Matches</Text>
         </View>
         <View>
-        { joinMatch?.length !== 0 ? (
-      <FlatList
-        data={joinMatch}
-        scrollEnabled={false}
-        keyExtractor={(item, id) => id.toString()}
-        renderItem={({ item }) => (
-          <MatchCard match={item} refreshData={refreshData} />
-        )}
-        contentContainerStyle={{ gap: 20 }}
-      />
-    ) : (
-      <Text>No join Matches Right now.</Text>
-    )}
+          {joinMatch?.length !== 0 ? (
+            <FlatList
+              data={joinMatch}
+              scrollEnabled={false}
+              keyExtractor={(item, id) => id.toString()}
+              renderItem={({item}) => (
+                <MatchCard match={item} refreshData={refreshData} />
+              )}
+              contentContainerStyle={{gap: 20}}
+            />
+          ) : (
+            <Text>No join Matches Right now.</Text>
+          )}
         </View>
 
-  <View style={{paddingBottom: 15,backgroundColor:'red'}}>
-  <View>
-    {datas === null ? (
-      <ShimmerBox />
-    ) : datas.length !== 0 ? (
-      <FlatList
-        data={datas}
-        scrollEnabled={false}
-        keyExtractor={(item, id) => id.toString()}
-        renderItem={({ item }) => (
-          <MatchCard match={item} refreshData={refreshData} />
-        )}
-        contentContainerStyle={{ gap: 20 }}
-      />
-    ) : (
-      <Text>No Matches Right now.</Text>
-    )}
-  </View>
-</View>
+        <View style={{paddingBottom: 15, backgroundColor: 'red'}}>
+          <View>
+            {datas === null ? (
+              <ShimmerBox />
+            ) : datas.length !== 0 ? (
+              <FlatList
+                data={datas}
+                scrollEnabled={false}
+                keyExtractor={(item, id) => id.toString()}
+                renderItem={({item}) => (
+                  <MatchCard match={item} refreshData={refreshData} />
+                )}
+                contentContainerStyle={{gap: 20}}
+              />
+            ) : (
+              <Text>No Matches Right now.</Text>
+            )}
+          </View>
+        </View>
         <Modal
           visible={matchDetails.show}
           transparent
           animationType="fade"
           onRequestClose={handleOutsidePress}>
-               <ScrollView
-                contentContainerStyle={styles.modalContentContainer}
-                nestedScrollEnabled={true}>
-          <TouchableOpacity
-            style={styles.modalOverlay}
-            activeOpacity={1}
-            onPress={handleOutsidePress}>
-            <TouchableOpacity style={styles.modal} activeOpacity={1}>
+          <ScrollView
+            contentContainerStyle={styles.modalContentContainer}
+            nestedScrollEnabled={true}>
+            <TouchableOpacity
+              style={styles.modalOverlay}
+              activeOpacity={1}
+              onPress={handleOutsidePress}>
+              <TouchableOpacity style={styles.modal} activeOpacity={1}>
                 <TouchableOpacity
                   style={styles.closeButton}
                   onPress={handleOutsidePress}>
@@ -662,8 +663,8 @@ const ClashSquad = ({navigation}) => {
                     </View>
                   )}
                 </View>
+              </TouchableOpacity>
             </TouchableOpacity>
-          </TouchableOpacity>
           </ScrollView>
         </Modal>
 
@@ -759,7 +760,7 @@ const styles = StyleSheet.create({
     maxHeight: '80%',
     backgroundColor: '#FFFFFF',
     marginTop: 280,
-    zIndex:100
+    zIndex: 100,
   },
   modalContentContainer: {
     paddingBottom: 10,
