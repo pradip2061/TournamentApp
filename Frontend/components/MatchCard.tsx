@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -21,8 +21,8 @@ import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 const MatchCard = ({ match, refreshData }) => {
   const [check, setCheck] = useState('');
-  const [customId, setCustomId] = useState(0);
-  const [customPassword, setCustomPassword] = useState(0);
+  const [customId, setCustomId] = useState('');
+  const [customPassword, setCustomPassword] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
@@ -44,184 +44,140 @@ const MatchCard = ({ match, refreshData }) => {
   const matchId = match._id;
   const { setTrigger, trigger } = useContext(CheckAdminContext);
 
-  useEffect(() => {
-    const checkUserOrAdmin = async () => {
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/checkUserOrAdmin`,
-          { matchId },
-          { headers: { Authorization: `${token}` } },
-        )
-        .then(response => {
-          setCheck(response.data.message);
-          setRender('done');
-        });
-    };
-    checkUserOrAdmin();
-  }, [trigger, render]);
+  // Memoize token retrieval
+  const getToken = useCallback(async () => {
+    return await AsyncStorage.getItem('token');
+  }, []);
 
-  const checking = async () => {
+  // Combine API calls into a single useEffect
+  useEffect(() => {
+    const fetchInitialData = async () => {
+      const token = await getToken();
+      try {
+        const [userCheckResponse, publishResponse, resultResponse, reportResponse] = await Promise.all([
+          axios.post(`${BASE_URL}/khelmela/checkUserOrAdmin`, { matchId }, { headers: { Authorization: `${token}` } }),
+          axios.post(`${BASE_URL}/khelmela/checkpublish`, { matchId }),
+          axios.post(`${BASE_URL}/khelmela/checkresult`, {}, { headers: { Authorization: `${token}` } }),
+          axios.post(`${BASE_URL}/khelmela/checkreportClash`, {}, { headers: { Authorization: `${token}` } }),
+        ]);
+
+        setCheck(userCheckResponse.data.message);
+        setPublish(publishResponse.data.message);
+        setResult(resultResponse.data.message);
+        setCheckReport(reportResponse.data.message);
+        setRender('done');
+      } catch (err) {
+        console.log('Error fetching initial data:', err.response?.data?.message || err.message);
+      }
+    };
+
+    fetchInitialData();
+  }, [matchId, trigger, getToken]);
+
+  const checking = useCallback(async () => {
     try {
       setError('');
       setMessage('');
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/check`,
-          {},
-          { headers: { Authorization: `${token}` } },
-        )
-        .then(response => {
-          if (response.status === 200) {
-            setModalVisible(true);
-            setMessage('user is free');
-          } else {
-            setModalVisible(false);
-          }
-        });
+      const token = await getToken();
+      const response = await axios.post(`${BASE_URL}/khelmela/check`, {}, { headers: { Authorization: `${token}` } });
+      if (response.status === 200) {
+        setModalVisible(true);
+        setMessage('user is free');
+      } else {
+        setModalVisible(false);
+      }
     } catch (error) {
-      setError(error.response.data.message);
+      setError(error.response?.data?.message || 'Check failed');
     } finally {
       notify();
     }
-  };
+  }, [getToken]);
 
-  const notify = () => {
+  const notify = useCallback(() => {
     setNotifyModel(true);
     setTimeout(() => setNotifyModel(false), 1200);
-  };
+  }, []);
 
-  const customIdAndPassword = async e => {
+  const customIdAndPassword = useCallback(async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await axios
-        .post(`${BASE_URL}/khelmela/setpass`, {
-          customId,
-          customPassword,
-          matchId,
-        })
-        .then(response => {
-          if (response.status === 200) {
-            setMessage(response.data.message);
-            refreshData();
-            setLoading(false);
-          }
-        });
+      const response = await axios.post(`${BASE_URL}/khelmela/setpass`, { customId, customPassword, matchId });
+      if (response.status === 200) {
+        setMessage(response.data.message);
+        refreshData();
+      }
     } catch (error) {
-      setError(error.response.data.message);
+      setError(error.response?.data?.message || 'Failed to set custom ID/password');
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [customId, customPassword, matchId, refreshData]);
 
-  const joinuser = async () => {
+  const joinuser = useCallback(async () => {
     try {
       setError('');
       setMessage('');
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/join`,
-          { matchId },
-          { headers: { Authorization: `${token}` } },
-        )
-        .then(response => {
-          if (response.status === 200) {
-            setModalVisible(false);
-            setMessage(response.data.message);
-            setRender('done');
-          } else {
-            setModalVisible(true);
-          }
-        });
+      const token = await getToken();
+      const response = await axios.post(`${BASE_URL}/khelmela/join`, { matchId }, { headers: { Authorization: `${token}` } });
+      if (response.status === 200) {
+        setModalVisible(false);
+        setMessage(response.data.message);
+        setRender('done');
+      } else {
+        setModalVisible(true);
+      }
     } catch (error) {
-      setError(error.response.data.message);
+      setError(error.response?.data?.message || 'Join failed');
     } finally {
       notify();
     }
-  };
+  }, [matchId, getToken]);
 
-  useEffect(() => {
-    const checkpublish = async () => {
-      try {
-        await axios
-          .post(`${BASE_URL}/khelmela/checkpublish`, { matchId })
-          .then(response => {
-            if (response.status === 200) setPublish(response.data.message);
-          });
-      } catch (error) {
-        console.log(error);
-      }
-    };
-    checkpublish();
-  }, [trigger, render, message]);
-
-  const copyToClipboardId = () => {
+  const copyToClipboardId = useCallback(() => {
     if (!match.customId) {
       setError('no customId here');
       return;
     }
     Clipboard.setString(match.customId.toString());
-  };
+  }, [match.customId]);
 
-  const copyToClipboardPass = () => {
+  const copyToClipboardPass = useCallback(() => {
     if (!match.customPassword) {
       setError('no customId here');
       return;
     }
     Clipboard.setString(match.customPassword.toString());
-  };
+  }, [match.customPassword]);
 
-  const reset = async () => {
+  const reset = useCallback(async () => {
     try {
       setLoading(true);
-      const token = await AsyncStorage.getItem('token');
+      const token = await getToken();
       setError('');
       setMessage('');
       if (!customId || !customPassword) {
         setError('all field are required!');
         return;
       }
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/changecustom`,
-          { matchId, customId, customPassword },
-          { headers: { Authorization: `${token}` } },
-        )
-        .then(response => {
-          if (response.status === 200) {
-            setModalReset(false);
-            refreshData();
-            setLoading(false);
-          }
-        });
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/changecustom`,
+        { matchId, customId, customPassword },
+        { headers: { Authorization: `${token}` } }
+      );
+      if (response.status === 200) {
+        setModalReset(false);
+        refreshData();
+      }
     } catch (error) {
-      setError(error.response.data.message);
+      setError(error.response?.data?.message || 'Reset failed');
     } finally {
+      setLoading(false);
       notify();
     }
-  };
+  }, [customId, customPassword, matchId, getToken, refreshData]);
 
-  const checkresult = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/checkresult`,
-          {},
-          { headers: { Authorization: `${token}` } },
-        )
-        .then(response => setResult(response.data.message));
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  useEffect(() => {
-    checkresult();
-  }, [trigger, render]);
-
-  const pickWinImage = () => {
+  const pickWinImage = useCallback(() => {
     const options = {
       mediaType: 'photo',
       maxWidth: 800,
@@ -230,17 +186,13 @@ const MatchCard = ({ match, refreshData }) => {
       includeBase64: true,
     };
     launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
+      if (!response.didCancel && !response.errorMessage) {
         setWinImage(response?.assets?.[0]?.base64);
       }
     });
-  };
+  }, []);
 
-  const pickReportImage = () => {
+  const pickReportImage = useCallback(() => {
     const options = {
       mediaType: 'photo',
       maxWidth: 800,
@@ -249,299 +201,199 @@ const MatchCard = ({ match, refreshData }) => {
       includeBase64: true,
     };
     launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
+      if (!response.didCancel && !response.errorMessage) {
         setReportImage(response?.assets?.[0]?.base64);
       }
     });
-  };
+  }, []);
 
-  const handleDeposite = async image => {
+  const handleDeposite = useCallback(async (image) => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        Alert.alert('Token not found');
-        return null;
-      }
-      if (!image) {
-        Alert.alert('Please upload an image');
-        return null;
-      }
+      const token = await getToken();
+      if (!token) throw new Error('Token not found');
+      if (!image) throw new Error('Please upload an image');
       const timestamp = new Date().getTime();
       const filename = `payment_proof_${timestamp}.jpg`;
-      const imageResponse = await axios.post(
+      const response = await axios.post(
         `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'proof',
-          filename: filename,
-        },
-        { headers: { Authorization: `${token}` } },
+        { image, folderName: 'proof', filename },
+        { headers: { Authorization: `${token}` } }
       );
-      if (!imageResponse?.data?.url) {
-        Alert.alert('Image upload failed');
-        return null;
-      }
-      return imageResponse.data.url;
+      if (!response?.data?.url) throw new Error('Image upload failed');
+      return response.data.url;
     } catch (error) {
-      Alert.alert(
-        'Error',
-        error.response?.data?.error || error.message || 'Something went wrong',
-      );
+      Alert.alert('Error', error.message || 'Something went wrong');
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken]);
 
-  const reportImages = async image => {
+  const reportImages = useCallback(async (image) => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        Alert.alert('Token not found');
-        return null;
-      }
-      if (!image) {
-        setError('Please upload an image');
-        notify();
-        return null;
-      }
+      const token = await getToken();
+      if (!token) throw new Error('Token not found');
+      if (!image) throw new Error('Please upload an image');
       const timestamp = new Date().getTime();
       const filename = `report_proof_${timestamp}.jpg`;
-      const imageResponse = await axios.post(
+      const response = await axios.post(
         `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'report',
-          filename: filename,
-        },
-        { headers: { Authorization: `${token}` } },
+        { image, folderName: 'report', filename },
+        { headers: { Authorization: `${token}` } }
       );
-      if (!imageResponse?.data?.url) {
-        Alert.alert('Image upload failed');
-        return null;
-      }
-      return imageResponse.data.url;
+      if (!response?.data?.url) throw new Error('Image upload failed');
+      return response.data.url;
     } catch (error) {
-      setError(
-        error.response?.data?.error || error.message || 'Something went wrong',
-      );
+      setError(error.message || 'Something went wrong');
       notify();
       return null;
     } finally {
       setLoading(false);
     }
-  };
+  }, [getToken, notify]);
 
-  const submitResult = async () => {
+  const submitResult = useCallback(async () => {
     if (boolean === null) {
       setError('Select Yes or No');
       notify();
       return;
     }
     setLoading(true);
-    if (boolean === true) {
-      if (!winImage) {
-        setError('Please upload an image!');
-        notify();
-        setLoading(false);
-        return;
-      }
-      try {
+    try {
+      if (boolean) {
+        if (!winImage) throw new Error('Please upload an image!');
         const uploadedProof = await handleDeposite(winImage);
-        if (!uploadedProof) {
-          setError('Image upload failed');
-          notify();
-          setLoading(false);
-          return;
-        }
+        if (!uploadedProof) throw new Error('Image upload failed');
         await proofsend(uploadedProof);
-      } catch (error) {
-        setError('Image upload failed');
-        notify();
-        setLoading(false);
-      }
-    } else {
-      try {
-        const token = await AsyncStorage.getItem('token');
-        if (!token) {
-          setError('Token not found');
-          setLoading(false);
-          return;
-        }
+      } else {
+        const token = await getToken();
         const response = await axios.post(
           `${BASE_URL}/khelmela/checkBoolean`,
           { matchId, boolean },
-          { headers: { Authorization: `${token}` } },
+          { headers: { Authorization: `${token}` } }
         );
         setMessage(response.data.message);
-        checkresult();
-        divideMoney(matchId)
-        refreshData()
-      } catch (error) {
-        setError(error.response?.data?.message || 'Submission failed');
-      } finally {
-        setModalDidYouWin(false);
-        notify();
-        setLoading(false);
+        setRender('done');
+        divideMoney(matchId);
+        refreshData();
       }
+    } catch (error) {
+      setError(error.message || 'Submission failed');
+      notify();
+    } finally {
+      setModalDidYouWin(false);
+      setLoading(false);
     }
-  };
+  }, [boolean, winImage, matchId, getToken, handleDeposite, proofsend, notify, refreshData]);
 
-  const proofsend = async proof => {
+  const proofsend = useCallback(async (proof) => {
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      if (!proof) {
-        console.log('No proof uploaded');
-        return;
-      }
+      const token = await getToken();
+      if (!token) throw new Error('Token not found');
+      if (!proof) throw new Error('No proof uploaded');
       const response = await axios.post(
         `${BASE_URL}/khelmela/checkBoolean`,
         { matchId, boolean, proof },
-        { headers: { Authorization: `${token}` } },
+        { headers: { Authorization: `${token}` } }
       );
       setMessage(response.data.message);
-      checkresult();
-      divideMoney(matchId)
-      refreshData()
+      setRender('done');
+      divideMoney(matchId);
+      refreshData();
     } catch (error) {
       setError(error.response?.data?.message || 'Submission failed');
-    } finally {
-      setModalDidYouWin(false);
       notify();
     }
-  };
+  }, [matchId, boolean, getToken, notify, refreshData]);
 
-  const deleteCard = async () => {
+  const deleteCard = useCallback(async () => {
     try {
       setMessage('');
       setError('');
-      const token = await AsyncStorage.getItem('token');
+      const token = await getToken();
       const response = await axios.post(
         `${BASE_URL}/khelmela/deletecard`,
         { matchId },
-        { headers: { Authorization: `${token}` } },
+        { headers: { Authorization: `${token}` } }
       );
       if (response.status === 200) {
         setMessage(response?.data?.message);
         refreshData();
       }
     } catch (error) {
-      setError(error?.response?.data?.message);
+      setError(error?.response?.data?.message || 'Delete failed');
     } finally {
       notify();
       setDeleteCardModel(false);
     }
-  };
+  }, [matchId, getToken, refreshData, notify]);
 
-  const submitReport = async () => {
+  const submitReport = useCallback(async () => {
     setLoading(true);
     try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      if (!reportImage) {
-        setError('Please upload an image');
-        notify();
-        setLoading(false);
-        return;
-      }
+      const token = await getToken();
+      if (!token) throw new Error('Token not found');
+      if (!reportImage) throw new Error('Please upload an image');
       const uploadedProof = await reportImages(reportImage);
-      if (!uploadedProof) {
-        setError('Image upload failed');
-        notify();
-        setLoading(false);
-        return;
-      }
-      if (!reportMessage) {
-        setError('All fields are Required');
-        notify();
-        setLoading(false);
-        return;
-      }
+      if (!uploadedProof) throw new Error('Image upload failed');
+      if (!reportMessage) throw new Error('All fields are Required');
       const response = await axios.post(
         `${BASE_URL}/khelmela/reportClash`,
         { reportMessage, uploadedProof },
-        { headers: { Authorization: `${token}` } },
+        { headers: { Authorization: `${token}` } }
       );
       setMessage(response.data.message);
-      checkReportClash();
-      refreshData()
+      setRender('done');
+      refreshData();
     } catch (error) {
-      setError(error.response?.data?.message || 'Submission failed');
+      setError(error.message || 'Submission failed');
     } finally {
       setReportModel(false);
       notify();
       setLoading(false);
     }
-  };
+  }, [reportImage, reportMessage, getToken, reportImages, notify, refreshData]);
 
-  const checkReportClash = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/checkreportClash`,
-        {},
-        { headers: { Authorization: `${token}` } },
-      );
-      setCheckReport(response.data.message);
-    } catch (error) {
-      console.log(error.response?.data?.message || 'Submission failed');
-    }
-  };
-
-  useEffect(() => {
-    checkReportClash();
-  }, [trigger, render, message]);
-
-  const handleReportMessageChange = (text) => {
+  const handleReportMessageChange = useCallback((text) => {
     const words = text.trim().split(/\s+/);
-    if (words.length <= 100) {
+    if (words.length <= 200) {
       setReportMessage(text);
     } else {
-      setError('Maximum 100 words allowed');
+      setError('Maximum 200 words allowed');
       notify();
     }
-  };
+  }, [notify]);
 
-  const divideMoney=async(matchId)=>{
-    console.log("from frontend divide money")
-try {
- const response =await axios.post(`${BASE_URL}/khelmela/dividemoney`,{matchId})
- if(response.data.message === "resultconflict"){
-  resultConflictNotify(response.data.userid,response.data.hostid)
- }
-} catch (error) {
-  console.log(error)
-}
-  }
-  const resultConflictNotify=async(reciver1,reciver2)=>{
+  const divideMoney = useCallback(async (matchId) => {
+    console.log("from frontend divide money");
     try {
-      await axios.post(`${BASE_URL}/khelmela/SAP-1/send-notification`,{
-        reciver : [ reciver1 , reciver2 ]  ,
-        message :{  "message": "conflict detected on your clashsquad match both user selected yes in Did you win match, wait 30-40 min moderator will be look for conflict. fair player will be provide win amount money" ,
-              type : "notification"}
-        }
-        )
+      const response = await axios.post(`${BASE_URL}/khelmela/dividemoney`, { matchId });
+      if (response.data.message === "resultconflict") {
+        resultConflictNotify(response.data.userid, response.data.hostid);
+      }
     } catch (error) {
-      console.log(error.response.data.message)
+      console.log(error);
     }
-  }
+  }, []);
+
+  const resultConflictNotify = useCallback(async (reciver1, reciver2) => {
+    try {
+      await axios.post(`${BASE_URL}/khelmela/SAP-1/send-notification`, {
+        reciver: [reciver1, reciver2],
+        message: {
+          "message": "conflict detected on your clashsquad match both user selected yes in Did you win match, wait 30-40 min moderator will be look for conflict. fair player will be provide win amount money",
+          type: "notification"
+        }
+      });
+    } catch (error) {
+      console.log(error.response?.data?.message);
+    }
+  }, []);
+
+  const isPublishDisabled = !match?.teamopponent[0]?.userid;
+
   return (
     <View style={styles.cardContainer}>
       <View style={styles.card}>
@@ -564,7 +416,7 @@ try {
                     {check === 'host' && (
                       <TouchableOpacity
                         onPress={() => setDeleteCardModel(true)}>
-                        <Text style={{ color: 'red', fontSize: 25 }}>x</Text>
+                        <Text style={{ color: 'red', fontSize: 25,marginLeft:18,marginTop:-40 }}>✖</Text>
                       </TouchableOpacity>
                     )}
                   </View>
@@ -572,15 +424,11 @@ try {
                     <View style={styles.column}>
                       <Text style={styles.text}>🎮 Mode: {item.player}</Text>
                       <Text style={styles.text}>🔫 Skills: {item.skill}</Text>
-                      <Text style={styles.text}>
-                        🎯 Headshot: {item.headshot}
-                      </Text>
+                      <Text style={styles.text}>🎯 Headshot: {item.headshot}</Text>
                       <Text style={styles.text}>🗺️ Match: {item.match}</Text>
                     </View>
                     <View style={styles.column}>
-                      <Text style={styles.text}>
-                        💥 Limited Ammo: {item.ammo}
-                      </Text>
+                      <Text style={styles.text}>💥 Limited Ammo: {item.ammo}</Text>
                       <Text style={styles.text}>🔄 Rounds: {item.round}</Text>
                       <Text style={styles.text}>
                         💰 {item.coin ? `Coin: ${item.coin}` : ''}
@@ -589,17 +437,19 @@ try {
                   </View>
                   <View style={styles.divider} />
                   <View style={styles.footer}>
-                    {
-                      check === 'host'? <Text style={styles.text}>
-                      👾 Opponent: {match.opponentName||"no one has join yet"}
-                    </Text>: check === 'userjoined'? <Text style={styles.text}>
-                      👾 Opponent: {item.gameName}
-                    </Text>: null
-                    }
-                   
+                    {check === 'user' ? (
+                      <Text style={styles.text}>👾 Opponent: {item.gameName}</Text>
+                    ) : null}
+                    {check === 'host' ? (
+                      <Text style={styles.text}>
+                        👾 Opponent: {match.opponentName || "no one has join yet"}
+                      </Text>
+                    ) : check === 'userjoined' ? (
+                      <Text style={styles.text}>👾 Opponent: {item.gameName}</Text>
+                    ) : null}
                     <View style={styles.footerRow}>
                       <Text style={styles.prizeText}>
-                        🏆 Prize: {item.betAmount * 1.5}
+                        🏆 Prize: {item.betAmount * 1.9}
                       </Text>
                       {check === 'user' ? (
                         <TouchableOpacity
@@ -618,7 +468,7 @@ try {
                     </View>
                   </View>
 
-                  {check === 'host' || check === 'userjoined' ? (
+                  {(check === 'host' || check === 'userjoined') && (
                     <View style={styles.container}>
                       {publish === 'publish' ? (
                         <>
@@ -627,17 +477,13 @@ try {
                               <TouchableOpacity onPress={copyToClipboardId}>
                                 <Text style={styles.label}>Custom ID:</Text>
                                 <View style={styles.inputs}>
-                                  <Text style={styles.inputText}>
-                                    {match.customId}
-                                  </Text>
+                                  <Text style={styles.inputText}>{match.customId}</Text>
                                 </View>
                               </TouchableOpacity>
                               <TouchableOpacity onPress={copyToClipboardPass}>
                                 <Text style={styles.label}>Custom Pass:</Text>
                                 <View style={styles.inputs}>
-                                  <Text style={styles.inputText}>
-                                    {match.customPassword}
-                                  </Text>
+                                  <Text style={styles.inputText}>{match.customPassword}</Text>
                                 </View>
                               </TouchableOpacity>
                             </View>
@@ -653,28 +499,20 @@ try {
                           </View>
                           <View>
                             {checkReport === 'report' ? (
-                              <Text style={styles.centerText}>
-                                Report Submitted
-                              </Text>
+                              <Text style={styles.centerText}>Report Submitted</Text>
                             ) : result === 'resultsubmit' ? (
-                              <Text style={styles.centerText}>
-                                Result Submitted
-                              </Text>
+                              <Text style={styles.centerText}>Result Submitted</Text>
                             ) : (
                               <View style={styles.actionContainer}>
                                 <TouchableOpacity
                                   onPress={() => setModalDidYouWin(true)}
                                   style={styles.actionButton}>
-                                  <Text style={styles.actionText}>
-                                    Submit Your Result
-                                  </Text>
+                                  <Text style={styles.actionText}>Submit Your Result</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                   onPress={() => setReportModel(true)}
                                   style={styles.actionButton}>
-                                  <Text style={styles.actionText}>
-                                    Report Match
-                                  </Text>
+                                  <Text style={styles.actionText}>Report Match</Text>
                                 </TouchableOpacity>
                               </View>
                             )}
@@ -688,7 +526,7 @@ try {
                               placeholder="Custom ID"
                               keyboardType="numeric"
                               value={customId}
-                              onChangeText={text => setCustomId(text)}
+                              onChangeText={setCustomId}
                               placeholderTextColor="#aaa"
                             />
                             <TextInput
@@ -696,23 +534,26 @@ try {
                               placeholder="Custom Password"
                               keyboardType="numeric"
                               value={customPassword}
-                              onChangeText={text => setCustomPassword(text)}
+                              onChangeText={setCustomPassword}
                               placeholderTextColor="#aaa"
                             />
                           </View>
                           <View style={styles.rightContainer}>
                             <TouchableOpacity
-                              style={styles.button}
-                              onPress={customIdAndPassword} 
-                              disabled={!match?.teamopponent[0]?.userid}
-                              >
+                              style={[styles.button, isPublishDisabled && { backgroundColor: 'lightblue' }]}
+                              onPress={customIdAndPassword}
+                              disabled={isPublishDisabled}>
                               <Text style={styles.buttonText}>Publish</Text>
                             </TouchableOpacity>
                           </View>
                         </View>
-                      ) : <Text style ={{color:'grey', fontSize:15,marginLeft:7,marginTop:5}}>id and pass will provided by host in 5 min</Text>}
+                      ) : (
+                        <Text style={{ color: 'grey', fontSize: 15, marginLeft: 7, marginTop: 5 }}>
+                          id and pass will provided by host in 5 min
+                        </Text>
+                      )}
                     </View>
-                  ) : null}
+                  )}
                 </View>
               </TouchableOpacity>
             )}
@@ -794,9 +635,7 @@ try {
                 <TouchableOpacity
                   style={styles.uploadButton}
                   onPress={pickWinImage}>
-                  <Text style={styles.uploadText}>
-                    Upload Winning Proof
-                  </Text>
+                  <Text style={styles.uploadText}>Upload Winning Proof</Text>
                 </TouchableOpacity>
                 {winImage && (
                   <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
@@ -825,7 +664,7 @@ try {
               <Text style={styles.closeText}>X</Text>
             </TouchableOpacity>
             <TextInput
-              placeholder="Enter your message (max 100 words)"
+              placeholder="Enter your message (max 200 words)"
               style={styles.inputModal}
               value={reportMessage}
               onChangeText={handleReportMessageChange}
@@ -837,9 +676,7 @@ try {
               <TouchableOpacity
                 style={styles.uploadButton}
                 onPress={pickReportImage}>
-                <Text style={styles.uploadText}>
-                  Click here to upload proof
-                </Text>
+                <Text style={styles.uploadText}>Click here to upload proof</Text>
               </TouchableOpacity>
               {reportImage && (
                 <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
@@ -902,6 +739,8 @@ try {
     </View>
   );
 };
+
+
 
 const styles = StyleSheet.create({
   cardContainer: {

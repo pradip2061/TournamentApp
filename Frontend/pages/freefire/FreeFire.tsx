@@ -12,18 +12,17 @@ import {
   ImageBackground,
 } from 'react-native';
 import React, {useContext, useEffect, useState} from 'react';
-import AntDesign from 'react-native-vector-icons/AntDesign';
+import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Freefirefullmatchcard from '../../components/Freefirefullmatchcard';
 import axios from 'axios';
 import {FlatList, TouchableWithoutFeedback} from 'react-native-gesture-handler';
 import ShimmerBox from '../../components/ShimmerBox';
-import LinearGradient from 'react-native-linear-gradient';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
 
 import {BASE_URL} from '../../env';
-import MatchCard from '../../components/MatchCard';
+
 
 const FreeFire = ({navigation}) => {
   const [card, setCard] = useState([]);
@@ -59,6 +58,11 @@ const FreeFire = ({navigation}) => {
         <Text style={styles.note}>
           Note: All matches are created by admin . Everyday at the same time
         </Text>
+        <View style={styles.liveMatches}>
+                  <Entypo name="game-controller" size={24} color="#333" />
+                  <Text style={styles.liveMatchesText}>Live Matches</Text>
+                </View>
+                <View></View>
         {card.length !== 0 ? (
           <FlatList
             data={card}
@@ -117,12 +121,31 @@ const styles = StyleSheet.create({
     color: 'black',
   },
   note: {
-    color: 'red',
-    fontSize: 15,
-    marginBottom: 16,
-    marginLeft: 30,
-    paddingBottom: 20,
-    marginTop: -15,
+    color: '#555',
+    fontSize: 14,
+    marginBottom: 20,
+    marginLeft: 15,
+    fontStyle: 'italic',
+  },
+  liveMatches: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#FFFFFF',
+    padding: 10,
+    borderRadius: 10,
+    width: 150,
+    marginVertical: 15,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
+    marginLeft: 20,
+  },
+  liveMatchesText: {
+    marginLeft: 8,
+    fontWeight: '600',
+    color: '#333',
+    fontSize: 16,
   },
 });
 

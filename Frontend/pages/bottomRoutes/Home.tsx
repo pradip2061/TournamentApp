@@ -1,26 +1,11 @@
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  TouchableOpacity,
-  Modal,
-  BackHandler,
-  Alert,
-  ImageBackground,
-} from 'react-native';
-import React, {
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
+import { View,Text,StyleSheet,TouchableOpacity,BackHandler,Alert,} from 'react-native';
+import React, {useCallback,useContext,useState,
 } from 'react';
 import Doller from 'react-native-vector-icons/FontAwesome6';
 import Gamepad from 'react-native-vector-icons/Entypo';
 import TabButton from '../../components/TabButton';
 import Card from '../../components/Card';
-import LinearGradient from 'react-native-linear-gradient';
+
 import {useFocusEffect} from '@react-navigation/native';
 import {CheckAdminContext} from '../ContextApi/ContextApi';
 import FastImage from 'react-native-fast-image';
@@ -37,7 +22,7 @@ const bg1 = require('../../assets/bg9.gif');
 
 const Home = ({navigation}) => {
   const [toggle, setToggle] = useState('freefire');
-  const {checkadmin, data, getProfile} = useContext(CheckAdminContext);
+  const { data, getProfile} = useContext(CheckAdminContext);
 
   useFocusEffect(
     useCallback(() => {
@@ -70,7 +55,7 @@ const Home = ({navigation}) => {
     <FastImage style={styles.container} source={bg1}>
       <View style={styles.header}>
         <TouchableOpacity
-          style={{flexDirection: 'row', gap: 10, alignItems: 'center'}}
+          style={{flexDirection: 'row', gap: -5, alignItems: 'center'}}
           onPress={() => navigation.navigate('Transcation')}>
           <Doller name="circle-dollar-to-slot" size={32} color="gold" />
           <Text style={{color: 'white', fontSize: 17, fontWeight: 'bold'}}>
@@ -162,7 +147,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 13,
     gap: 180,
-    marginLeft: 21,
+    marginLeft: -15,
   },
   headerIcons: {
     flexDirection: 'row',

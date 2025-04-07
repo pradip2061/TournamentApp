@@ -31,9 +31,9 @@ const DidYouWinMatch = async (req, res) => {
             userinfo.matchId.FreefireClashId=[]
             if(boolean === true){
                 match.hostProof=proof
-                userinfo?.victory?.FreefireClash.push(matchId);
+                userinfo?.victory?.FreefireClash.push({matchid:matchId,position:1});
             }else{
-                userinfo?.Loss?.FreefireClash.push(matchId);
+                userinfo?.Loss?.FreefireClash.push({matchid:matchId,position:2});
             }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
@@ -44,9 +44,9 @@ const DidYouWinMatch = async (req, res) => {
             userinfo.matchId.FreefireClashId=[]
             if(boolean === true){
                 match.userProof=proof
-                userinfo?.victory?.FreefireClash.push(matchId);
+                userinfo?.victory?.FreefireClash.push({matchid:matchId,position:1});
             }else{
-                userinfo?.Loss?.FreefireClash.push(matchId);
+                userinfo?.Loss?.FreefireClash.push({matchid:matchId,position:2});
             }
         } else {
             return res.status(403).json({ message: "You are not part of this match"});
@@ -90,9 +90,9 @@ const DidYouWinMatchtdm = async (req, res) => {
             userinfo.matchId.pubgTdmId=[]
             if(boolean === true){
                 match.hostProof=proof
-                userinfo?.victory?.pubgTdm.push(matchId);
+                userinfo?.victory?.pubgTdm.push({matchid:matchId,position:1});
             }else{
-                userinfo?.Loss?.pubgTdm.push(matchId);
+                userinfo?.Loss?.pubgTdm.push({matchid:matchId,position:2});
             }
         } else if (match.teamopponent[0].userid === userid) {
             match.teamopponent[0].team2Status = boolean;
@@ -103,9 +103,9 @@ const DidYouWinMatchtdm = async (req, res) => {
             userinfo.matchId.pubgTdmId=[]
             if(boolean === true){
                 match.userProof=proof
-                userinfo?.victory?.pubgTdm.push(matchId);
+                userinfo?.victory?.pubgTdm.push({matchid:matchId,position:1});
             }else{
-                userinfo?.Loss?.pubgTdm.push(matchId);
+                userinfo?.Loss?.pubgTdm.push({matchid:matchId,position:2});
             }
         } else {
             return res.status(403).json({ message: "You are not part of this match"});
