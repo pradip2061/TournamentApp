@@ -4,36 +4,58 @@ const {User} = require("../model/schema")
 const tdm = require("../model/TdmModel")
 const timelimit = require("../model/TimeLimitModel")
 const mongoose =require('mongoose')
-const updateProfile =async(req,res)=>{
-    const userid =req.user
-    const {username}=req.body
- const userinfo =await User.findOne({_id:userid})
- const limit =await RateLimit.findOne({userId:userid})
+const updateProfile = async (req, res) => {
+    const userId = req.user;
+    const { username } = req.body;
 
- if(limit){
-   const Timeleft=  Date.now() -limit.lastRequest
-   const twoHoursInMs = 2 * 60 * 60 * 1000;
-   const remainingTime = twoHoursInMs -Timeleft
-   const value = remainingTime/(1000*60*60)
-   const minuteTime = value.toFixed(2)
-return res.status(200).json({
-    message:`you can update after ${minuteTime} hours`
-})
- }
- userinfo.username =username
- const requestCount =1
- const lastRequest = Date.now()
-await RateLimit.create({
-    userId:userid,
-    requestCount,
-    lastRequest
-})
- await userinfo.save()
+    // Trim and validate
+    const trimmedUsername = username.trim();
 
- res.status(200).json({
-    message:"update successfully"
- })
-}
+    if (/[A-Z]/.test(trimmedUsername)) {
+        return res.status(400).json({ message: "Username can only contain lowercase letters" });
+    }
+
+    if (/\s/.test(trimmedUsername)) {
+        return res.status(400).json({ message: "Username can't contain spaces" });
+    }
+
+    // Check if username already taken
+    const checkUsername = await User.findOne({ username: trimmedUsername });
+    if (checkUsername) {
+        return res.status(409).json({ message: "Username already taken" });
+    }
+
+    const userInfo = await User.findOne({ _id: userId });
+    const limit = await RateLimit.findOne({ userId });
+
+    if (limit) {
+        const timeSinceLastRequest = Date.now() - limit.lastRequest;
+        const twoHoursInMs = 2 * 60 * 60 * 1000;
+
+        if (timeSinceLastRequest < twoHoursInMs) {
+            const timeRemaining = twoHoursInMs - timeSinceLastRequest;
+            const hours = Math.floor(timeRemaining / (1000 * 60 * 60));
+            const minutes = Math.floor((timeRemaining % (1000 * 60 * 60)) / (1000 * 60));
+
+            return res.status(429).json({
+                message: `You can update after ${hours}hr ${minutes}min`
+            });
+        }
+    }
+
+    userInfo.username = trimmedUsername;
+    await userInfo.save();
+
+    await RateLimit.findOneAndUpdate(
+        { userId },
+        { lastRequest: Date.now(), requestCount: 1 },
+        { upsert: true }
+    );
+
+    res.status(200).json({
+        message: "Updated successfully"
+    });
+};
 
 const pubgprofile=async(req,res)=>{
 const{pubgName,pubgUid}=req.body

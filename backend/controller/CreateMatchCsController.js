@@ -71,7 +71,7 @@ const getCsData = async (req, res) => {
 
     // Fetch the user's joined match
     const matchjoin = matchId ? await ClashSquad.find({ _id: matchId }) : [];
-
+    console.log("matchjoin",matchjoin)
     // Fetch matches where the user is not in teamHost or teamopponent
     const card = await ClashSquad.find({
       $and: [

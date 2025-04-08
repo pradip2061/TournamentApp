@@ -30,7 +30,6 @@ router1.get("/get", Authverify, getCsData);
 router1.get("/getsingle", playingmatch);
 router1.get("/getff", getFFmatch);
 router1.get("/enrollmatch", Authverify, EnrollMatch);
-
 router1.post("/create_FM", Authverify, create_FM);
 router1.post("/addNameff", Authverify, addName);
 router1.post("/addinhost", Authverify, trackusermodel);

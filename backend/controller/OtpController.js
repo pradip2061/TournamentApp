@@ -32,12 +32,20 @@ const requestOtp = async (req, res) => {
       return;
     }
 
-    const verifyuser = await User.findOne({ username: username });
-    if (verifyuser) {
-      res.status(400).json({
-        message: "username already taken",
-      });
-      return;
+    if (/[A-Z]/.test(username)) {
+        return res.status(400).json({ message: "Username can only contain lowercase letters" });
+    }
+
+    if (username.includes(" ")){
+        return res.status(400).json({ message: "Username can't contain spaces" });
+    }
+    if (!/^[a-z0-9]+$/.test(username)){
+      return res.status(400).json({ message: "no special character are allowed" });
+  }
+    // Check if username already taken
+    const checkUsername = await User.findOne({ username});
+    if (checkUsername) {
+        return res.status(409).json({ message: "Username already taken" });
     }
     const emailid = await OtpModel.find({ email: email });
     if (emailid.length >= 3) {

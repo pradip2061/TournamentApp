@@ -93,7 +93,7 @@ const Withdraw = ({navigation}) => {
             : 'Enter your Khalti number'
         }
         placeholderTextColor="black" // Placeholder text set to black
-        keyboardType="default"
+        keyboardType="numeric"
         onChangeText={text => setNumber(text)}
       />
       <TextInput
@@ -113,7 +113,6 @@ const Withdraw = ({navigation}) => {
         style={styles.input}
         placeholder="Enter your name"
         placeholderTextColor="black" // Placeholder text set to black
-        keyboardType="numeric"
         onChangeText={text => {
           setName(text);
         }}

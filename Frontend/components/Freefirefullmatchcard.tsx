@@ -1,4 +1,4 @@
-import React, {useContext, useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -7,10 +7,7 @@ import {
   TouchableOpacity,
   Modal,
   TextInput,
-  KeyboardAvoidingView,
   ScrollView,
-  Platform,
-  ImageBackground,
 } from 'react-native';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import axios from 'axios';
@@ -18,18 +15,18 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import Clipboard from '@react-native-clipboard/clipboard';
 import ModalNotify from './ModalNotify';
 import LinearGradient from 'react-native-linear-gradient';
-import {CheckAdminContext} from '../pages/ContextApi/ContextApi';
-import {launchImageLibrary} from 'react-native-image-picker';
-import {BASE_URL} from '../env';
+import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
+import { BASE_URL } from '../env';
 
 const freefire = require('../assets/freefire.jpeg');
 const bermuda = require('../assets/bermuda.jpg');
 const purgatory = require('../assets/pugatory.png');
 const kalahari = require('../assets/kalahari.webp');
 
-const Freefirefullmatchcard = ({matches}) => {
-  const {setTrigger, data} = useContext(CheckAdminContext);
+const Freefirefullmatchcard = ({ matches }) => {
+  const { setTrigger, data } = useContext(CheckAdminContext);
   const [joinModel, setJoinModel] = useState(false);
+  const [rulesModel, setRulesModel] = useState(false); // New state for rules modal
   const [checKJoined, setCheckJoined] = useState('');
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
@@ -38,19 +35,14 @@ const Freefirefullmatchcard = ({matches}) => {
   const [player2, setPlayer2] = useState('');
   const [player3, setPlayer3] = useState('');
   const [player4, setPlayer4] = useState('');
-  const [reportModel, setReportModel] = useState(false);
-  const [reportMessage, setReportMessage] = useState('');
-  const [reportImage, setReportImage] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [checkReport, setCheckReport] = useState('');
   const matchId = matches._id;
+  const isSquad = matches.playermode === 'Squad';
+  const maxSlots = isSquad ? 16 : 48;
 
   const notify = () => {
     setJoinModel(false);
     setVisible(true);
-    setTimeout(() => {
-      setVisible(false);
-    }, 900);
+    setTimeout(() => setVisible(false), 900);
   };
 
   useEffect(() => {
@@ -66,25 +58,18 @@ const Freefirefullmatchcard = ({matches}) => {
   const joinuser = async () => {
     const token = await AsyncStorage.getItem('token');
     try {
-      if (matches.TotalPlayer === 48) {
-        // Adjusted to Free Fire's max players
+      if (matches.TotalPlayer >= maxSlots) {
         setMessage('Slot is full!');
         return;
       }
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/joinff`,
-          {matchId},
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          },
-        )
-        .then(response => {
-          setMessage(response.data.message);
-          setTrigger('done');
-        });
+      await axios.post(
+        `${BASE_URL}/khelmela/joinff`,
+        { matchId },
+        { headers: { Authorization: `${token}` } }
+      ).then(response => {
+        setMessage(response.data.message);
+        setTrigger('done');
+      });
     } catch (error) {
       setError(error.response.data.message);
     } finally {
@@ -95,49 +80,30 @@ const Freefirefullmatchcard = ({matches}) => {
   useEffect(() => {
     const checkuser = async () => {
       const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/checkuserff`,
-          {matchId},
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          },
-        )
-        .then(response => {
-          if (response.status === 200) {
-            setCheckJoined(response.data.message);
-          }
-        });
+      await axios.post(
+        `${BASE_URL}/khelmela/checkuserff`,
+        { matchId },
+        { headers: { Authorization: `${token}` } }
+      ).then(response => {
+        if (response.status === 200) {
+          setCheckJoined(response.data.message);
+        }
+      });
     };
     checkuser();
   }, [matchId]);
 
-  const clipboardid = () => {
-    Clipboard.setString('hello');
-  };
-
-  const clipboardpass = () => {
-    Clipboard.setString('hello');
-  };
+  const clipboardid = () => Clipboard.setString('855545895');
+  const clipboardpass = () => Clipboard.setString('5498');
 
   const addName = async () => {
     const token = await AsyncStorage.getItem('token');
     try {
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/addNameff`,
-          {matchId, player1, player2, player3, player4},
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          },
-        )
-        .then(response => {
-          setMessage(response.data.message);
-        });
+      await axios.post(
+        `${BASE_URL}/khelmela/addNameff`,
+        { matchId, player1, player2, player3, player4 },
+        { headers: { Authorization: `${token}` } }
+      ).then(response => setMessage(response.data.message));
     } catch (error) {
       setError(error.response.data.message);
     } finally {
@@ -145,145 +111,13 @@ const Freefirefullmatchcard = ({matches}) => {
     }
   };
 
-  const pickReportImage = () => {
-    const options = {
-      mediaType: 'photo',
-      maxWidth: 800,
-      maxHeight: 800,
-      quality: 0.3,
-      includeBase64: true,
-    };
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
-        setReportImage(response?.assets?.[0]?.base64);
-      }
-    });
-  };
-
-  const reportImages = async image => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return null;
-      }
-      if (!image) {
-        setError('Please upload an image');
-        notify();
-        return null;
-      }
-      const timestamp = new Date().getTime();
-      const filename = `report_proof_${timestamp}.jpg`;
-      const imageResponse = await axios.post(
-        `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'report',
-          filename: filename,
-        },
-        {headers: {Authorization: `${token}`}},
-      );
-      if (!imageResponse?.data?.url) {
-        setError('Image upload failed');
-        return null;
-      }
-      return imageResponse.data.url;
-    } catch (error) {
-      setError(
-        error.response?.data?.error || error.message || 'Something went wrong',
-      );
-      notify();
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitReport = async () => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      if (!reportImage) {
-        setError('Please upload an image');
-        notify();
-        setLoading(false);
-        return;
-      }
-      const uploadedProof = await reportImages(reportImage);
-      if (!uploadedProof) {
-        setError('Image upload failed');
-        notify();
-        setLoading(false);
-        return;
-      }
-      if (!reportMessage) {
-        setError('All fields are Required');
-        notify();
-        setLoading(false);
-        return;
-      }
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/reportClash`,
-        {reportMessage, uploadedProof, matchId},
-        {headers: {Authorization: `${token}`}},
-      );
-      setMessage(response.data.message);
-      checkReportClash();
-    } catch (error) {
-      setError(error.response?.data?.message || 'Submission failed');
-    } finally {
-      setReportModel(false);
-      notify();
-      setLoading(false);
-    }
-  };
-
-  const checkReportClash = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/checkreportClash`,
-        {matchId},
-        {headers: {Authorization: `${token}`}},
-      );
-      setCheckReport(response.data.message);
-    } catch (error) {
-      setError(error.response?.data?.message || 'Submission failed');
-    }
-  };
-
-  useEffect(() => {
-    checkReportClash();
-  }, [matchId]);
-
-  const handleReportMessageChange = text => {
-    const words = text.trim().split(/\s+/);
-    if (words.length <= 100) {
-      setReportMessage(text);
-    } else {
-      setError('Maximum 100 words allowed');
-      notify();
-    }
-  };
-
   return (
-    <ImageBackground
-      source={require('../assets/bg9.jpg')}
+    <LinearGradient
+      colors={["#0f0c29", "#302b63", "#24243e"]}
       style={styles.container}
-      key={matches._id}>
+      key={matches._id}
+    >
+      {/* Existing Code */}
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <Image source={freefire} style={styles.image} />
@@ -294,7 +128,7 @@ const Freefirefullmatchcard = ({matches}) => {
 
       <View style={styles.mapContainer}>
         <Text style={styles.title}>MAP: Random</Text>
-        <Text style={styles.title}>Total player: 48</Text>
+        <Text style={styles.title}>Total slot: {maxSlots}</Text>
       </View>
 
       <View style={styles.mapImages}>
@@ -306,54 +140,61 @@ const Freefirefullmatchcard = ({matches}) => {
       <View style={styles.detailsContainer}>
         <View>
           <Text style={styles.text}>Winner:</Text>
-          <Text style={styles.text}>Top: 3</Text>
-          <Text style={styles.text}>Top: 15</Text>
+          <Text style={styles.text}>{isSquad ? 'Top: 1' : 'Top: 3'}</Text>
+          <Text style={styles.text}>{isSquad ? 'Top: 3' : 'Top: 16'}</Text>
         </View>
         <View>
           <Text style={styles.text}>Odds:</Text>
           <Text style={styles.text}>3x</Text>
-          <Text style={styles.text}>1.5x</Text>
+          <Text style={styles.text}>2x</Text>
         </View>
       </View>
       <View style={styles.divider} />
 
       <View style={styles.timeAndEntryContainer}>
         <View style={styles.timeContainer}>
-          <Text style={{marginLeft: 5}}>Time: {matches.time || '9:00 AM'}</Text>
+          <Text style={{ marginLeft: 5 }}>Time: {matches.time || '9:00 AM'}</Text>
           {checKJoined === 'notjoined' ? (
             <TouchableOpacity
               style={styles.entryButton}
-              onPress={() => setJoinModel(true)}>
-              <Text style={{color: 'white'}}>
-                Entry fee: {matches.entryFee}
-              </Text>
+              onPress={() => setJoinModel(true)}
+            >
+              <Text style={{ color: 'white' }}>Entry fee: {matches.entryFee}</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity style={styles.joinedButton}>
-              <Text style={{color: 'white'}}>Joined</Text>
-            </TouchableOpacity>
+            <View style={styles.joinedButton}>
+              <Text style={{ color: 'white' }}>Joined</Text>
+            </View>
           )}
         </View>
       </View>
 
+      {/* Updated Note TouchableOpacity */}
+      <TouchableOpacity onPress={() => setRulesModel(true)}>
+        <Text style={styles.noteText}>
+          Note: Click Here to see rules of the full map
+        </Text>
+      </TouchableOpacity>
+
+      {/* Existing Join Modal */}
       <Modal transparent animationType="slide" visible={joinModel}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>
-              Are you sure you want to join this match?
-            </Text>
+            <Text style={styles.modalText}>Are you sure you want to join this match?</Text>
             <Text style={styles.smallText}>
               Rs {matches.entryFee} will be deducted from your account.
             </Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
-                onPress={() => setJoinModel(false)}>
+                onPress={() => setJoinModel(false)}
+              >
                 <Text style={styles.buttonText}>No</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={[styles.button, styles.yesButton]}
-                onPress={joinuser}>
+                onPress={joinuser}
+              >
                 <Text style={styles.buttonText}>Yes</Text>
               </TouchableOpacity>
             </View>
@@ -361,16 +202,65 @@ const Freefirefullmatchcard = ({matches}) => {
         </View>
       </Modal>
 
+      {/* New Rules Modal */}
+      <Modal
+        transparent
+        animationType="slide"
+        visible={rulesModel}
+        onRequestClose={() => setRulesModel(false)}
+      >
+        <View style={styles.rulesModalContainer}>
+          <View style={styles.rulesModalContent}>
+            <ScrollView contentContainerStyle={styles.scrollContent}>
+              <Text style={styles.rulesTitle}>Rules of the Full Map Match</Text>
+              <Text style={styles.rulesText}>
+                1️⃣. All players are compulsory to follow the rules while playing full match. Any player found violating the rules will be immediately disqualified from the match.
+              </Text>
+              <Text style={styles.rulesText}>
+                1.1 If match was cancelled due to technical issues or some reason, players will get mail on notification and money will refund.
+              </Text>
+            
+              <Text style={styles.rulesText}>
+                2️⃣. If the match does not reach 48 players, the number of winners will decrease accordingly. The top 35% of total players will receive the prize. Example: If there are 40 players, only the top 14 players will receive the prize. same goes for  Squad also 35%.
+              </Text>
+              <Text style={styles.rulesText}>
+                3️⃣. The prize distribution will be as follows:
+                {"\n    "}* In solo the top 16 players & in Squad top 3   will receive a 2x prize.
+                {"\n    "}* In solo the top 3 players & in Squad top 1 will receive a 3x prize.
+                {"\n      "}Example of odds: 2x means you get 2 times your entry fee, and 3x means you get 3 times your entry fee.
+              </Text>
+              
+              <Text style={styles.rulesText}>
+                4️⃣.  Using any kind of bug, hacking, or team up activity is strictly prohibited.
+                
+              </Text>
+              <Text style={styles.rulesText}>
+                5️⃣.Full map matches are non-refundable if a player failed to  join match in given time.
+                {"\n    "}Password will given before 6 min of match time.
+                {"\n    "}Match will be started after 2 min of match time. so player have total 8 min to join the match.
+
+              </Text>
+              <Text style={styles.rulesText}>
+                6️⃣. ID and Password will be given to player before 6 min by notification of the app or player can also see the id and pass from the enroll match.
+              </Text>
+            </ScrollView>
+            <TouchableOpacity
+              style={styles.closeButton}
+              onPress={() => setRulesModel(false)}
+            >
+              <Text style={styles.closeButtonText}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       <ModalNotify visible={visible} error={error} message={message} />
 
-      {checKJoined === 'joined' ? (
+      {/* Existing Joined Section */}
+      {checKJoined === 'joined' && (
         <View style={styles.joinedContainer}>
           <View style={styles.playerContainer}>
-            {matches.playermode === 'solo' ? (
-              <View style={styles.soloContainer}>
-                <Text style={styles.soloPlayerText}>{player1}</Text>
-              </View>
-            ) : (
+            {matches.playermode === 'Squad' ? (
               <>
                 <Text style={styles.squadHeaderText}>
                   Enter Your Squad Member Game Names
@@ -380,12 +270,7 @@ const Freefirefullmatchcard = ({matches}) => {
                     <Text style={styles.mainPlayerText}>{player1}</Text>
                   </View>
                   <TouchableOpacity style={styles.add} onPress={addName}>
-                    <Text
-                      style={{
-                        color: 'black',
-                        fontSize: 15,
-                        fontWeight: '700',
-                      }}>
+                    <Text style={{ color: 'black', fontSize: 15, fontWeight: '700' }}>
                       Save
                     </Text>
                   </TouchableOpacity>
@@ -398,7 +283,7 @@ const Freefirefullmatchcard = ({matches}) => {
                       value={player2}
                       onChangeText={text => setPlayer2(text)}
                       placeholderTextColor="grey"
-                      textAlign="center" // Centered text
+                      textAlign="center"
                     />
                     <TextInput
                       style={styles.squadInput}
@@ -406,7 +291,7 @@ const Freefirefullmatchcard = ({matches}) => {
                       value={player3}
                       onChangeText={text => setPlayer3(text)}
                       placeholderTextColor="#aaa"
-                      textAlign="center" // Centered text
+                      textAlign="center"
                     />
                     <TextInput
                       style={styles.squadInput}
@@ -414,118 +299,59 @@ const Freefirefullmatchcard = ({matches}) => {
                       value={player4}
                       onChangeText={text => setPlayer4(text)}
                       placeholderTextColor="#aaa"
-                      textAlign="center" // Centered text
+                      textAlign="center"
                     />
                   </View>
-                  <Text
-                    style={{
-                      fontSize: 13,
-                      color: 'white',
-                      textAlign: 'center',
-                    }}>
-                    Room id & pass will be shown before 6 min matchtime
+                  <Text style={styles.roomInfoText}>
+                    Room id & pass will be shown before 6 min of matchtime
                   </Text>
                   <View style={styles.clip}>
                     <View style={styles.input}>
-                      <Text>customid: 88997</Text>
+                      <Text>Custom Id: 855545895</Text>
                       <TouchableOpacity onPress={clipboardid}>
-                        <AntDesign
-                          name="copy1"
-                          size={17}
-                          style={{marginLeft: 10}}
-                        />
+                        <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
                       </TouchableOpacity>
                     </View>
                     <View style={styles.input}>
-                      <Text>custom: 54988</Text>
+                      <Text>Pass: 5498</Text>
                       <TouchableOpacity onPress={clipboardpass}>
-                        <AntDesign
-                          name="copy1"
-                          size={17}
-                          style={{marginLeft: 10}}
-                        />
+                        <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
                       </TouchableOpacity>
                     </View>
                   </View>
-                  {checkReport === 'report' ? (
-                    <Text style={styles.reportStatus}>Report Submitted</Text>
-                  ) : (
-                    <TouchableOpacity
-                      style={styles.reportButton}
-                      onPress={() => setReportModel(true)}>
-                      <Text style={styles.reportButtonText}>Report Match</Text>
+                </View>
+              </>
+            ) : (
+              <>
+                <Text style={styles.roomInfoText}>
+                  Room id & pass will be shown before 6 min of matchtime
+                </Text>
+                <View style={styles.clip}>
+                  <View style={styles.input}>
+                    <Text>Custom Id: 855545895</Text>
+                    <TouchableOpacity onPress={clipboardid}>
+                      <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
                     </TouchableOpacity>
-                  )}
+                  </View>
+                  <View style={styles.input}>
+                    <Text>Pass: 5498</Text>
+                    <TouchableOpacity onPress={clipboardpass}>
+                      <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </>
             )}
           </View>
         </View>
-      ) : checKJoined === 'notjoined' ? null : (
-        <Text style={styles.loadingText}>...loading</Text>
       )}
-
-      <Modal transparent animationType="slide" visible={reportModel}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}>
-          <ScrollView
-            contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalText}>Report Match</Text>
-                <TouchableOpacity
-                  onPress={() => setReportModel(false)}
-                  style={styles.closeButton}>
-                  <Text style={styles.closeText}>X</Text>
-                </TouchableOpacity>
-              </View>
-              <TextInput
-                placeholder="Enter your message (max 100 words)"
-                style={styles.inputModal}
-                value={reportMessage}
-                onChangeText={handleReportMessageChange}
-                placeholderTextColor="#aaa"
-                multiline
-                textAlignVertical="top"
-                textAlign="center" // Centered text
-              />
-              <View style={styles.uploadContainer}>
-                <TouchableOpacity
-                  style={styles.uploadButton}
-                  onPress={pickReportImage}>
-                  <Text style={styles.uploadText}>
-                    Click here to upload proof
-                  </Text>
-                </TouchableOpacity>
-                {reportImage && (
-                  <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
-                )}
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.noButton]}
-                  onPress={() => setReportModel(false)}>
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.yesButton]}
-                  onPress={submitReport}
-                  disabled={loading}>
-                  <Text style={styles.buttonText}>
-                    {loading ? 'Submitting...' : 'Submit'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
-    </ImageBackground>
+    </LinearGradient>
   );
 };
 
+// Updated Styles
 const styles = StyleSheet.create({
+  // Existing styles remain unchanged
   container: {
     width: 340,
     marginLeft: 20,
@@ -555,18 +381,19 @@ const styles = StyleSheet.create({
     fontSize: 13.6,
     fontWeight: '700',
     color: 'white',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
   mapContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: 120,
+    marginLeft: 15,
     marginTop: -10,
   },
   title: {
     fontSize: 12.5,
     fontWeight: '700',
     color: '#fff',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
   mapImages: {
     flexDirection: 'row',
@@ -629,25 +456,12 @@ const styles = StyleSheet.create({
   playerContainer: {
     alignItems: 'center',
   },
-  soloContainer: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 10,
-    borderRadius: 10,
-    width: 150,
-    alignItems: 'center',
-  },
-  soloPlayerText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-    textAlign: 'center', // Centered text
-  },
   squadHeaderText: {
     color: '#fff',
     fontSize: 14,
     fontWeight: '600',
     marginBottom: 10,
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
   squadInputRow: {
     flexDirection: 'row',
@@ -688,14 +502,14 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 10,
     color: 'black',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
     lineHeight: 40,
     fontWeight: 'bold',
     fontSize: 15,
   },
   clip: {
     flexDirection: 'row',
-    gap: 15,
+    gap: 10,
   },
   mainplayerbox: {
     backgroundColor: 'white',
@@ -717,13 +531,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: 25,
   },
-  loadingText: {
-    color: '#fff',
-    fontSize: 20,
-    marginLeft: 10,
-    marginTop: 20,
-    textAlign: 'center', // Centered text
-  },
   modalContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -737,34 +544,18 @@ const styles = StyleSheet.create({
     width: 330,
     alignItems: 'center',
   },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 15,
-  },
   modalText: {
     fontSize: 18,
     fontWeight: '600',
     color: '#333',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
   smallText: {
     marginTop: 20,
     marginBottom: 20,
     fontSize: 14,
     color: '#333',
-    textAlign: 'center', // Centered text
-  },
-
-  closeButton: {
-    padding: 5,
-  },
-  closeText: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#333',
+    textAlign: 'center',
   },
   buttonContainer: {
     flexDirection: 'row',
@@ -786,62 +577,72 @@ const styles = StyleSheet.create({
   buttonText: {
     color: '#fff',
     fontWeight: 'bold',
-    textAlign: 'center', // Centered text
+    textAlign: 'center',
   },
-  inputModal: {
-    width: '100%',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 12,
+  roomInfoText: {
+    fontSize: 12,
+    color: 'white',
+    textAlign: 'center',
+    marginBottom: 10,
+    fontWeight: '900',
+  },
+  noteText: {
+    color: '#CA0909',
+    fontSize: 14.5,
+    marginLeft: 10,
+    marginTop: -10,
+    textDecorationLine: 'underline',
+    textDecorationStyle: 'dashed',
+    textDecorationColor: '#ff4444',
+  },
+  // New styles for Rules Modal
+  rulesModalContainer: {
+    flex: 1,
+    justifyContent: 'flex-end',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+  },
+  rulesModalContent: {
+    backgroundColor: '#fff',
+    height: '70%', // Adjust height as needed
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20,
+  },
+  scrollContent: {
+    paddingBottom: 20,
+  },
+  rulesTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 15,
+  },
+  rulesText: {
     fontSize: 14,
     color: '#333',
-    minHeight: 50,
-    maxHeight: 150,
+    marginBottom: 10,
+    lineHeight: 20,
   },
-  uploadContainer: {
-    alignItems: 'center',
-    marginVertical: 15,
-    width: '100%',
+  rulesNote: {
+    fontSize: 12,
+    color: '#666',
+    fontStyle: 'italic',
+    marginBottom: 10,
   },
-  uploadButton: {
-    backgroundColor: '#87CEEB',
+  closeButton: {
+    backgroundColor: '#CA0909',
     paddingVertical: 10,
     paddingHorizontal: 20,
-    borderRadius: 8,
-    width: '80%',
-    alignItems: 'center',
-  },
-  uploadText: {
-    color: '#333',
-    fontSize: 14,
-    fontWeight: '500',
-    textAlign: 'center', // Centered text
-  },
-  checkMark: {
-    color: '#00FF00',
-    fontSize: 14,
-    marginTop: 8,
-    fontWeight: 'bold',
-    textAlign: 'center', // Centered text
-  },
-  reportButton: {
+    borderRadius: 25,
+    alignSelf: 'center',
     marginTop: 10,
   },
-  reportButtonText: {
-    color: '#ff4444',
-    fontSize: 14,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-    textAlign: 'center', // Centered text
-  },
-  reportStatus: {
+  closeButtonText: {
     color: '#fff',
-    fontSize: 14,
-    fontWeight: '600',
-    marginTop: 10,
-    textAlign: 'center', // Centered text
-  },
+    fontWeight: 'bold',
+    fontSize: 16,
+  }, 
 });
 
 export default Freefirefullmatchcard;

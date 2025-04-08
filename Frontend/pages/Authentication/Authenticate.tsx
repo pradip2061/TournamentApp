@@ -90,6 +90,7 @@ const Authenticate = ({navigation}) => {
     try {
       Keyboard.dismiss(); // Dismiss keyboard before sending OTP
       setLoading(true);
+      setError("")
       await axios
         .post(`${BASE_URL}/khelmela/verifyotp`, {
           otp,
@@ -355,15 +356,7 @@ const Authenticate = ({navigation}) => {
               onPress={() => setOtpmodel(false)}>
               <Icon name="close" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Enter OTP</Text>
-            <TextInput
-              style={styles.modalInput}
-              placeholder="Enter email"
-              placeholderTextColor="#999999"
-              keyboardType="email-address"
-              value={email}
-              onChangeText={setEmail}
-            />
+            <Text style={{fontSize:16,marginTop:30,marginBottom:20}}>Otp sent to <Text style={{color:"#007BFF"}}>{email}</Text></Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Enter OTP"

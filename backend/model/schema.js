@@ -63,18 +63,108 @@ const Userschema = new mongoose.Schema(
       codId: [String],
     },
     victory: {
-      pubgFull: [{ _id: false, match_id: String, position: Number }],
-      pubgTdm: [String],
-      FreefireFull: [{ _id: false, match_id: String, position: Number }],
-      FreefireClash: [String],
-      cod: [String],
+      pubgFull: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      pubgTdm: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      FreefireFull: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      FreefireClash: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      cod: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
     },
     Loss: {
-      pubgFull: [{ _id: false, match_id: String, position: Number }],
-      pubgTdm: [String],
-      FreefireFull: [{ _id: false, match_id: String, position: Number }],
-      FreefireClash: [String],
-      cod: [String],
+      pubgFull: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      pubgTdm: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      FreefireFull: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      FreefireClash: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
+      cod: [
+        {
+          matchid: {
+            type: String,
+          },
+          position: {
+            type: String,
+          },
+        },
+      ],
     },
     balance: {
       type: Number,

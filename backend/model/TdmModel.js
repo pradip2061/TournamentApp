@@ -33,22 +33,27 @@ gameName:{
     customPassword:{
       type:Number || null
     },
+    opponentName:{
+      type:String
+    },
     status:{
       type: String ,
-      enum: ["running", "pending","completed"],
+      enum: ["running", "pending","completed","conflict"],
       default: "pending",
     },
+    TotalPlayers:{
+      type:Number,
+      default:0
+    },
    createdAt: { type: Date, default: () => new Date(Date.now() + 6 * 60 * 1000) },
+   createdAtid:{type:Date},
+   resultAt:{type:Date},
    hostProof:{
     type:String
    },
 userProof:{
     type:String
-   },
-   TotalPlayers:{
-      type:Number,
-      default:0
-    }
+   }
 });
 const tdm =mongoose.model('tdm',schema)
 module.exports = tdm

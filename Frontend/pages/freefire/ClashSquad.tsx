@@ -106,6 +106,7 @@ const ClashSquad = ({navigation}) => {
           getMatches();
           setMatchDetails(prev => ({...prev, show: false}));
           matchidSend(response.data.newMatch._id);
+          getMatches();
         });
     } catch (error) {
       const errorMessage = error.response.data.message || 'Exceed the limit';
