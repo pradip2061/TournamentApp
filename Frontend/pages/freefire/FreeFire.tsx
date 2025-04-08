@@ -28,8 +28,7 @@ import {BASE_URL} from '../../env';
 
 const FreeFire = ({navigation}) => {
   const [card, setCard] = useState([]);
-  const {checkrole, checkadmin} = useContext(CheckAdminContext);
-  const [createModal, setCreateModal] = useState(false);
+ 
   const {renderPage} = useSocket();
   useEffect(() => {
     checkrole();
@@ -45,6 +44,7 @@ const FreeFire = ({navigation}) => {
       console.log(error);
     }
   }, [renderPage]);
+  
 
   return (
     <ImageBackground style={styles.matchCard}>
@@ -67,7 +67,7 @@ const FreeFire = ({navigation}) => {
                   <Text style={styles.liveMatchesText}>Live Matches</Text>
                 </View>
                 <View></View>
-        {card.length !== 0 ? (
+        {card.length > 0 ? (
           <FlatList
             data={card}
             scrollEnabled={false}
@@ -76,18 +76,11 @@ const FreeFire = ({navigation}) => {
             contentContainerStyle={{gap: 35, marginLeft: 8}}
           />
         ) : (
-          <ShimmerBox />
+          <Text style={{ textAlign: 'center',marginTop:100,fontSize:15, color: '#333' }}>
+                        No Matches Right now.
+                      </Text>
         )}
-        <Modal visible={createModal} animationType="fade" transparent>
-          <TouchableWithoutFeedback onPress={() => setCreateModal(false)}>
-            <View
-              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <TouchableWithoutFeedback onPress={() => {}}>
-                <Text></Text>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
+       
       </ScrollView>
     </ImageBackground>
   );

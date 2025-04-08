@@ -264,7 +264,8 @@ const LandingChat = ({navigation}) => {
                     uri:
                       item?.photoUrl ||
                       item?.image ||
-                      'https://storage.googleapis.com/khelmela-98.firebasestorage.app/users/13cca677-dc05-4fb3-9ee4-c80b745ac8a0-.jpg',
+                      'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                      
                   }}
                   style={styles?.avatar}
                 />
@@ -343,7 +344,8 @@ const LandingChat = ({navigation}) => {
                           source={{
                             uri:
                               item?.image ||
-                              'https://firebasestorage.googleapis.com/v0/b/khelmela-98.firebasestorage.app/o/mainLogo%2Flogo.jpg?alt=media&token=07f1f6ae-2391-4143-83f4-6ff44bba581b',
+                               'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                              
                           }}
                           style={styles?.resultAvatar}
                         />
@@ -468,8 +470,8 @@ const styles = StyleSheet.create({
     borderRadius: 30,
     backgroundColor: '#e0e0e0',
     marginRight: 15,
-    borderWidth: 2,
-    borderColor: '#5DADB0',
+    borderWidth: 3,
+    borderColor: 'black',
   },
   friendInfo: {
     flex: 1,

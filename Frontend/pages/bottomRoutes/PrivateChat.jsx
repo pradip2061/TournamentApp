@@ -66,7 +66,10 @@ const MessageItem = ({
           styles.messageContainer,
           isSent ? styles.sentContainer : styles.receivedContainer,
         ]}>
-        {!isSent && <Image source={{uri: photoUrl}} style={styles.avatar} />}
+        {!isSent && <Image source={{uri: photoUrl ||
+                    'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+
+        }} style={styles.avatar} />}
         <View style={styles.messageContent}>
           {!isSent && showName && <Text style={styles.senderName}>{name}</Text>}
           <View
@@ -497,7 +500,10 @@ const PrivateChat = ({route, navigation}) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backButton}>←</Text>
         </TouchableOpacity>
-        <Image source={{uri: photoUrl}} style={styles.headerAvatar} />
+        <Image source={{uri: photoUrl || 
+                    'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+
+        }} style={styles.headerAvatar} />
         <View>
           <Text style={styles.headerName}>{name}</Text>
         </View>
@@ -569,7 +575,7 @@ const styles = StyleSheet.create({
   backButton: {
     fontSize: 40,
     color: 'black',
-    marginRight: 10,
+    marginRight: 15,
     fontWeight: '900',
     height: 50,
   },

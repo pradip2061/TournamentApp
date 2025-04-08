@@ -62,6 +62,7 @@ const Home = ({navigation}) => {
             {data?.balance} +
           </Text>
         </TouchableOpacity>
+        <View style={{marginLeft:185}}>
         <View style={styles.headerIcons}>
           <TouchableOpacity onPress={() => navigation.navigate('EnrollMatch')}>
             <Gamepad name="game-controller" size={32} color="#fff" />
@@ -74,6 +75,7 @@ const Home = ({navigation}) => {
               onPress={() => navigation.navigate('Setting')}
             />
           </TouchableOpacity>
+        </View>
         </View>
       </View>
 
@@ -146,7 +148,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingTop: 13,
-    gap: 180,
+  
     marginLeft: -15,
   },
   headerIcons: {

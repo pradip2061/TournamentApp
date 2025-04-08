@@ -33,6 +33,7 @@ const PubgFullMatchCard = ({matches}) => {
   const [notifyModel, setNotifyModel] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
+  const [rulesMoel, setRulesModel] = useState(false);
   const [checkJoined, setCheckJoined] = useState('');
   const [player1] = useState(data?.gameName?.[0]?.pubg || '');
   const [player2, setPlayer2] = useState('');
@@ -43,7 +44,10 @@ const PubgFullMatchCard = ({matches}) => {
   const [reportMessage, setReportMessage] = useState('');
   const [reportImage, setReportImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [checkReport, setCheckReport] = useState('');
+  const isSolo = matches.playermode ==='Solo';
+  const maxSlots = isSolo ? 64 : 16;
+  
+ 
 
   const notify = () => {
     setModal(false);
@@ -148,139 +152,7 @@ const PubgFullMatchCard = ({matches}) => {
     checkmatchType();
   }, [matchId]);
 
-  const pickReportImage = () => {
-    const options = {
-      mediaType: 'photo',
-      maxWidth: 800,
-      maxHeight: 800,
-      quality: 0.3,
-      includeBase64: true,
-    };
-    launchImageLibrary(options, response => {
-      if (response.didCancel) {
-        console.log('User cancelled image picker');
-      } else if (response.errorMessage) {
-        console.log('ImagePicker Error: ', response.errorMessage);
-      } else {
-        setReportImage(response?.assets?.[0]?.base64);
-      }
-    });
-  };
-
-  const reportImages = async image => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return null;
-      }
-      if (!image) {
-        setError('Please upload an image');
-        notify();
-        return null;
-      }
-      const timestamp = new Date().getTime();
-      const filename = `report_proof_${timestamp}.jpg`;
-      const imageResponse = await axios.post(
-        `${BASE_URL}/khelmela/upload/upload`,
-        {
-          image: image,
-          folderName: 'report',
-          filename: filename,
-        },
-        {headers: {Authorization: `${token}`}},
-      );
-      if (!imageResponse?.data?.url) {
-        setError('Image upload failed');
-        return null;
-      }
-      return imageResponse.data.url;
-    } catch (error) {
-      setError(
-        error.response?.data?.error || error.message || 'Something went wrong',
-      );
-      notify();
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const submitReport = async () => {
-    setLoading(true);
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      if (!reportImage) {
-        setError('Please upload an image');
-        notify();
-        setLoading(false);
-        return;
-      }
-      const uploadedProof = await reportImages(reportImage);
-      if (!uploadedProof) {
-        setError('Image upload failed');
-        notify();
-        setLoading(false);
-        return;
-      }
-      if (!reportMessage) {
-        setError('All fields are Required');
-        notify();
-        setLoading(false);
-        return;
-      }
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/reportClash`,
-        {reportMessage, uploadedProof, matchId},
-        {headers: {Authorization: `${token}`}},
-      );
-      setMessage(response.data.message);
-      checkReportClash();
-    } catch (error) {
-      setError(error.response?.data?.message || 'Submission failed');
-    } finally {
-      setReportModel(false);
-      notify();
-      setLoading(false);
-    }
-  };
-
-  const checkReportClash = async () => {
-    try {
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        setError('Token not found');
-        return;
-      }
-      const response = await axios.post(
-        `${BASE_URL}/khelmela/checkreportClash`,
-        {matchId},
-        {headers: {Authorization: `${token}`}},
-      );
-      setCheckReport(response.data.message);
-    } catch (error) {
-      setError(error.response?.data?.message || 'Submission failed');
-    }
-  };
-
-  useEffect(() => {
-    checkReportClash();
-  }, [matchId]);
-
-  const handleReportMessageChange = text => {
-    const words = text.trim().split(/\s+/);
-    if (words.length <= 100) {
-      setReportMessage(text);
-    } else {
-      setError('Maximum 100 words allowed');
-      notify();
-    }
-  };
+ 
 
   return (
     <LinearGradient
@@ -297,7 +169,7 @@ const PubgFullMatchCard = ({matches}) => {
 
       <View style={styles.mapContainer}>
         <Text style={styles.title}>MAP: Random</Text>
-        <Text style={styles.title}>Total player: {matches.TotalPlayer}</Text>
+        <Text style={styles.title}>Total slot:{maxSlots}</Text>
       </View>
 
       <View style={styles.mapImages}>
@@ -307,46 +179,16 @@ const PubgFullMatchCard = ({matches}) => {
       </View>
 
       <View style={styles.detailsContainer}>
-        {checkmatch === 'solo' ? (
-          <>
-            <View>
-              <Text style={styles.text}>Winner:</Text>
-              <Text style={styles.text}>Top: 4</Text>
-              <Text style={styles.text}>Top: 22</Text>
-            </View>
-            <View>
-              <Text style={styles.text}>Odds:</Text>
-              <Text style={styles.text}>3x</Text>
-              <Text style={styles.text}>1.5x</Text>
-            </View>
-          </>
-        ) : checkmatch === 'squad' ? (
-          <>
-            <View>
-              <Text style={styles.text}>Winner:</Text>
-              <Text style={styles.text}>Top: 2</Text>
-              <Text style={styles.text}>Top: 6</Text>
-            </View>
-            <View>
-              <Text style={styles.text}>Odds:</Text>
-              <Text style={styles.text}>3x</Text>
-              <Text style={styles.text}>1.5x</Text>
-            </View>
-          </>
-        ) : (
-          <>
-            <View>
-              <Text style={styles.text}>Winner:</Text>
-              <Text style={styles.text}>Top: 2</Text>
-              <Text style={styles.text}>Top: 16</Text>
-            </View>
-            <View>
-              <Text style={styles.text}>Odds:</Text>
-              <Text style={styles.text}>3x</Text>
-              <Text style={styles.text}>1.5x</Text>
-            </View>
-          </>
-        )}
+       <View>
+                 <Text style={styles.text}>Winner:</Text>
+                 <Text style={styles.text}>{isSolo ? 'Top: 4' : 'Top: 1'}</Text>
+                 <Text style={styles.text}>{isSolo ? 'Top: 22' : 'Top: 4'}</Text>
+               </View>
+               <View>
+                 <Text style={styles.text}>Odds:</Text>
+                 <Text style={styles.text}>3x</Text>
+                 <Text style={styles.text}>2x</Text>
+               </View>
       </View>
       <View style={styles.divider} />
 
@@ -398,13 +240,40 @@ const PubgFullMatchCard = ({matches}) => {
 
       <ModalNotify visible={notifyModel} error={error} message={message} />
 
-      {checkJoined === 'joined' ? (
+      {checkJoined === 'joined' && (
         <View style={styles.joinedContainer}>
           <View style={styles.playerContainer}>
-            {matches.playermode === 'solo' ? (
-              <View style={styles.soloContainer}>
-                <Text style={styles.soloPlayerText}>{player1}</Text>
+            {matches.playermode === 'Solo' ? (
+              <View >
+                
+                <Text style={{fontSize: 12, color: 'white',marginBottom:5}}>
+                    Roomid & pass will be visible before 6 min of the matchtime
+                  </Text>
+                  <View style={styles.clip}>
+                    <View style={styles.input}>
+                      <Text>Roomid: 88997888</Text>
+                      <TouchableOpacity onPress={clipboardid}>
+                        <AntDesign
+                          name="copy1"
+                          size={17}
+                          style={{marginLeft: 10}}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                    <View style={styles.input}>
+                      <Text>pass: 54988</Text>
+                      <TouchableOpacity onPress={clipboardpass}>
+                        <AntDesign
+                          name="copy1"
+                          size={17}
+                          style={{marginLeft: 10}}
+                        />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+
               </View>
+               
             ) : (
               <>
                 <Text style={styles.squadHeaderText}>
@@ -446,12 +315,12 @@ const PubgFullMatchCard = ({matches}) => {
                     />
                   </View>
 
-                  <Text style={{fontSize: 13, color: 'white'}}>
-                    Room id & pass will be visible before 6 min of the matchtime
+                  <Text style={{fontSize: 11, color: 'white'}}>
+                    Roomid & pass will be visible before 6 min of the matchtime
                   </Text>
                   <View style={styles.clip}>
                     <View style={styles.input}>
-                      <Text>customid: 88997</Text>
+                      <Text>Roomid: 8899745445</Text>
                       <TouchableOpacity onPress={clipboardid}>
                         <AntDesign
                           name="copy1"
@@ -461,7 +330,7 @@ const PubgFullMatchCard = ({matches}) => {
                       </TouchableOpacity>
                     </View>
                     <View style={styles.input}>
-                      <Text>custom: 54988</Text>
+                      <Text>pass: 54988</Text>
                       <TouchableOpacity onPress={clipboardpass}>
                         <AntDesign
                           name="copy1"
@@ -472,79 +341,17 @@ const PubgFullMatchCard = ({matches}) => {
                     </View>
                   </View>
                 </View>
-                {checkReport === 'report' ? (
-                  <Text style={styles.reportStatus}>Report Submitted</Text>
-                ) : (
-                  <TouchableOpacity
-                    style={styles.reportButton}
-                    onPress={() => setReportModel(true)}>
-                    <Text style={styles.reportButtonText}>Report Match</Text>
-                  </TouchableOpacity>
-                )}
+               
               </>
             )}
           </View>
         </View>
-      ) : checkJoined === 'notjoined' ? null : (
-        <Text style={styles.loadingText}>...loading</Text>
-      )}
+      ) }
 
-      {/* Report Modal  */}
-      <Modal transparent animationType="slide" visible={reportModel}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}>
-          <ScrollView
-            contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
-            <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalText}>Report Match</Text>
-                <TouchableOpacity
-                  onPress={() => setReportModel(false)}
-                  style={styles.closeButton}>
-                  <Text style={styles.closeText}>X</Text>
-                </TouchableOpacity>
-              </View>
-              <TextInput
-                placeholder="Enter your message (max 100 words)"
-                style={styles.inputModal}
-                value={reportMessage}
-                onChangeText={handleReportMessageChange}
-                placeholderTextColor="#aaa"
-                multiline
-                textAlignVertical="top"
-              />
-              <View style={styles.uploadContainer}>
-                <TouchableOpacity
-                  style={styles.uploadButton}
-                  onPress={pickReportImage}>
-                  <Text style={styles.uploadText}>
-                    Click here to upload proof
-                  </Text>
-                </TouchableOpacity>
-                {reportImage && (
-                  <Text style={styles.checkMark}>✓ Photo Uploaded</Text>
-                )}
-              </View>
-              <View style={styles.buttonContainer}>
-                <TouchableOpacity
-                  style={[styles.button, styles.noButton]}
-                  onPress={() => setReportModel(false)}>
-                  <Text style={styles.buttonText}>Cancel</Text>
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={[styles.button, styles.yesButton]}
-                  onPress={submitReport}
-                  disabled={loading}>
-                  <Text style={styles.buttonText}>
-                    {loading ? 'Submitting...' : 'Submit'}
-                  </Text>
-                </TouchableOpacity>
-              </View>
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
-      </Modal>
+      
+              
+          
+       
     </LinearGradient>
   );
 };
@@ -582,8 +389,9 @@ const styles = StyleSheet.create({
   },
   mapContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    
     marginTop: -10,
+    gap:150
   },
   title: {
     fontSize: 12.5,

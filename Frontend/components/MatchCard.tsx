@@ -182,7 +182,7 @@ const MatchCard = ({ match, refreshData }) => {
       mediaType: 'photo',
       maxWidth: 800,
       maxHeight: 800,
-      quality: 0.3,
+      quality: 0.4,
       includeBase64: true,
     };
     launchImageLibrary(options, response => {
@@ -197,7 +197,7 @@ const MatchCard = ({ match, refreshData }) => {
       mediaType: 'photo',
       maxWidth: 800,
       maxHeight: 800,
-      quality: 0.3,
+      quality: 0.4,
       includeBase64: true,
     };
     launchImageLibrary(options, response => {
@@ -449,7 +449,7 @@ const MatchCard = ({ match, refreshData }) => {
                     ) : null}
                     <View style={styles.footerRow}>
                       <Text style={styles.prizeText}>
-                        🏆 Prize: {item.betAmount * 1.9}
+                        🏆 Prize: {Math.floor(item.betAmount * 1.9) }
                       </Text>
                       {check === 'user' ? (
                         <TouchableOpacity
@@ -584,7 +584,7 @@ const MatchCard = ({ match, refreshData }) => {
       <Modal transparent animationType="slide" visible={deleteCardModel}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Are you sure?</Text>
+            <Text style={styles.modalText}>Did you want to delete this match?</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
@@ -941,7 +941,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
   },
