@@ -172,7 +172,7 @@ const ClashSquad = ({ navigation }) => {
           <Text style={styles.createButtonText}>Create</Text>
         </Pressable>
 
-        {loading ? null : (
+       (
           <>
             {/* Enroll Matches (Shown only if joined) */}
             {joinMatch.length > 0 && (

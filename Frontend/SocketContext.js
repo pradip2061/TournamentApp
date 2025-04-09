@@ -1,155 +1,109 @@
-import React, {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useRef,
-} from 'react';
-import {io} from 'socket.io-client';
-import {baseUrl} from './env';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import { io } from 'socket.io-client';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
+import { baseUrl } from './env';
 import NotificationPopup from './components/NotificationModal';
 import playNotificationSound from './utility/Notification';
 
-// Create Context
 const SocketContext = createContext(null);
 
 export const useSocket = () => useContext(SocketContext);
 
-export const SocketProvider = ({children}) => {
+export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [isConnected, setIsConnected] = useState(false);
   const [renderPage, setRenderPage] = useState(false);
+  const [notification, setNotification] = useState({ visible: false, message: '', type: 'info' });
   const socketRef = useRef(null);
   const activeChat = useRef(null);
 
-  // Notification modal state
-  const [notificationVisible, setNotificationVisible] = useState(false);
-  const [notificationMessage, setNotificationMessage] = useState('');
-  const [notificationType, setNotificationType] = useState('info');
-
-  const setActiveChat = chat => {
+  const setActiveChat = (chat) => {
     activeChat.current = chat;
   };
 
-  // Function to show notification
   const showNotification = (message, type = 'info') => {
-    setNotificationMessage(message);
-    setNotificationType(type);
-    setNotificationVisible(true);
-
-    // Play notification sound
-    setTimeout(() => {
-      playNotificationSound();
-    }, 200);
+    setNotification({ visible: true, message, type });
+    setTimeout(() => playNotificationSound(), 200);
   };
 
-  const setupSocket = async () => {
+  const hideNotification = () => {
+    setNotification((prev) => ({ ...prev, visible: false }));
+  };
+
+  const initializeSocket = async () => {
     try {
-      // Check if we already have a socket connection
+      const token = await AsyncStorage.getItem('token');
+      if (!token) return;
+
       if (socketRef.current) {
-        console.log('Socket already exists, cleaning up before reconnecting');
-        socketRef.current.removeAllListeners();
+        socketRef.current.off();
         socketRef.current.disconnect();
       }
 
-      const token = await AsyncStorage.getItem('token');
-      if (!token) {
-        console.log('Token not found');
-        return;
-      }
-
-      // Create new socket with auto reconnect options
       const newSocket = io(baseUrl, {
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 3000,
         timeout: 10000,
-        forceNew: true, // Ensure a new connection is created
+        auth: { token },
       });
 
       socketRef.current = newSocket;
+      setSocket(newSocket);
 
-      // Set up event listeners
       newSocket.on('connect', () => {
-        console.log('Socket connected');
         setIsConnected(true);
-        // Register with token after connection
         newSocket.emit('GlobalRegister', token);
       });
 
-      newSocket.on('disconnect', reason => {
-        console.log('Socket disconnected:', reason);
+      newSocket.on('disconnect', () => {
         setIsConnected(false);
-        // Let socket.io handle reconnection
       });
 
-      newSocket.on('connect_error', error => {
-        console.log('Connection error:', error.message);
-        // Let socket.io handle reconnection
+      newSocket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error.message);
       });
 
-      newSocket.on('Notify', data => {
-        console.log('Notification received:', data);
+      newSocket.on('Notify', (data) => {
+        if (data.type === 'newMessage' && data.message?.FriendId === activeChat.current) return;
 
-        // Determine notification type and message based on data
-        let messageText = '';
-        let notifyType = 'info';
-
-        if (
-          data.type === 'newMessage' &&
-          data.message.FriendId === activeChat.current
-        ) {
-          return;
-        }
-
-        if (data.type === 'newMessage') {
-          messageText = data?.message?.message || 'New Message';
-          notifyType = 'info';
-        } else if (data.type === 'notification') {
-          messageText = data?.message?.message || 'New Notification';
-          notifyType = 'info';
-        } else if (data.type === 'file') {
-          messageText = data?.message?.message || 'New File';
-          notifyType = 'success';
-        } else if (data.type == 'render') {
-          setRenderPage(prevState => !prevState);
+        const { type: notifyType, message: msg } = processNotificationData(data);
+        if (notifyType === 'render') {
+          setRenderPage((prev) => !prev);
         } else {
-          messageText =
-            data?.message?.message ||
-            (typeof data === 'string'
-              ? data
-              : typeof data?.message === 'string'
-              ? data.message
-              : 'New Notification');
-          notifyType = 'info';
+          showNotification(msg, notifyType);
         }
-
-        // Show notification using our modal
-        showNotification(messageText, notifyType);
       });
-
-      // Store the socket reference
-      setSocket(newSocket);
-
-      return newSocket;
     } catch (error) {
-      console.error('Error setting up socket:', error);
-      return null;
+      console.error('Socket initialization failed:', error);
     }
   };
 
-  useEffect(() => {
-    // Initial socket setup
-    setupSocket();
+  const processNotificationData = (data) => {
+    if (data.type === 'newMessage') {
+      return { type: 'info', message: data?.message?.message || 'New Message' };
+    }
+    if (data.type === 'notification') {
+      return { type: 'info', message: data?.message?.message || 'New Notification' };
+    }
+    if (data.type === 'file') {
+      return { type: 'success', message: data?.message?.message || 'New File' };
+    }
+    if (data.type === 'render') {
+      return { type: 'render', message: '' };
+    }
+    return {
+      type: 'info',
+      message: data?.message?.message || typeof data === 'string' ? data : 'New Notification',
+    };
+  };
 
-    // Cleanup on unmount
+  useEffect(() => {
+    initializeSocket();
     return () => {
       if (socketRef.current) {
-        socketRef.current.removeAllListeners();
+        socketRef.current.off();
         socketRef.current.disconnect();
-        console.log('Disconnecting socket on unmount');
       }
     };
   }, []);
@@ -164,18 +118,19 @@ export const SocketProvider = ({children}) => {
           setRenderPage,
           activeChat,
           setActiveChat,
-        }}>
+        }}
+      >
         {children}
       </SocketContext.Provider>
-
-      {/* Notification component positioned outside the main layout */}
       <NotificationPopup
-        visible={notificationVisible}
-        message={notificationMessage}
-        type={notificationType}
-        onClose={() => setNotificationVisible(false)}
-        duration={4000} // Auto-hide after 4 seconds
+        visible={notification.visible}
+        message={notification.message}
+        type={notification.type}
+        duration={4000}
+        onClose={hideNotification}
       />
-    </>
-  );
+    </>
+  );
 };
+
+export default SocketProvider;
