@@ -35,6 +35,9 @@ const Freefirefullmatchcard = ({ matches }) => {
   const [player2, setPlayer2] = useState('');
   const [player3, setPlayer3] = useState('');
   const [player4, setPlayer4] = useState('');
+    const[reportplayer,setReportPlayer]=useState(false)
+  const[reportplayerModel,setReportPlayerModel]=useState(false)
+  const[userid,setUserid]=useState("")
   const matchId = matches._id;
   const isSquad = matches.playermode === 'Squad';
   const maxSlots = isSquad ? 16 : 48;
@@ -110,7 +113,29 @@ const Freefirefullmatchcard = ({ matches }) => {
       notify();
     }
   };
-
+ const honorScore=async()=>{
+    try {
+      setLoading(true)
+      setError("")
+      setMessage("")
+      if(!userid){
+        return
+      }
+      const response =await axios.post(`${BASE_URL}/khelmela/honorscore`,{userid})
+      if(response.status === 200){
+        setMessage(response.data.message)
+      }
+    } catch (error) {
+      setError(error.response.data.message)
+    }finally{
+      notify()
+      setLoading(false)
+    }
+  }
+  const reportplayers=(userid)=>{
+    setReportPlayerModel(true)
+    setUserid(userid)
+  }
   return (
     <LinearGradient
       colors={["#0f0c29", "#302b63", "#24243e"]}
@@ -339,12 +364,82 @@ const Freefirefullmatchcard = ({ matches }) => {
                       <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
                     </TouchableOpacity>
                   </View>
+                  <TouchableOpacity onPress={()=>setReportPlayer(true)}>
+                      <Text style={styles.reportButtonText}>report the player</Text>
+                    </TouchableOpacity>
                 </View>
               </>
             )}
           </View>
         </View>
       )}
+      <Modal transparent animationType="slide" visible={reportplayer}>
+        <View style={{backgroundColor:'rgba(0, 0, 0, 0.5)'}}>
+        <View style={{width:'100%',height:"50%",backgroundColor:'white',marginTop:400}}>
+          <ScrollView
+            contentContainerStyle={{flexGrow: 1, justifyContent: 'center',alignItems:"center"}}>
+            <View>
+            <Text style={styles.modalText}>Report Player</Text>
+                <TouchableOpacity
+                  onPress={() => setReportPlayer(false)}
+                  style={styles.closeButton}>
+                  <Text style={styles.closeText}>X</Text>
+                  <View style={{gap:20,marginTop:20}}>
+                    {
+                      matches.gameName.map((item)=>(
+                        <View key={item._id} style={{flexDirection:'row',alignItems:'center',gap:30}}>
+                          <View>
+                          <Text>{item.player1}</Text>
+                          <Text>{item.player2 || "player2 Name Unknown"}</Text>
+                          <Text>{item.player3||"player3 Name Unknown"}</Text>
+                          <Text>{item.player4||"player4 Name Unknown"}</Text>
+                          </View>
+                          <TouchableOpacity style={{width:40,height:30,backgroundColor:"gray",alignItems:'center',justifyContent:'center'}} onPress={()=>reportplayers(item.userid)}>
+                            <Text style={{color:'white'}}>+</Text>
+                          </TouchableOpacity>
+                          </View>
+                      ))
+                    }
+                  </View>
+                </TouchableOpacity>
+            </View>
+          </ScrollView>
+          </View>
+          </View>
+      </Modal>
+      <Modal transparent animationType="slide" visible={reportplayerModel}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={styles.modalContainer}>
+          <ScrollView
+            contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
+            <View style={styles.modalContent}>
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalText}>Report player</Text>
+                <TouchableOpacity
+                  onPress={() => setReportPlayerModel(false)}
+                  style={styles.closeButton}>
+                  <Text style={styles.closeText}>X</Text>
+                </TouchableOpacity>
+              </View>
+              <View style={styles.buttonContainer}>
+                <TouchableOpacity
+                  style={[styles.button, styles.noButton]}
+                  onPress={() => setReportPlayerModel(false)}>
+                  <Text style={styles.buttonText}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.button, styles.yesButton]}
+                  disabled={loading} onPress={honorScore}>
+                  <Text style={styles.buttonText}>
+                    {loading ? 'Submitting...' : 'Submit'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </Modal>
     </LinearGradient>
   );
 };
