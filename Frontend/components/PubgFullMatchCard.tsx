@@ -367,8 +367,10 @@ const PubgFullMatchCard = ({matches}) => {
                       </TouchableOpacity>
                     </View>
                   </View>
+                  <TouchableOpacity onPress={()=>setReportPlayer(true)}>
+                                        <Text style={styles.reportButtonText}>report the player</Text>
+                                      </TouchableOpacity>
                 </View>
-               
               </>
             )}
           </View>
