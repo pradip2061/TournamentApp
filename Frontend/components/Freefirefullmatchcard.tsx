@@ -38,6 +38,7 @@ const Freefirefullmatchcard = ({ matches }) => {
     const[reportplayer,setReportPlayer]=useState(false)
   const[reportplayerModel,setReportPlayerModel]=useState(false)
   const[userid,setUserid]=useState("")
+  const[loading,setLoading]=useState(false)
   const matchId = matches._id;
   const isSquad = matches.playermode === 'Squad';
   const maxSlots = isSquad ? 16 : 48;
@@ -344,6 +345,9 @@ const Freefirefullmatchcard = ({ matches }) => {
                       </TouchableOpacity>
                     </View>
                   </View>
+                  <TouchableOpacity onPress={()=>setReportPlayer(true)}>
+                      <Text>report the player</Text>
+                    </TouchableOpacity>
                 </View>
               </>
             ) : (
@@ -364,9 +368,6 @@ const Freefirefullmatchcard = ({ matches }) => {
                       <AntDesign name="copy1" size={17} style={{ marginLeft: 10 }} />
                     </TouchableOpacity>
                   </View>
-                  <TouchableOpacity onPress={()=>setReportPlayer(true)}>
-                      <Text style={styles.reportButtonText}>report the player</Text>
-                    </TouchableOpacity>
                 </View>
               </>
             )}
@@ -383,7 +384,7 @@ const Freefirefullmatchcard = ({ matches }) => {
                 <TouchableOpacity
                   onPress={() => setReportPlayer(false)}
                   style={styles.closeButton}>
-                  <Text style={styles.closeText}>X</Text>
+                  <Text>X</Text>
                   <View style={{gap:20,marginTop:20}}>
                     {
                       matches.gameName.map((item)=>(
@@ -408,18 +409,15 @@ const Freefirefullmatchcard = ({ matches }) => {
           </View>
       </Modal>
       <Modal transparent animationType="slide" visible={reportplayerModel}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-          style={styles.modalContainer}>
           <ScrollView
             contentContainerStyle={{flexGrow: 1, justifyContent: 'center'}}>
             <View style={styles.modalContent}>
-              <View style={styles.modalHeader}>
+              <View >
                 <Text style={styles.modalText}>Report player</Text>
                 <TouchableOpacity
                   onPress={() => setReportPlayerModel(false)}
                   style={styles.closeButton}>
-                  <Text style={styles.closeText}>X</Text>
+                  <Text>X</Text>
                 </TouchableOpacity>
               </View>
               <View style={styles.buttonContainer}>
@@ -430,7 +428,7 @@ const Freefirefullmatchcard = ({ matches }) => {
                 </TouchableOpacity>
                 <TouchableOpacity
                   style={[styles.button, styles.yesButton]}
-                  disabled={loading} onPress={honorScore}>
+                   onPress={honorScore} disabled={loading}>
                   <Text style={styles.buttonText}>
                     {loading ? 'Submitting...' : 'Submit'}
                   </Text>
@@ -438,7 +436,6 @@ const Freefirefullmatchcard = ({ matches }) => {
               </View>
             </View>
           </ScrollView>
-        </KeyboardAvoidingView>
       </Modal>
     </LinearGradient>
   );
