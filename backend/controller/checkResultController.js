@@ -357,9 +357,26 @@ const divideMoney = async (req, res) => {
         return res.status(500).json({ message: "Internal Server Error" });
     }
 };
+const deductHonorScore=async(req,res)=>{
+    const{userid}=req.body
+    if(!userid){
+        return res.status(400).json({
+            message:"userid not found"
+        })
+    }
+    const userinfo= await User.findOne({_id:userid})
+    if(!userinfo){
+        return res.status(400).json({
+            message:"user not found"
+        })
+    }
+    userinfo.honorscore -=2
+    userinfo.save()
+    res.status(200).json({message:"report successfully"})
+
+}
 
 
 
 
-
-module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions,checkReportClash,checkReportTdm,divideMoney};
+module.exports = {checkResult,checkResulttdm,checkuserJoinFF,checkmatchtypeTdm,checkrole,checkmatchtypePubg,checkmatchtypeff,getchampions,checkReportClash,checkReportTdm,divideMoney,deductHonorScore};
