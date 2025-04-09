@@ -3,6 +3,7 @@ const mongoose = require('mongoose')
 const bcrypt = require('bcrypt')
 const ClashSquad = require("../model/ClashSquadModel")
 const tdm = require("../model/TdmModel")
+const getSocket = require("../App")
 const changePassword=async(req,res)=>{
 try {
 const userid =req.user
@@ -42,22 +43,36 @@ res.status(200).json({
 }
 }
 
-const customIdAndPassword=async(req,res)=>{
-const{customId,customPassword,matchId}=req.body
-const match = await ClashSquad.findOne({_id:matchId})
-if(!match){
-  return res.status(404).json({
-    message:'matchCard not found'
-  })
-}
-match.customId=customId
-match.customPassword=customPassword
-await match.save()
+const customIdAndPassword = async (req, res) => {
+  try {
+    const { customId, customPassword, matchId } = req.body;
 
-res.status(200).json({
-    message:'data added successfully'
-})
-}
+    const match = await ClashSquad.findById(matchId);
+    if (!match) {
+      return res.status(404).json({ message: "Match card not found" });
+    }
+
+    match.customId = customId;
+    match.customPassword = customPassword;
+    await match.save();
+
+    const io = getSocket(); // Get io safely
+    if (io) {
+      io.emit("idpassClash", {
+        matchId: match._id,
+        customId: match.customId,
+        customPassword: match.customPassword,
+      });
+    }
+    return res.status(200).json({
+      message: "Custom ID and password updated successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: error.message,
+    });
+  }
+};
 
 const customIdAndPasswordtdm=async(req,res)=>{
   const{customId,customPassword,matchId}=req.body
