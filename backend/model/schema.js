@@ -170,6 +170,10 @@ const Userschema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    honorscore:{
+      type:Number,
+      default:100
+    },
     role: {
       type: String,
       enum: ["user", "admin"],
