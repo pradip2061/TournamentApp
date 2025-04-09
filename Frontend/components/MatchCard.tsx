@@ -18,7 +18,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
 import { BASE_URL } from '../env';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
-
+import { io } from "socket.io-client";
 const MatchCard = ({ match, refreshData }) => {
   const [check, setCheck] = useState('');
   const [customId, setCustomId] = useState('');
@@ -43,7 +43,21 @@ const MatchCard = ({ match, refreshData }) => {
 
   const matchId = match._id;
   const { setTrigger, trigger } = useContext(CheckAdminContext);
+  useEffect(() => {
+    // Listen for real-time ID/PW updates
+    socket.on("idpassClash", (data) => {
+      if (data.matchId === matchId) {
+        setPublish('publish')
+        refreshData()
+         // or update just the ID/password parts
+      }
+    });
 
+    // Cleanup on unmount
+    return () => {
+      socket.off("idpassClash");
+    };
+  }, [matchId]);
   // Memoize token retrieval
   const getToken = useCallback(async () => {
     return await AsyncStorage.getItem('token');
