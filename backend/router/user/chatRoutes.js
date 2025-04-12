@@ -105,41 +105,120 @@ const setupChatSocket = (io) => {
           return;
         }
 
-        for (let i = 0; i < user.friends.length; i++) {
-          if (user.friends[i].id == friendId) {
-            console.log("Friend Id Matched " + friendId);
-            user.friends[i].latestMessage = {
-              message: main_chat.message,
-              time: main_chat.time,
-            };
-            user.markModified(`friends.${i}.latestMessage`);
+        // Check if the friendId is "admin" (a special keyword) rather than an actual user ID
+        if (friendId === "admin") {
+          console.log("Message is for admin broadcast");
 
-            await user.save(); // Ensure save is awaited
+          // Find all users
+          const allUsers = await User.find();
+
+          for (const targetUser of allUsers) {
+            // Skip the sender
+            if (targetUser._id.toString() === message.senderID) continue;
+
+            // Emit message to each user
+            socket.to(targetUser._id.toString()).emit("message", message);
+
+            // Update each user's latest message from this sender
+            let friendIndex = -1;
+            for (let i = 0; i < targetUser.friends.length; i++) {
+              if (targetUser.friends[i].id == message.senderID) {
+                friendIndex = i;
+                break;
+              }
+            }
+
+            if (friendIndex >= 0) {
+              // Update existing friend relationship
+              targetUser.friends[friendIndex].latestMessage = {
+                message: main_chat.message,
+                time: main_chat.time,
+              };
+              targetUser.markModified(`friends.${friendIndex}.latestMessage`);
+
+              await targetUser.save();
+            }
           }
-        }
 
-        // Update recipient's friends list
-        const friend = await User.findById(message.FriendId);
-        if (!friend) {
-          console.log("Friend Not Found");
-          return;
-        }
+          console.log("Message broadcast to all users");
+        } else {
+          // Regular flow for a specific friend
+          for (let i = 0; i < user.friends.length; i++) {
+            if (user.friends[i].id == friendId) {
+              console.log("Friend Id Matched " + friendId);
+              user.friends[i].latestMessage = {
+                message: main_chat.message,
+                time: main_chat.time,
+              };
+              user.markModified(`friends.${i}.latestMessage`);
 
-        for (let i = 0; i < friend.friends.length; i++) {
-          if (friend.friends[i].id == main_chat.senderID) {
-            console.log("Time ------- " + main_chat.time);
-            friend.friends[i].latestMessage = {
-              message: main_chat.message,
-              time: main_chat.time,
-            };
-            friend.markModified(`friends.${i}.latestMessage`);
+              await user.save(); // Ensure save is awaited
+            }
+          }
 
-            console.log(
-              "Friend after Latest Message ------> ",
-              friend.friends[i]
-            );
+          // Update recipient's friends list
+          const friend = await User.findById(friendId);
+          if (!friend) {
+            console.log("Friend Not Found");
+            return;
+          }
 
-            await friend.save(); // Ensure save is awaited
+          // Check if the friend is an admin user
+          if (friend.role === "admin") {
+            console.log("Friend is an admin, broadcasting to all users");
+
+            // Find all users
+            const allUsers = await User.find();
+
+            for (const targetUser of allUsers) {
+              // Skip the sender and the admin
+              if (
+                targetUser._id.toString() === message.senderID ||
+                targetUser._id.toString() === friendId
+              )
+                continue;
+
+              // Emit message to each user
+              socket.to(targetUser._id.toString()).emit("message", message);
+
+              // Update their latest message if they're friends with the sender
+              let friendIndex = -1;
+              for (let i = 0; i < targetUser.friends.length; i++) {
+                if (targetUser.friends[i].id == message.senderID) {
+                  friendIndex = i;
+                  break;
+                }
+              }
+
+              if (friendIndex >= 0) {
+                targetUser.friends[friendIndex].latestMessage = {
+                  message: main_chat.message,
+                  time: main_chat.time,
+                };
+                targetUser.markModified(`friends.${friendIndex}.latestMessage`);
+
+                await targetUser.save();
+              }
+            }
+          }
+
+          // Update the friend's latest message (whether admin or not)
+          for (let i = 0; i < friend.friends.length; i++) {
+            if (friend.friends[i].id == main_chat.senderID) {
+              console.log("Time ------- " + main_chat.time);
+              friend.friends[i].latestMessage = {
+                message: main_chat.message,
+                time: main_chat.time,
+              };
+              friend.markModified(`friends.${i}.latestMessage`);
+
+              console.log(
+                "Friend after Latest Message ------> ",
+                friend.friends[i]
+              );
+
+              await friend.save(); // Ensure save is awaited
+            }
           }
         }
 

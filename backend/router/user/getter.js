@@ -35,40 +35,56 @@ router.get("/userRequest/:request", Authverify, async (req, res) => {
 
       console.log("Fetching friend details...");
 
-      // Map friend IDs and maintain structure
-      const friendIdMap = new Map();
-      const friendIds = user.friends
-        .map((f) => {
-          if (isValidObjectId(f?.id)) {
-            friendIdMap.set(f.id, f); // Store original object
-            return new mongoose.Types.ObjectId(f.id);
-          }
-          return null;
-        })
-        .filter(Boolean);
+      const ADMIN_ID = "admin";
+      const CUSTOM_ADMIN_IMAGE =
+        "https://firebasestorage.googleapis.com/v0/b/khelmela-98.firebasestorage.app/o/uploads%2FLogorso.jpg?alt=media&token=2f91f77c-12b8-471c-a285-2fea9a30bad1";
 
-      if (friendIds.length === 0) {
-        return res.json({ message: "No valid friends found" });
+      const friendIdMap = new Map(); // maps ID -> original friend object
+      const dbFriendIds = []; // only valid ObjectIds go here
+      const friends = [];
+
+      // Step 1: Classify and map friends
+      for (const friend of user.friends) {
+        const id = friend?.id;
+
+        if (!id) continue;
+
+        friendIdMap.set(id, friend); // Store the original structure for merging
+
+        if (id === ADMIN_ID) {
+          friends.push({
+            _id: ADMIN_ID,
+            username: "Admin",
+            image: CUSTOM_ADMIN_IMAGE,
+          });
+        } else if (isValidObjectId(id)) {
+          dbFriendIds.push(new mongoose.Types.ObjectId(id));
+        }
       }
 
-      // Fetch all friends in parallel
-      const friends = await User.find({ _id: { $in: friendIds } }).select(
-        "_id username image"
-      );
+      // Step 2: Fetch non-admin friends in one DB call
+      if (dbFriendIds.length > 0) {
+        const dbFriends = await User.find({ _id: { $in: dbFriendIds } }).select(
+          "_id username image"
+        );
+        friends.push(...dbFriends);
+      }
 
-      // Merge fetched data with existing friend objects
+      // Step 3: Merge updated info back into original friend list
       const updatedFriends = user.friends.map((f) => {
-        const updatedFriend = friends.find((friend) => friend._id.equals(f.id));
-        return updatedFriend
+        const matched = friends.find(
+          (friend) => friend._id.toString() === f.id
+        );
+        return matched
           ? {
               ...f,
-              username: updatedFriend.username,
-              image: updatedFriend.image,
+              username: matched.username,
+              image: matched.image,
             }
           : f;
       });
 
-      console.log("Friends fetched and merged successfully!");
+      console.log("Updated Friends: ", updatedFriends);
       return res.json(updatedFriends);
     }
 

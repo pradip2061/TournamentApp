@@ -14,6 +14,7 @@ import Orientation from 'react-native-orientation-locker';
 import Withdraw from './pages/transaction/Withdraw';
 import NetworkStatus from './NetworkStatus';
 import {SocketProvider} from './SocketContext';
+import {FilteredFriendsProvider} from './filteredFriend';
 const App = () => {
   const Stack = createStackNavigator();
   useEffect(() => {
@@ -27,34 +28,36 @@ const App = () => {
     <NetworkStatus>
       <ContextApi>
         <SocketProvider>
-          <NavigationContainer ref={navigationRef}>
-            <TokenCheck />
-            <Stack.Navigator>
-              <Stack.Screen
-                name="First"
-                component={FirstPage}
-                options={{headerShown: false}}
-              />
-              <Stack.Screen
-                name="Authenticate"
-                component={Authenticate}
-                options={{headerShown: false}}
-              />
-              <Stack.Screen
-                name="Main"
-                component={Main}
-                options={{headerShown: false}}
-              />
-              <Stack.Screen
-                name="PrivateChat"
-                component={PrivateChat}
-                options={{headerShown: false}}
-              />
+          <FilteredFriendsProvider>
+            <NavigationContainer ref={navigationRef}>
+              <TokenCheck />
+              <Stack.Navigator>
+                <Stack.Screen
+                  name="First"
+                  component={FirstPage}
+                  options={{headerShown: false}}
+                />
+                <Stack.Screen
+                  name="Authenticate"
+                  component={Authenticate}
+                  options={{headerShown: false}}
+                />
+                <Stack.Screen
+                  name="Main"
+                  component={Main}
+                  options={{headerShown: false}}
+                />
+                <Stack.Screen
+                  name="PrivateChat"
+                  component={PrivateChat}
+                  options={{headerShown: false}}
+                />
 
-              <Stack.Screen name="AddMoney" component={AddMoney} />
-              <Stack.Screen name="Withdraw" component={Withdraw} />
-            </Stack.Navigator>
-          </NavigationContainer>
+                <Stack.Screen name="AddMoney" component={AddMoney} />
+                <Stack.Screen name="Withdraw" component={Withdraw} />
+              </Stack.Navigator>
+            </NavigationContainer>
+          </FilteredFriendsProvider>
         </SocketProvider>
       </ContextApi>
     </NetworkStatus>

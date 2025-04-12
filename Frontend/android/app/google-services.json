@@ -1,26 +1,44 @@
 {
   "project_info": {
-    "project_number": "43642509681",
-    "project_id": "khelmela-98",
-    "storage_bucket": "khelmela-98.firebasestorage.app"
+    "project_number": "358939671305",
+    "project_id": "khelmela-96",
+    "storage_bucket": "khelmela-96.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:43642509681:android:de70e1834c84653317fed0",
+        "mobilesdk_app_id": "1:358939671305:android:b2eefd8df476b4819df1d8",
         "android_client_info": {
           "package_name": "com.frontend"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "358939671305-dg60pa92tc1k0q7j50tefjnthfi6ji5l.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.frontend",
+            "certificate_hash": "f05680cc6d2735c9a58f24b0bf3268f83ec8e31f"
+          }
+        },
+        {
+          "client_id": "358939671305-5jtt9037g0to856skm3d8h568q36tv5l.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyASf7igsHnmmCEgVtF5nhkh71RYObc4HyU"
+          "current_key": "AIzaSyAAyMBAUOke3Leb1EvzYv4yMO__hj_wWIY"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "358939671305-5jtt9037g0to856skm3d8h568q36tv5l.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

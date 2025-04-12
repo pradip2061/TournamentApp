@@ -32,6 +32,7 @@ import {
 } from '../../components/PrivateChatComponent/Dateformat';
 
 import {useSocket} from '../../SocketContext';
+import {useFilteredFriends} from '../../filteredFriend';
 
 // Message item component
 const MessageItem = ({
@@ -165,14 +166,7 @@ const messagesReducer = (state, action) => {
 };
 
 const PrivateChat = ({route, navigation}) => {
-  const {
-    userId,
-    FriendId,
-    name,
-    photoUrl,
-    filteredFriends,
-    setFilteredFriends,
-  } = route.params || {
+  const {userId, FriendId, name, photoUrl} = route.params || {
     name: 'Unknown',
     photoUrl: 'https://via.placeholder.com/40',
   };
@@ -184,6 +178,7 @@ const PrivateChat = ({route, navigation}) => {
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const {socket, isConnected, activeChat, setActiveChat} = useSocket();
+  const {filteredFriends, setFilteredFriends} = useFilteredFriends();
 
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -313,6 +308,7 @@ const PrivateChat = ({route, navigation}) => {
   };
 
   // Send text message
+
   const sendTextMessage = useCallback(() => {
     if (!newMessage.trim() || !socket) return;
 
@@ -333,6 +329,7 @@ const PrivateChat = ({route, navigation}) => {
     });
 
     const updateFriendMessage = (FriendId, messageData) => {
+      // First, update the friend's latest message
       const updatedFriendsWithNewMessage = filteredFriends.map(friend => {
         if (friend.id === FriendId) {
           return {
@@ -346,20 +343,54 @@ const PrivateChat = ({route, navigation}) => {
         return friend;
       });
 
+      // Now reorder the list while preserving admin at top
+
+      // Find the admin (should be at index 0)
+      const adminIndex = updatedFriendsWithNewMessage.findIndex(
+        friend => friend.id === 'admin',
+      );
+      let adminUser = null;
+
+      // If admin exists, remove it temporarily
+      if (adminIndex !== -1) {
+        adminUser = updatedFriendsWithNewMessage.splice(adminIndex, 1)[0];
+      }
+
       // Find the index of the updated friend
       const updatedFriendIndex = updatedFriendsWithNewMessage.findIndex(
         friend => friend.id === FriendId,
       );
 
-      // If the friend was found and updated, move them to the beginning of the array
-      if (updatedFriendIndex > 0) {
+      // If the friend was found, remove it from its current position
+      if (updatedFriendIndex !== -1) {
         const updatedFriend = updatedFriendsWithNewMessage.splice(
           updatedFriendIndex,
           1,
         )[0];
-        setFilteredFriends([updatedFriend, ...updatedFriendsWithNewMessage]);
+
+        // Construct the new array with admin first, then updated friend, then the rest
+        let newFilteredFriends = [];
+
+        if (adminUser) {
+          // Admin at index 0, updated friend at index 1
+          newFilteredFriends = [
+            adminUser,
+            updatedFriend,
+            ...updatedFriendsWithNewMessage,
+          ];
+        } else {
+          // No admin, so updated friend goes at index 0
+          newFilteredFriends = [updatedFriend, ...updatedFriendsWithNewMessage];
+        }
+
+        setFilteredFriends(newFilteredFriends);
       } else {
-        setFilteredFriends(updatedFriendsWithNewMessage);
+        // Friend wasn't found, just restore admin at top if it exists
+        if (adminUser) {
+          setFilteredFriends([adminUser, ...updatedFriendsWithNewMessage]);
+        } else {
+          setFilteredFriends(updatedFriendsWithNewMessage);
+        }
       }
 
       console.log(
@@ -380,7 +411,7 @@ const PrivateChat = ({route, navigation}) => {
     dispatchMessages({type: 'ADD_MESSAGE', payload: messageData});
     setNewMessage('');
     setInputHeight(40);
-  }, [newMessage, roomId, socket, userId]);
+  }, [newMessage, roomId, socket, userId, filteredFriends, FriendId]);
 
   // Select photo from library
   const selectPhoto = useCallback(async () => {
@@ -554,142 +585,139 @@ const PrivateChat = ({route, navigation}) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFEFE',
+    backgroundColor: '#F8F9FA',
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    backgroundColor: 'white',
+    padding: 16,
+    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    borderColor: 'grey',
-    elevation: 10,
+    borderBottomColor: '#EFEFEF',
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.1,
+    shadowRadius: 2,
   },
   backButton: {
-    fontSize: 40,
-    color: 'black',
-    marginRight: 10,
-    fontWeight: '900',
-    height: 50,
+    fontSize: 28,
+    color: '#0084FF',
+    marginRight: 15,
+    fontWeight: '500',
   },
   headerAvatar: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    marginRight: 10,
+    marginRight: 12,
   },
   headerName: {
-    color: 'black',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  imageContainer: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
-    overflow: 'hidden',
-    backgroundColor: '#eee',
-  },
-  image: {
-    height: 100,
-    width: 100,
-    borderRadius: 30,
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    marginLeft: 'auto',
-  },
-  icon: {
-    fontSize: 20,
-    color: '#fff',
-    marginLeft: 15,
+    color: '#262626',
+    fontSize: 17,
+    fontWeight: '600',
   },
   messageList: {
-    padding: 10,
-    paddingTop: 60,
+    padding: 12,
+    paddingTop: 20,
     flexGrow: 1,
   },
   dateSeparator: {
     alignItems: 'center',
-    marginVertical: 12,
+    marginVertical: 16,
   },
   dateText: {
-    color: '#aaa',
+    color: '#65676B',
     fontSize: 12,
-    backgroundColor: '#222',
-    paddingHorizontal: 10,
-    paddingVertical: 2,
-    borderRadius: 10,
-    textTransform: 'uppercase',
+    backgroundColor: '#F0F2F5',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 12,
+    overflow: 'hidden',
   },
   messageContainer: {
-    marginVertical: 5,
-    maxWidth: '70%',
+    marginVertical: 4,
+    maxWidth: '75%',
     flexDirection: 'row',
     alignItems: 'flex-end',
-    minWidth: 'auto',
   },
   sentContainer: {
     alignSelf: 'flex-end',
     flexDirection: 'row-reverse',
   },
-  receivedContainer: {},
+  receivedContainer: {
+    alignSelf: 'flex-start',
+  },
   avatar: {
-    width: 30,
-    height: 30,
-    borderRadius: 15,
+    width: 28,
+    height: 28,
+    borderRadius: 14,
     marginRight: 8,
-    marginBottom: 3,
+    marginBottom: 5,
   },
   messageContent: {
     flex: 1,
   },
   senderName: {
-    fontSize: 12,
-    color: '#aaa',
-    marginBottom: 2,
+    fontSize: 13,
+    color: '#65676B',
+    marginBottom: 3,
+    fontWeight: '500',
   },
   messageBubble: {
-    padding: 8,
-    borderRadius: 15,
-    minWidth: 100,
+    padding: 12,
+    borderRadius: 18,
+    minWidth: 80,
   },
   sentBubble: {
-    backgroundColor: 'blue',
+    backgroundColor: '#0084FF',
+    borderTopRightRadius: 4,
   },
   receivedBubble: {
-    backgroundColor: 'grey',
-    borderRadius: 15,
+    backgroundColor: '#D6F5F5', // Light teal
+    borderTopLeftRadius: 4,
+    borderWidth: 1,
+    borderColor: '#C6E5E5',
   },
   photoBubble: {
-    padding: 5,
+    padding: 4,
     backgroundColor: 'transparent',
   },
   messageText: {
     fontSize: 16,
-    color: '#fff',
+    color: '#FFFFFF',
+    lineHeight: 20,
+  },
+  receivedMessageText: {
+    color: '#2D2D2D', // Darker text for better contrast
   },
   photo: {
-    width: 200,
-    height: 200,
-    borderRadius: 10,
+    width: 220,
+    height: 220,
+    borderRadius: 12,
   },
   timestamp: {
     fontSize: 11,
-    marginTop: 2,
+    marginTop: 3,
     textAlign: 'right',
   },
   sentTimestamp: {
-    color: '#e0e0e0',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   receivedTimestamp: {
-    color: 'white',
+    color: '#65676B',
+  },
+  imageContainer: {
+    width: 220,
+    height: 220,
+    borderRadius: 12,
+    overflow: 'hidden',
+    backgroundColor: '#E4E6EB',
   },
   // Image modal styles
   modalContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.9)',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -701,23 +729,92 @@ const styles = StyleSheet.create({
   },
   modalImage: {
     width: '100%',
-    height: '80%',
+    height: '90%',
+    resizeMode: 'contain',
   },
   closeButton: {
     position: 'absolute',
-    top: 30,
+    top: 40,
     right: 20,
     zIndex: 10,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: 'center',
     alignItems: 'center',
   },
   closeButtonText: {
     color: 'white',
-    fontSize: 30,
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  // Input bar styles
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 10,
+    backgroundColor: '#ffffff',
+    borderTopWidth: 1,
+    borderTopColor: '#EFEFEF',
+  },
+  input: {
+    flex: 1,
+    backgroundColor: '#F0F2F5',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    fontSize: 16,
+    color: '#050505',
+    marginRight: 10,
+    maxHeight: 120,
+  },
+  sendButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#0084FF',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  sendButtonText: {
+    color: 'white',
+    fontSize: 18,
+    fontWeight: '600',
+  },
+  attachButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: '#F0F2F5',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 8,
+  },
+  selectedPhotoContainer: {
+    position: 'relative',
+    marginBottom: 10,
+    alignSelf: 'center',
+  },
+  selectedPhoto: {
+    width: 100,
+    height: 100,
+    borderRadius: 8,
+  },
+  cancelPhotoButton: {
+    position: 'absolute',
+    top: -8,
+    right: -8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#555',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelPhotoText: {
+    color: 'white',
+    fontSize: 14,
     fontWeight: 'bold',
   },
 });

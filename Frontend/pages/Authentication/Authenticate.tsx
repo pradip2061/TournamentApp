@@ -17,9 +17,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import Modal from 'react-native-modal';
 import {useFocusEffect} from '@react-navigation/native';
-import LinearGradient from 'react-native-linear-gradient';
 import {BASE_URL} from '../../env';
 import GoogleSignInScreen from './googleAuth';
+import FastImage from 'react-native-fast-image';
 const Authenticate = ({navigation}) => {
   const [show, setShow] = useState(true);
   const [value, setValue] = useState('Signup');
@@ -71,7 +71,6 @@ const Authenticate = ({navigation}) => {
           },
         )
         .then(response => {
-          Alert.alert(response.data.message);
           setEmail('');
           setPassword('');
           setToken(response.data.data);
@@ -90,7 +89,7 @@ const Authenticate = ({navigation}) => {
     try {
       Keyboard.dismiss(); // Dismiss keyboard before sending OTP
       setLoading(true);
-      setError("")
+      setError('');
       await axios
         .post(`${BASE_URL}/khelmela/verifyotp`, {
           otp,
@@ -211,8 +210,8 @@ const Authenticate = ({navigation}) => {
   };
 
   return (
-    <LinearGradient
-      colors={['#0f0c29', '#302b63', '#24243e']}
+    <FastImage
+      source={require('../../assets/bg7.gif')}
       style={styles.container}>
       <View style={styles.mainContent}>
         <TouchableOpacity
@@ -356,7 +355,9 @@ const Authenticate = ({navigation}) => {
               onPress={() => setOtpmodel(false)}>
               <Icon name="close" size={24} color="#333" />
             </TouchableOpacity>
-            <Text style={{fontSize:16,marginTop:30,marginBottom:20}}>Otp sent to <Text style={{color:"#007BFF"}}>{email}</Text></Text>
+            <Text style={{fontSize: 16, marginTop: 30, marginBottom: 20}}>
+              Otp sent to <Text style={{color: '#007BFF'}}>{email}</Text>
+            </Text>
             <TextInput
               style={styles.modalInput}
               placeholder="Enter OTP"
@@ -465,7 +466,7 @@ const Authenticate = ({navigation}) => {
           </View>
         </Modal>
       </View>
-    </LinearGradient>
+    </FastImage>
   );
 };
 

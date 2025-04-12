@@ -27,32 +27,37 @@ const requestOtp = async (req, res) => {
     const verifyemail = await User.findOne({ email: email });
     if (verifyemail) {
       res.status(400).json({
-        message: "email already use",
+        message: "User already exists",
       });
       return;
     }
 
     if (/[A-Z]/.test(username)) {
-        return res.status(400).json({ message: "Username can only contain lowercase letters" });
-    }
-
-    if (username.includes(" ")){
-        return res.status(400).json({ message: "Username can't contain spaces" });
-    }
-    if (!/^[a-z0-9]+$/.test(username)){
-      return res.status(400).json({ message: "no special character are allowed" });
-  }
-    // Check if username already taken
-    const checkUsername = await User.findOne({ username});
-    if (checkUsername) {
-        return res.status(409).json({ message: "Username already taken" });
-    }
-    const emailid = await OtpModel.find({ email: email });
-    if (emailid.length >= 3) {
       return res
         .status(400)
-        .json({ message: "your today otp limit is exceed" });
+        .json({ message: "Username can only contain lowercase letters" });
     }
+
+    if (username.includes(" ")) {
+      return res.status(400).json({ message: "Username can't contain spaces" });
+    }
+    if (!/^[a-z0-9]+$/.test(username)) {
+      return res
+        .status(400)
+        .json({ message: "no special character are allowed" });
+    }
+    // Check if username already taken
+    const checkUsername = await User.findOne({ username });
+    if (checkUsername) {
+      return res.status(409).json({ message: "Username already taken" });
+    }
+    const emailid = await OtpModel.find({ email: email });
+    if (emailid.length >= 9) {
+      return res
+        .status(400)
+        .json({ message: "Your today otp limit is exceed" });
+    }
+
     const otp = generateOtp();
     const expiresAt = new Date(Date.now() + 5 * 60 * 1000); // Expiry in 5 minutes
 
@@ -127,7 +132,6 @@ const verifyOtpanduser = async (req, res) => {
       friends: [{ id: "admin" }],
     });
 
-    // Find all admin users and add the new user to their friends lists
     await User.updateMany(
       { role: "admin" }, // Find all users with role "admin"
       {

@@ -18,18 +18,19 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {BASE_URL} from '../../env';
 import {jwtDecode} from 'jwt-decode';
+import {useFilteredFriends} from '../../filteredFriend';
 
 const LandingChat = ({navigation}) => {
   const [user, setUser] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [clicked, setClicked] = useState(false);
   const [friends, setFriends] = useState([]);
-  const [filteredFriends, setFilteredFriends] = useState([]);
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [token, setToken] = useState('');
+  const {filteredFriends, setFilteredFriends} = useFilteredFriends();
 
   useEffect(() => {
     const getUser = async () => {
@@ -82,16 +83,29 @@ const LandingChat = ({navigation}) => {
         );
 
         console.log('Friend Array :', response?.data);
-
         if (response?.data && response?.data?.length > 0) {
+          // First sort by latest message
           const sortedFriends = sortByLatestMessage(response.data);
+
+          // Then reorder to put admin at the top if present
+          const adminIndex = sortedFriends.findIndex(
+            friend => friend.id === 'admin',
+          );
+
+          // If admin exists in the array, remove it and place at the beginning
+          if (adminIndex !== -1) {
+            const adminUser = sortedFriends.splice(adminIndex, 1)[0];
+            sortedFriends.unshift(adminUser);
+          }
+
           console.log(
-            'Sorted friends by latest message:',
+            'Sorted friends by latest message with admin pinned:',
             sortedFriends.map(f => ({
               username: f?.username,
               time: f?.latestMessage?.time,
             })),
           );
+
           setFriends(sortedFriends);
           setFilteredFriends(sortedFriends);
         } else {
@@ -182,8 +196,6 @@ const LandingChat = ({navigation}) => {
       FriendId: item?.id,
       photoUrl: item?.image || item?.photoUrl,
       name: item?.username || item?.name,
-      filteredFriends,
-      setFilteredFriends,
     });
   };
 
@@ -262,7 +274,6 @@ const LandingChat = ({navigation}) => {
                 <Image
                   source={{
                     uri:
-                      item?.photoUrl ||
                       item?.image ||
                       'https://storage.googleapis.com/khelmela-98.firebasestorage.app/users/13cca677-dc05-4fb3-9ee4-c80b745ac8a0-.jpg',
                   }}

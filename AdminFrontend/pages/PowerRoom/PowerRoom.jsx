@@ -22,20 +22,11 @@ const PowerRoom = () => {
   const [balance, setBalance] = useState('');
   const [trophy, setTrophy] = useState('');
   const [message, setMessage] = useState('No update Initiated ');
-  const [matchMessage, setMatchMessage] = useState('Search Match ');
-  const [matchId, setMatchId] = useState('');
+
   const [match, setMatch] = useState({});
   const [token, setToken] = useState('');
   const [historyVisible, setHistoryVisible] = useState(false);
   let user1;
-
-  const item = {
-    gunAttribute: 'true',
-    betAmount: 100,
-    coin: 'Default',
-    round: 3,
-    headshot: 'yes',
-  };
 
   useEffect(() => {
     const getToken = async () => {
@@ -68,19 +59,6 @@ const PowerRoom = () => {
     } catch (error) {
       console.log('Error fetching user:', error);
       setMessage('User not found');
-    }
-  };
-
-  const searchMatch = async matchId => {
-    try {
-      console.log(`${baseUrl}/khelmela/get`);
-      const response = await axios.get(
-        `${baseUrl}/khelmela/getMatch/${matchId}`,
-      );
-      setMatch(response.data);
-    } catch (error) {
-      console.log('Error fetching match:', error);
-      setMatchMessage('Match not found');
     }
   };
 
