@@ -26,7 +26,15 @@ const app = express();
 const server = require("http").createServer(app);
 const { Server } = require("socket.io");
 
+
 connectToDatabase();
+const getSocket=()=>{
+if(!io){
+  console.log("io not initialized")
+  return
+}
+return io
+}
 
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ limit: "10mb", extended: true }));
@@ -82,7 +90,7 @@ function getPrivateIP() {
   }
   return "127.0.0.1"; // Fallback to localhost if no private IP is found
 }
-
+module.exports =getSocket
 // Start the server
 const PORT = process.env.SERVER_PORT || 9000;
 server.listen(PORT, () => {

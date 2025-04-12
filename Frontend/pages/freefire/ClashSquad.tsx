@@ -8,31 +8,28 @@ import {
   Keyboard,
   TouchableOpacity,
   ScrollView,
-  Animated,
 } from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 import AntDesign from 'react-native-vector-icons/AntDesign';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
 import Entypo from 'react-native-vector-icons/Entypo';
 import MatchCard from '../../components/MatchCard';
-import {FlatList} from 'react-native-gesture-handler';
+import { FlatList } from 'react-native-gesture-handler';
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import ShimmerBox from '../../components/ShimmerBox';
-import {CheckAdminContext} from '../ContextApi/ContextApi';
-import {BASE_URL} from '../../env';
-import {useSocket} from '../../SocketContext';
+import { CheckAdminContext } from '../ContextApi/ContextApi';
+import { BASE_URL } from '../../env';
+import { useSocket } from '../../SocketContext';
 
-const ClashSquad = ({navigation}) => {
-  const [page, setPage] = useState(1);
+const ClashSquad = ({ navigation }) => {
   const [datas, setDatas] = useState([]);
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const {getProfile, data} = useContext(CheckAdminContext);
+  const { getProfile, data } = useContext(CheckAdminContext);
   const [joinMatch, setJoinMatch] = useState([]);
-  const {renderPage, setRenderPage} = useSocket();
+  const { renderPage } = useSocket();
   const [matchDetails, setMatchDetails] = useState({
     show: false,
     showDetail: true,
@@ -43,9 +40,10 @@ const ClashSquad = ({navigation}) => {
     round: 13,
     coin: 'Default',
     match: 'clashsquad',
-    gameName: data?.gameName[0]?.freefire,
+    gameName: data?.gameName?.[0]?.freefire || '',
     betAmount: '',
   });
+
   const modal = messages => {
     setVisible(true);
     setMessage(String(messages));
@@ -57,59 +55,56 @@ const ClashSquad = ({navigation}) => {
 
   const handleOutsidePress = () => {
     Keyboard.dismiss();
-    setMatchDetails(prev => ({...prev, show: false}));
+    setMatchDetails(prev => ({ ...prev, show: false }));
   };
 
   const playerOptions = [
-    {id: 1, label: '1v1'},
-    {id: 2, label: '2v2'},
-    {id: 3, label: '3v3'},
-    {id: 4, label: '4v4'},
+    { id: 1, label: '1v1' },
+    { id: 2, label: '2v2' },
+    { id: 3, label: '3v3' },
+    { id: 4, label: '4v4' },
   ];
 
   const playerOption = [
-    {id: 1, label: '1v1'},
-    {id: 2, label: '2v2'},
+    { id: 1, label: '1v1' },
+    { id: 2, label: '2v2' },
   ];
 
   const roundOptions = [
-    {id: 1, label: 7},
-    {id: 2, label: 9},
-    {id: 3, label: 13},
+    { id: 1, label: 7 },
+    { id: 2, label: 9 },
+    { id: 3, label: 13 },
   ];
 
   const coinOptions = [
-    {id: 1, label: 'Default'},
-    {id: 2, label: '9999'},
+    { id: 1, label: 'Default' },
+    { id: 2, label: '9999' },
   ];
 
   const sendData = async e => {
     e.preventDefault();
     try {
-      if (!matchDetails.betAmount || !matchDetails.gameName) {
-        modal('Fill all fields');
+      const betAmountNum = parseInt(matchDetails.betAmount, 10);
+      if (!matchDetails.betAmount || isNaN(betAmountNum) || betAmountNum <= 9) {
+        modal('Bet amount cannot be less 10 ');
+        return;
+      }
+      if (!matchDetails.gameName) {
+        modal('Please enter a game name');
         return;
       }
       const token = await AsyncStorage.getItem('token');
-      await axios
-        .post(
-          `${BASE_URL}/khelmela/create`,
-          {matchDetails},
-          {
-            headers: {
-              Authorization: `${token}`,
-            },
-          },
-        )
-        .then(response => {
-          modal(response.data.message);
-          getMatches();
-          setMatchDetails(prev => ({...prev, show: false}));
-          matchidSend(response.data.newMatch._id);
-          getMatches();
-        });
+      const response = await axios.post(
+        `${BASE_URL}/khelmela/create`,
+        { matchDetails },
+        { headers: { Authorization: `${token}` } }
+      );
+      modal(response.data.message);
+      setMatchDetails(prev => ({ ...prev, show: false }));
+      matchidSend(response.data.newMatch._id);
+      getMatches();
     } catch (error) {
-      const errorMessage = error.response.data.message || 'Exceed the limit';
+      const errorMessage = error.response?.data?.message || 'Exceed the limit';
       modal(errorMessage);
     }
   };
@@ -119,12 +114,8 @@ const ClashSquad = ({navigation}) => {
       const token = await AsyncStorage.getItem('token');
       await axios.post(
         `${BASE_URL}/khelmela/addinhost`,
-        {matchId},
-        {
-          headers: {
-            Authorization: `${token}`,
-          },
-        },
+        { matchId },
+        { headers: { Authorization: `${token}` } }
       );
     } catch (error) {
       const errorMessage = error.response?.data?.message || 'Exceed the limit';
@@ -133,18 +124,19 @@ const ClashSquad = ({navigation}) => {
   };
 
   const getMatches = async () => {
-    const token = await AsyncStorage.getItem('token');
-    await axios
-      .get(`${BASE_URL}/khelmela/get`, {
-        headers: {
-          Authorization: `${token}`,
-        },
-      })
-      .then(response => {
-        setDatas(response.data.card);
-        setJoinMatch(response.data.matchjoin);
-        console.log(response);
+    setLoading(true);
+    try {
+      const token = await AsyncStorage.getItem('token');
+      const response = await axios.get(`${BASE_URL}/khelmela/get`, {
+        headers: { Authorization: `${token}` },
       });
+      setDatas(response.data.card || []);
+      setJoinMatch(response.data.matchjoin || []);
+    } catch (error) {
+      modal('Failed to load matches');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -174,72 +166,89 @@ const ClashSquad = ({navigation}) => {
 
         <Pressable
           style={styles.createButton}
-          onPress={() => setMatchDetails(prev => ({...prev, show: true}))}>
+          onPress={() => setMatchDetails(prev => ({ ...prev, show: true }))}
+        >
           <Ionicons name="add-circle-outline" size={24} color="white" />
           <Text style={styles.createButtonText}>Create</Text>
         </Pressable>
 
-        <View style={styles.liveMatches}>
-          <Entypo name="game-controller" size={24} color="#333" />
-          <Text style={styles.liveMatchesText}>Live Matches</Text>
-        </View>
-        <View>
-          {joinMatch?.length !== 0 ? (
-            <FlatList
-              data={joinMatch}
-              scrollEnabled={false}
-              keyExtractor={(item, id) => id.toString()}
-              renderItem={({item}) => (
-                <MatchCard match={item} refreshData={refreshData} />
-              )}
-              contentContainerStyle={{gap: 20}}
-            />
-          ) : (
-            <Text>No join Matches Right now.</Text>
-          )}
-        </View>
+       (
+          <>
+            {/* Enroll Matches (Shown only if joined) */}
+            {joinMatch.length > 0 && (
+              <View>
+                <View style={styles.liveMatches}>
+                  <Entypo name="game-controller" size={24} color="#333" />
+                  <Text style={styles.liveMatchesText}>Enroll Matches</Text>
+                </View>
+                <FlatList
+                  data={joinMatch}
+                  scrollEnabled={false}
+                  keyExtractor={(item, id) => id.toString()}
+                  renderItem={({ item }) => (
+                    <MatchCard match={item} refreshData={refreshData} />
+                  )}
+                  contentContainerStyle={{ gap: 20 }}
+                />
+              </View>
+            )}
 
-        <View style={{paddingBottom: 15, backgroundColor: 'red'}}>
-          <View>
-            {datas === null ? (
-              <ShimmerBox />
-            ) : datas.length !== 0 ? (
+            {/* Live Matches (Always shown) */}
+            <View style={styles.liveMatches}>
+              <Entypo name="game-controller" size={24} color="#333" />
+              <Text style={styles.liveMatchesText}>Live Matches</Text>
+            </View>
+            {datas.length > 0 ? (
               <FlatList
                 data={datas}
                 scrollEnabled={false}
                 keyExtractor={(item, id) => id.toString()}
-                renderItem={({item}) => (
+                renderItem={({ item }) => (
                   <MatchCard match={item} refreshData={refreshData} />
                 )}
-                contentContainerStyle={{gap: 20}}
+                contentContainerStyle={{ gap: 20 }}
               />
             ) : (
-              <Text>No Matches Right now.</Text>
+              <Text
+                style={{
+                  textAlign: 'center',
+                  marginTop: 100,
+                  fontSize: 15,
+                  color: '#333',
+                }}
+              >
+                No Matches Right now.
+              </Text>
             )}
-          </View>
-        </View>
+          </>
+        )}
+
         <Modal
           visible={matchDetails.show}
           transparent
           animationType="fade"
-          onRequestClose={handleOutsidePress}>
+          onRequestClose={handleOutsidePress}
+        >
           <ScrollView
             contentContainerStyle={styles.modalContentContainer}
-            nestedScrollEnabled={true}>
+            nestedScrollEnabled={true}
+          >
             <TouchableOpacity
               style={styles.modalOverlay}
               activeOpacity={1}
-              onPress={handleOutsidePress}>
+              onPress={handleOutsidePress}
+            >
               <TouchableOpacity style={styles.modal} activeOpacity={1}>
                 <TouchableOpacity
                   style={styles.closeButton}
-                  onPress={handleOutsidePress}>
+                  onPress={handleOutsidePress}
+                >
                   <AntDesign name="close" size={24} color="#333" />
                 </TouchableOpacity>
 
                 <View style={styles.modalHandle} />
                 <Text style={styles.modalTitle}>Create Your Match</Text>
-                <View style={{marginHorizontal: 20}}>
+                <View style={{ marginHorizontal: 20 }}>
                   <Text style={styles.sectionTitle}>Room Mode</Text>
                   <View style={styles.toggleContainer}>
                     <TouchableOpacity
@@ -254,13 +263,15 @@ const ClashSquad = ({navigation}) => {
                         matchDetails.showDetail
                           ? styles.toggleActive
                           : styles.toggle
-                      }>
+                      }
+                    >
                       <Text
                         style={
                           matchDetails.showDetail
                             ? styles.toggleTextActive
                             : styles.toggleText
-                        }>
+                        }
+                      >
                         Clash Squad
                       </Text>
                     </TouchableOpacity>
@@ -277,13 +288,15 @@ const ClashSquad = ({navigation}) => {
                         !matchDetails.showDetail
                           ? styles.toggleActive
                           : styles.toggle
-                      }>
+                      }
+                    >
                       <Text
                         style={
                           !matchDetails.showDetail
                             ? styles.toggleTextActive
                             : styles.toggleText
-                        }>
+                        }
+                      >
                         Lone Wolf
                       </Text>
                     </TouchableOpacity>
@@ -296,7 +309,7 @@ const ClashSquad = ({navigation}) => {
                         data={playerOptions}
                         horizontal
                         keyExtractor={item => item.id.toString()}
-                        renderItem={({item}) => (
+                        renderItem={({ item }) => (
                           <TouchableOpacity
                             onPress={() =>
                               setMatchDetails(prev => ({
@@ -308,13 +321,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.player === item.label
                                 ? styles.optionActive
                                 : styles.option
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.player === item.label
                                   ? styles.optionTextActive
                                   : styles.optionText
-                              }>
+                              }
+                            >
                               {item.label}
                             </Text>
                           </TouchableOpacity>
@@ -328,19 +343,24 @@ const ClashSquad = ({navigation}) => {
                           <TouchableOpacity
                             key={value}
                             onPress={() =>
-                              setMatchDetails(prev => ({...prev, ammo: value}))
+                              setMatchDetails(prev => ({
+                                ...prev,
+                                ammo: value,
+                              }))
                             }
                             style={
                               matchDetails.ammo === value
                                 ? styles.toggleActive
                                 : styles.toggle
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.ammo === value
                                   ? styles.toggleTextActive
                                   : styles.toggleText
-                              }>
+                              }
+                            >
                               {value}
                             </Text>
                           </TouchableOpacity>
@@ -362,13 +382,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.headshot === value
                                 ? styles.toggleActive
                                 : styles.toggle
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.headshot === value
                                   ? styles.toggleTextActive
                                   : styles.toggleText
-                              }>
+                              }
+                            >
                               {value}
                             </Text>
                           </TouchableOpacity>
@@ -381,19 +403,24 @@ const ClashSquad = ({navigation}) => {
                           <TouchableOpacity
                             key={value}
                             onPress={() =>
-                              setMatchDetails(prev => ({...prev, skill: value}))
+                              setMatchDetails(prev => ({
+                                ...prev,
+                                skill: value,
+                              }))
                             }
                             style={
                               matchDetails.skill === value
                                 ? styles.toggleActive
                                 : styles.toggle
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.skill === value
                                   ? styles.toggleTextActive
                                   : styles.toggleText
-                              }>
+                              }
+                            >
                               {value}
                             </Text>
                           </TouchableOpacity>
@@ -405,7 +432,7 @@ const ClashSquad = ({navigation}) => {
                         data={roundOptions}
                         horizontal
                         keyExtractor={item => item.id.toString()}
-                        renderItem={({item}) => (
+                        renderItem={({ item }) => (
                           <TouchableOpacity
                             onPress={() =>
                               setMatchDetails(prev => ({
@@ -417,13 +444,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.round === item.label
                                 ? styles.optionActive
                                 : styles.option
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.round === item.label
                                   ? styles.optionTextActive
                                   : styles.optionText
-                              }>
+                              }
+                            >
                               {item.label}
                             </Text>
                           </TouchableOpacity>
@@ -436,7 +465,7 @@ const ClashSquad = ({navigation}) => {
                         data={coinOptions}
                         horizontal
                         keyExtractor={item => item.id.toString()}
-                        renderItem={({item}) => (
+                        renderItem={({ item }) => (
                           <TouchableOpacity
                             onPress={() =>
                               setMatchDetails(prev => ({
@@ -448,13 +477,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.coin === item.label
                                 ? styles.optionActive
                                 : styles.option
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.coin === item.label
                                   ? styles.optionTextActive
                                   : styles.optionText
-                              }>
+                              }
+                            >
                               {item.label}
                             </Text>
                           </TouchableOpacity>
@@ -468,26 +499,31 @@ const ClashSquad = ({navigation}) => {
                         style={styles.textInput}
                         value={matchDetails.gameName}
                         onChangeText={text =>
-                          setMatchDetails(prev => ({...prev, gameName: text}))
+                          setMatchDetails(prev => ({ ...prev, gameName: text }))
                         }
                         placeholderTextColor="#808080"
                       />
 
                       <Text style={styles.sectionTitle}>Bet Amount</Text>
                       <TextInput
-                        placeholder="Enter the amount"
+                        placeholder="Enter the amount (min 10)"
                         keyboardType="numeric"
                         style={styles.textInput}
                         value={matchDetails.betAmount}
-                        onChangeText={text =>
-                          setMatchDetails(prev => ({...prev, betAmount: text}))
-                        }
+                        onChangeText={text => {
+                          const numericValue = text.replace(/[^0-9]/g, '');
+                          setMatchDetails(prev => ({
+                            ...prev,
+                            betAmount: numericValue,
+                          }));
+                        }}
                         placeholderTextColor="#808080"
                       />
 
                       <TouchableOpacity
                         style={styles.publishButton}
-                        onPress={sendData}>
+                        onPress={sendData}
+                      >
                         <Text style={styles.publishButtonText}>Publish</Text>
                       </TouchableOpacity>
                     </View>
@@ -498,7 +534,7 @@ const ClashSquad = ({navigation}) => {
                         data={playerOption}
                         horizontal
                         keyExtractor={item => item.id.toString()}
-                        renderItem={({item}) => (
+                        renderItem={({ item }) => (
                           <TouchableOpacity
                             onPress={() =>
                               setMatchDetails(prev => ({
@@ -510,13 +546,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.player === item.label
                                 ? styles.optionActive
                                 : styles.option
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.player === item.label
                                   ? styles.optionTextActive
                                   : styles.optionText
-                              }>
+                              }
+                            >
                               {item.label}
                             </Text>
                           </TouchableOpacity>
@@ -530,19 +568,24 @@ const ClashSquad = ({navigation}) => {
                           <TouchableOpacity
                             key={value}
                             onPress={() =>
-                              setMatchDetails(prev => ({...prev, ammo: value}))
+                              setMatchDetails(prev => ({
+                                ...prev,
+                                ammo: value,
+                              }))
                             }
                             style={
                               matchDetails.ammo === value
                                 ? styles.toggleActive
                                 : styles.toggle
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.ammo === value
                                   ? styles.toggleTextActive
                                   : styles.toggleText
-                              }>
+                              }
+                            >
                               {value}
                             </Text>
                           </TouchableOpacity>
@@ -564,13 +607,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.headshot === value
                                 ? styles.toggleActive
                                 : styles.toggle
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.headshot === value
                                   ? styles.toggleTextActive
                                   : styles.toggleText
-                              }>
+                              }
+                            >
                               {value}
                             </Text>
                           </TouchableOpacity>
@@ -583,19 +628,24 @@ const ClashSquad = ({navigation}) => {
                           <TouchableOpacity
                             key={value}
                             onPress={() =>
-                              setMatchDetails(prev => ({...prev, skill: value}))
+                              setMatchDetails(prev => ({
+                                ...prev,
+                                skill: value,
+                              }))
                             }
                             style={
                               matchDetails.skill === value
                                 ? styles.toggleActive
                                 : styles.toggle
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.skill === value
                                   ? styles.toggleTextActive
                                   : styles.toggleText
-                              }>
+                              }
+                            >
                               {value}
                             </Text>
                           </TouchableOpacity>
@@ -607,7 +657,7 @@ const ClashSquad = ({navigation}) => {
                         data={roundOptions}
                         horizontal
                         keyExtractor={item => item.id.toString()}
-                        renderItem={({item}) => (
+                        renderItem={({ item }) => (
                           <TouchableOpacity
                             onPress={() =>
                               setMatchDetails(prev => ({
@@ -619,13 +669,15 @@ const ClashSquad = ({navigation}) => {
                               matchDetails.round === item.label
                                 ? styles.optionActive
                                 : styles.option
-                            }>
+                            }
+                          >
                             <Text
                               style={
                                 matchDetails.round === item.label
                                   ? styles.optionTextActive
                                   : styles.optionText
-                              }>
+                              }
+                            >
                               {item.label}
                             </Text>
                           </TouchableOpacity>
@@ -639,26 +691,31 @@ const ClashSquad = ({navigation}) => {
                         style={styles.textInput}
                         value={matchDetails.gameName}
                         onChangeText={text =>
-                          setMatchDetails(prev => ({...prev, gameName: text}))
+                          setMatchDetails(prev => ({ ...prev, gameName: text }))
                         }
                         placeholderTextColor="#808080"
                       />
 
                       <Text style={styles.sectionTitle}>Bet Amount</Text>
                       <TextInput
-                        placeholder="Enter the amount"
+                        placeholder="Enter the amount (min 10)"
                         keyboardType="numeric"
                         style={styles.textInput}
                         value={matchDetails.betAmount}
-                        onChangeText={text =>
-                          setMatchDetails(prev => ({...prev, betAmount: text}))
-                        }
+                        onChangeText={text => {
+                          const numericValue = text.replace(/[^0-9]/g, '');
+                          setMatchDetails(prev => ({
+                            ...prev,
+                            betAmount: numericValue,
+                          }));
+                        }}
                         placeholderTextColor="#808080"
                       />
 
                       <TouchableOpacity
                         style={styles.publishButton}
-                        onPress={sendData}>
+                        onPress={sendData}
+                      >
                         <Text style={styles.publishButtonText}>Publish</Text>
                       </TouchableOpacity>
                     </View>
@@ -721,7 +778,7 @@ const styles = StyleSheet.create({
     borderRadius: 25,
     alignSelf: 'flex-end',
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
   },
@@ -740,7 +797,7 @@ const styles = StyleSheet.create({
     width: 150,
     marginVertical: 15,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
   },
@@ -897,7 +954,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     elevation: 5,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
+    shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.3,
     shadowRadius: 4,
   },

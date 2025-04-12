@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   Modal,
   View,
@@ -15,129 +15,101 @@ const NotificationPopup = ({
   duration = 3000,
   onClose,
 }) => {
-  const [show, setShow] = useState(visible);
-  const slideAnim = useState(new Animated.Value(-60))[0]; // Start slightly off-screen
-  const opacityAnim = useState(new Animated.Value(0))[0];
+  const [isVisible, setIsVisible] = React.useState(visible);
+  const slideAnim = React.useRef(new Animated.Value(-80)).current;
+  const opacityAnim = React.useRef(new Animated.Value(0)).current;
 
-  const getBackgroundColor = () => {
+  const getBackgroundColor = useCallback(() => {
     switch (type) {
-      case 'success':
-        return 'rgba(220, 252, 231, 0.8)'; // Light green with slight transparency
-      case 'warning':
-        return 'rgba(254, 249, 196, 0.8)'; // Light yellow with slight transparency
-      case 'error':
-        return 'rgba(254, 226, 226, 0.8)'; // Light red with slight transparency
-      case 'info':
-      default:
-        return 'rgba(207, 233, 252, 0.8)'; // Light blue with slight transparency
+      case 'success': return '#e6ffe6';
+      case 'warning': return '#fff3e6';
+      case 'error': return '#ffe6e6';
+      default: return '#f0f7ff';
     }
-  };
+  }, [type]);
 
-  // Border color based on notification type (more refined)
-  const getBorderColor = () => {
+  const getIconText = useCallback(() => {
     switch (type) {
-      case 'success':
-        return '#86efac'; // Muted green
-      case 'warning':
-        return '#fde047'; // Muted yellow
-      case 'error':
-        return '#fca5a5'; // Muted red
-      case 'info':
-      default:
-        return '#bae6fd'; // Muted blue
+      case 'success': return '✓';
+      case 'warning': return '!';
+      case 'error': return '✕';
+      default: return 'i';
     }
-  };
+  }, [type]);
 
-  // Icon text based on type (larger and bolder)
-  const getIconText = () => {
+  const getIconColor = useCallback(() => {
     switch (type) {
-      case 'success':
-        return '✓';
-      case 'warning':
-        return '⚠';
-      case 'error':
-        return '✕';
-      case 'info':
-      default:
-        return 'ℹ';
+      case 'success': return '#28a745';
+      case 'warning': return '#ff9500';
+      case 'error': return '#dc3545';
+      default: return '#007bff';
     }
-  };
+  }, [type]);
 
-  useEffect(() => {
-    setShow(visible);
-    if (visible) {
-      Animated.parallel([
-        Animated.timing(slideAnim, {
-          toValue: 10, // Slide in a bit more gently
-          duration: 300,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacityAnim, {
-          toValue: 1,
-          duration: 300,
-          useNativeDriver: true,
-        }),
-      ]).start();
-
-      if (duration > 0) {
-        const timer = setTimeout(() => {
-          handleClose();
-        }, duration);
-        return () => clearTimeout(timer);
-      }
-    } else {
-      slideAnim.setValue(-60);
-      opacityAnim.setValue(0);
-    }
-  }, [visible, duration]);
-
-  const handleClose = () => {
+  const animateNotification = useCallback((show) => {
     Animated.parallel([
       Animated.timing(slideAnim, {
-        toValue: -60,
+        toValue: show ? 0 : -80,
         duration: 300,
         useNativeDriver: true,
       }),
       Animated.timing(opacityAnim, {
-        toValue: 0,
+        toValue: show ? 1 : 0,
         duration: 300,
         useNativeDriver: true,
       }),
     ]).start(() => {
-      setShow(false);
-      if (onClose) onClose();
+      if (!show) {
+        setIsVisible(false);
+        if (onClose) onClose();
+      }
     });
-  };
+  }, [slideAnim, opacityAnim, onClose]);
 
-  if (!show && !visible) return null;
+  useEffect(() => {
+    setIsVisible(visible);
+    if (visible) {
+      animateNotification(true);
+      if (duration > 0) {
+        const timer = setTimeout(() => animateNotification(false), duration);
+        return () => clearTimeout(timer);
+      }
+    } else {
+      animateNotification(false);
+    }
+  }, [visible, duration, animateNotification]);
+
+  if (!isVisible && !visible) return null;
 
   return (
     <Modal
       transparent
-      visible={show}
+      visible={isVisible}
       animationType="none"
-      onRequestClose={handleClose}>
-      <View style={styles.container}>
+      onRequestClose={() => animateNotification(false)}
+    >
+      <View style={styles.overlay}>
         <Animated.View
           style={[
-            styles.notificationContainer,
+            styles.popup,
             {
-              transform: [{translateY: slideAnim}],
+              transform: [{ translateY: slideAnim }],
               opacity: opacityAnim,
               backgroundColor: getBackgroundColor(),
-              borderColor: getBorderColor(),
             },
-          ]}>
-          <View style={styles.contentContainer}>
-            <View style={styles.iconContainer}>
-              <Text style={[styles.iconText, {color: getBorderColor()}]}>
-                {getIconText()}
-              </Text>
-            </View>
-            <Text style={styles.message}>{message}</Text>
+          ]}
+        >
+          <View style={styles.iconWrapper}>
+            <Text style={[styles.icon, { color: getIconColor() }]}>
+              {getIconText()}
+            </Text>
           </View>
-          <TouchableOpacity onPress={handleClose} style={styles.closeButton}>
-            <Text style={styles.closeButtonText}>✕</Text>
+          <Text style={styles.message}>{message}</Text>
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => animateNotification(false)}
+          >
+            <Text style={styles.closeText}>×</Text>
           </TouchableOpacity>
         </Animated.View>
       </View>
@@ -146,64 +118,50 @@ const NotificationPopup = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    top: 40, // Adjust top position for better spacing from the top
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    zIndex: 9999,
-  },
-  notificationContainer: {
-    width: '90%', // Slightly narrower for a cleaner look
-    paddingVertical: 14, // Adjusted vertical padding
-    paddingHorizontal: 16,
-    borderRadius: 8, // Slightly less rounded for a modern feel
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1, // Softer vertical shadow
-    },
-    shadowOpacity: 0.08, // More subtle shadow
-    shadowRadius: 3,
-    elevation: 3, // Lower elevation for a less pronounced lift
-    borderLeftWidth: 5, // Slightly thicker border for better emphasis
-  },
-  contentContainer: {
+  overlay: {
     flex: 1,
+    justifyContent: 'flex-start',
+    alignItems: 'center',
+    paddingTop: 40,
+  },
+  popup: {
+    width: '85%',
     flexDirection: 'row',
     alignItems: 'center',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 8,
+    elevation: 4,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
   },
-  iconContainer: {
-    marginRight: 14, // Slightly more spacing
-    width: 28, // Slightly larger icon container
-    height: 28,
-    borderRadius: 14, // Make it a circle
+  iconWrapper: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
-    // backgroundColor: 'rgba(0,0,0,0.05)', // Optional: subtle background for the icon
+    marginRight: 12,
   },
-  iconText: {
-    fontSize: 20, // Larger icon text
+  icon: {
+    fontSize: 16,
     fontWeight: 'bold',
   },
   message: {
     flex: 1,
-    fontSize: 16, // Slightly larger message text
-    color: '#334155', // Darker, more readable text color
+    fontSize: 14,
+    color: '#333',
     fontWeight: '500',
   },
   closeButton: {
-    padding: 6, // Adjust close button padding
+    padding: 8,
   },
-  closeButtonText: {
-    fontSize: 18, // Slightly larger close button text
-    color: '#475569', // Darker close button text
-    fontWeight: 'bold',
-    lineHeight: 18, // Adjust line height for better vertical alignment
+  closeText: {
+    fontSize: 16,
+    color: '#666',
+    fontWeight: '600',
   },
 });
 

@@ -18,7 +18,7 @@ import { launchImageLibrary } from 'react-native-image-picker';
 import { CheckAdminContext } from '../pages/ContextApi/ContextApi';
 import { BASE_URL } from '../env';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
-
+import { io } from "socket.io-client";
 const MatchCard = ({ match, refreshData }) => {
   const [check, setCheck] = useState('');
   const [customId, setCustomId] = useState('');
@@ -43,7 +43,21 @@ const MatchCard = ({ match, refreshData }) => {
 
   const matchId = match._id;
   const { setTrigger, trigger } = useContext(CheckAdminContext);
+  useEffect(() => {
+    // Listen for real-time ID/PW updates
+    socket.on("idpassClash", (data) => {
+      if (data.matchId === matchId) {
+        setPublish('publish')
+        refreshData()
+         // or update just the ID/password parts
+      }
+    });
 
+    // Cleanup on unmount
+    return () => {
+      socket.off("idpassClash");
+    };
+  }, [matchId]);
   // Memoize token retrieval
   const getToken = useCallback(async () => {
     return await AsyncStorage.getItem('token');
@@ -182,7 +196,7 @@ const MatchCard = ({ match, refreshData }) => {
       mediaType: 'photo',
       maxWidth: 800,
       maxHeight: 800,
-      quality: 0.3,
+      quality: 0.4,
       includeBase64: true,
     };
     launchImageLibrary(options, response => {
@@ -197,7 +211,7 @@ const MatchCard = ({ match, refreshData }) => {
       mediaType: 'photo',
       maxWidth: 800,
       maxHeight: 800,
-      quality: 0.3,
+      quality: 0.4,
       includeBase64: true,
     };
     launchImageLibrary(options, response => {
@@ -449,7 +463,7 @@ const MatchCard = ({ match, refreshData }) => {
                     ) : null}
                     <View style={styles.footerRow}>
                       <Text style={styles.prizeText}>
-                        🏆 Prize: {item.betAmount * 1.9}
+                        🏆 Prize: {Math.floor(item.betAmount * 1.9) }
                       </Text>
                       {check === 'user' ? (
                         <TouchableOpacity
@@ -584,7 +598,7 @@ const MatchCard = ({ match, refreshData }) => {
       <Modal transparent animationType="slide" visible={deleteCardModel}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalText}>Are you sure?</Text>
+            <Text style={styles.modalText}>Did you want to delete this match?</Text>
             <View style={styles.buttonContainer}>
               <TouchableOpacity
                 style={[styles.button, styles.noButton]}
@@ -941,7 +955,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   modalText: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: '600',
     color: '#333',
   },

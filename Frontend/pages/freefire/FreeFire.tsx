@@ -1,55 +1,55 @@
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  Pressable,
   TextInput,
-  Modal,
-  Keyboard,
-  TouchableOpacity,
   ScrollView,
-  Animated,
   ImageBackground,
 } from 'react-native';
-import React, {useContext, useEffect, useState} from 'react';
-import Entypo from 'react-native-vector-icons/Entypo';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
-import Freefirefullmatchcard from '../../components/Freefirefullmatchcard';
+import Entypo from 'react-native-vector-icons/Entypo';
 import axios from 'axios';
-import {FlatList, TouchableWithoutFeedback} from 'react-native-gesture-handler';
-import ShimmerBox from '../../components/ShimmerBox';
-import {CheckAdminContext} from '../ContextApi/ContextApi';
+import { FlatList } from 'react-native-gesture-handler';
+import Freefirefullmatchcard from '../../components/Freefirefullmatchcard';
+import { useSocket } from '../../SocketContext';
+import { BASE_URL } from '../../env';
 
-import {useSocket} from '../../SocketContext';
-
-import {BASE_URL} from '../../env';
-
-
-const FreeFire = ({navigation}) => {
+const FreeFire = ({ navigation }) => {
   const [card, setCard] = useState([]);
-  const {checkrole, checkadmin} = useContext(CheckAdminContext);
-  const [createModal, setCreateModal] = useState(false);
-  const {renderPage} = useSocket();
-  useEffect(() => {
-    checkrole();
-  }, []);
-  useEffect(() => {
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const { renderPage } = useSocket();
+
+  const fetchMatches = useCallback(async () => {
     try {
-      const getmatch = async () => {
-        const match = await axios.get(`${BASE_URL}/khelmela/getff`);
-        setCard(match.data.card);
-      };
-      getmatch();
-    } catch (error) {
-      console.log(error);
+      setLoading(true);
+      setError(null);
+      const response = await axios.get(`${BASE_URL}/khelmela/getff`);
+      setCard(response.data.card || []);
+    } catch (err) {
+      setError('Failed to load matches. Please try again.');
+      console.error('Error fetching matches:', err);
+    } finally {
+      setLoading(false);
     }
-  }, [renderPage]);
+  }, []);
+
+  useEffect(() => {
+    fetchMatches();
+  }, [renderPage, fetchMatches]);
+
+  const renderMatchCard = useCallback(({ item }) => (
+    <Freefirefullmatchcard matches={item} />
+  ), []);
 
   return (
     <ImageBackground style={styles.matchCard}>
-      <ScrollView style={styles.container}>
-        {/* Search Bar */}
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: 20 }}
+      >
         <View style={styles.searchContainer}>
           <Ionicons name="menu-outline" size={24} color="black" />
           <TextInput
@@ -60,34 +60,30 @@ const FreeFire = ({navigation}) => {
           <FontAwesome5 name="search" size={20} color="black" />
         </View>
         <Text style={styles.note}>
-          Note: All matches are created by admin . Everyday at the same time
+          Note: All matches are created by admin. Everyday at the same time
         </Text>
         <View style={styles.liveMatches}>
-                  <Entypo name="game-controller" size={24} color="#333" />
-                  <Text style={styles.liveMatchesText}>Live Matches</Text>
-                </View>
-                <View></View>
-        {card.length !== 0 ? (
+          <Entypo name="game-controller" size={24} color="#333" />
+          <Text style={styles.liveMatchesText}>Live Matches</Text>
+        </View>
+
+        {loading ? (
+          <Text style={styles.loadingText}>Loading matches...</Text>
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : card.length > 0 ? (
           <FlatList
             data={card}
             scrollEnabled={false}
             keyExtractor={(item, id) => id.toString()}
-            renderItem={({item}) => <Freefirefullmatchcard matches={item} />}
-            contentContainerStyle={{gap: 35, marginLeft: 8}}
+            renderItem={renderMatchCard}
+            contentContainerStyle={styles.flatListContent}
           />
         ) : (
-          <ShimmerBox />
+          <Text style={styles.noMatchesText}>
+            No Matches Right Now
+          </Text>
         )}
-        <Modal visible={createModal} animationType="fade" transparent>
-          <TouchableWithoutFeedback onPress={() => setCreateModal(false)}>
-            <View
-              style={{flex: 1, justifyContent: 'center', alignItems: 'center'}}>
-              <TouchableWithoutFeedback onPress={() => {}}>
-                <Text></Text>
-              </TouchableWithoutFeedback>
-            </View>
-          </TouchableWithoutFeedback>
-        </Modal>
       </ScrollView>
     </ImageBackground>
   );
@@ -98,13 +94,11 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     paddingRight: 15,
-    backgroundColor: 'F2F2F2',
+    backgroundColor: '#F2F2F2',
   },
-
-  MatchCard: {
+  matchCard: {
     borderRadius: 40,
   },
-
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -140,7 +134,7 @@ const styles = StyleSheet.create({
     width: 150,
     marginVertical: 15,
     shadowColor: '#000',
-    shadowOffset: {width: 0, height: 1},
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
     marginLeft: 20,
@@ -150,6 +144,28 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#333',
     fontSize: 16,
+  },
+  flatListContent: {
+    gap: 35,
+    marginLeft: 8,
+  },
+  loadingText: {
+    textAlign: 'center',
+    marginTop: 100,
+    fontSize: 16,
+    color: '#666',
+  },
+  errorText: {
+    textAlign: 'center',
+    marginTop: 100,
+    fontSize: 16,
+    color: '#red',
+  },
+  noMatchesText: {
+    textAlign: 'center',
+    marginTop: 100,
+    fontSize: 15,
+    color: '#333',
   },
 });
 
